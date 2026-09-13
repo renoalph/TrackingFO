@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <?!= include('Stylesheet'); ?>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+  <!-- ============================================================ HEADER ============================================================ -->
+  <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
+          <span class="material-symbols-rounded text-[22px]">router</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base md:text-lg font-bold text-slate-900 leading-tight">Tracking FO</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Proyek JATIM</span>
+          </div>
+          <p class="text-xs text-slate-500">Monitoring Milestone &middot; Sinkronisasi Approval Lapangan dengan Sistem Pusat</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <!-- 1 Indikator Tanggal & Waktu Tunggal (Tanpa Emoticon, dengan Icon) -->
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm shrink-0">
+          <span class="material-symbols-rounded text-blue-600 text-[17px]">schedule</span>
+          <span id="headerDateDisplay">Memuat waktu...</span>
+        </div>
+
+        <a id="btnSpreadsheet" href="https://docs.google.com/spreadsheets/d/1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No/edit?usp=sharing&ouid=102001982908865439766&rtpof=true&sd=true" target="_blank"
+          class="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-sm whitespace-nowrap"
+          title="Buka Google Spreadsheet">
+          <span class="material-symbols-rounded text-[18px]">table_chart</span>
+          Buka Spreadsheet
+        </a>
+
+        <button id="btnOpenGenerator" onclick="openGeneratorModal()"
+          class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition shadow-sm whitespace-nowrap"
+          title="Ubah daftar SO dan site mentah menjadi baris sheet siap tempel">
+          <span class="material-symbols-rounded text-[18px]">post_add</span>
+          Format Input Lapangan
+        </button>
+
+        <button id="btnRefresh" onclick="refreshAll(true)"
+          class="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm whitespace-nowrap">
+          <span id="refreshIcon" class="material-symbols-rounded text-[18px]">sync</span>
+          Segarkan Data
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-5">
+
+    <!-- ============================================================ KPI CARDS ============================================================ -->
+    <section id="kpiGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3"></section>
+
+    <!-- ============================================================ CHARTS ============================================================ -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card">
+        <div class="card-head"><span class="material-symbols-rounded text-slate-400">filter_alt</span>Funnel Tahapan
+          Milestone (Aktual Lapangan)</div>
+        <div id="chartFunnel" class="h-72"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="material-symbols-rounded text-slate-400">compare_arrows</span>Distribusi
+          Status Akhir — Aktual vs Sistem</div>
+        <div class="h-72 relative"><canvas id="chartComparison"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ FILTER BAR ============================================================ -->
+    <section class="card">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="relative flex-1 min-w-[200px]">
+          <span
+            class="material-symbols-rounded absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <input id="searchInput" type="text" placeholder="Cari SO Number / Site / Mitra..."
+            class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div id="msYearPeriod" class="relative">
+          <select id="selectYearPeriod" onchange="onYearPeriodChange(this.value)"
+            class="flex items-center gap-1.5 pl-3 pr-8 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer shadow-sm">
+            <option value="2026" selected>Proyek CIP (2025–2026 Aktif)</option>
+            <option value="2025">Tahun: 2025</option>
+            <option value="2024">Tahun: 2024</option>
+            <option value="Semua Tahun">Semua Portofolio (26k)</option>
+          </select>
+          <span class="material-symbols-rounded absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
+        </div>
+        <div id="msOperator"></div>
+        <div id="msKabupaten"></div>
+        <div id="msMitra"></div>
+        <div id="msTahapan"></div>
+        <div id="msApprovedBy"></div>
+        <div id="msStatus"></div>
+
+        <button data-toggle="onlyGap" class="chip-toggle" onclick="toggleChip(this)">
+          <span class="material-symbols-rounded text-[16px]">compare_arrows</span> Hanya Gap
+        </button>
+        <button data-toggle="onlyApprovedToday" class="chip-toggle" onclick="toggleChip(this)">
+          <span class="material-symbols-rounded text-[16px]">task_alt</span> Approved Hari Ini
+        </button>
+        <button data-toggle="onlyPending" class="chip-toggle" onclick="toggleChip(this)">
+          <span class="material-symbols-rounded text-[16px]">pending_actions</span> Menunggu Approval
+        </button>
+
+        <button onclick="resetFilters()"
+          class="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
+          <span class="material-symbols-rounded text-[16px]">restart_alt</span> Reset
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================================ TABEL ============================================================ -->
+    <section id="tableSection" class="card overflow-hidden">
+      <div class="card-head justify-between">
+        <div class="flex items-center gap-2"><span
+            class="material-symbols-rounded text-slate-400">table_rows</span>Daftar Monitoring Proyek
+          <span id="tableCount" class="text-xs font-normal text-slate-400"></span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <label class="text-slate-400">Baris/hal:</label>
+          <select id="pageSizeSelect" onchange="onPageSizeChange()"
+            class="border border-slate-300 rounded-md text-xs px-2 py-1">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto max-h-[560px] relative">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-slate-100 text-slate-600 uppercase font-semibold z-10">
+            <tr id="tableHeadRow"></tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="9" class="p-6 text-center text-slate-400">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between px-1 pt-3 text-xs">
+        <div id="pageInfo" class="text-slate-500"></div>
+        <div class="flex items-center gap-1">
+          <button onclick="gotoPage(1)" class="pg-btn"><span
+              class="material-symbols-rounded text-[16px]">first_page</span></button>
+          <button onclick="gotoPage(state.page-1)" class="pg-btn"><span
+              class="material-symbols-rounded text-[16px]">chevron_left</span></button>
+          <span id="pageNumDisplay" class="px-2 font-semibold text-slate-700">1</span>
+          <button onclick="gotoPage(state.page+1)" class="pg-btn"><span
+              class="material-symbols-rounded text-[16px]">chevron_right</span></button>
+          <button onclick="gotoPage(state.totalPages)" class="pg-btn"><span
+              class="material-symbols-rounded text-[16px]">last_page</span></button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="text-center text-[11px] text-slate-400 pb-4">
+      Tracking FO (Proyek JATIM) · Data terintegrasi Google Spreadsheet · Cache diperbarui otomatis
+    </footer>
+  </main>
+
+  <!-- ============================================================ MODAL DETAIL ============================================================ -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/50" onclick="closeDetail()"></div>
+    <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-2xl overflow-y-auto">
+      <div class="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-slate-900 text-sm">Detail Proyek</h3>
+        <button onclick="closeDetail()" class="text-slate-400 hover:text-slate-700">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <div id="detailContent" class="p-5 space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ MODAL DAFTAR PROYEK KPI (APPROVED HARI INI / MENUNGGU APPROVAL) ============================================================ -->
+  <div id="kpiListModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeKpiListModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-100 animate-fadeIn">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div id="kpiListIconWrap" class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm">
+            <span id="kpiListIcon" class="material-symbols-rounded text-[22px]">task_alt</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="kpiListTitle" class="font-bold text-slate-900 text-sm sm:text-base">Daftar Proyek</h3>
+              <span id="kpiListBadge" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">0</span>
+            </div>
+            <p id="kpiListSubtitle" class="text-xs text-slate-500">Memuat data...</p>
+          </div>
+        </div>
+        <button onclick="closeKpiListModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <div class="p-3.5 border-b border-slate-100 bg-white">
+        <div class="relative">
+          <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <input id="kpiListSearch" type="text" oninput="onKpiListSearch(this.value)" placeholder="Cari SO Number, Site, atau Mitra..."
+            class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/60 focus:bg-white transition">
+        </div>
+      </div>
+
+      <div id="kpiListBody" class="flex-1 overflow-y-auto p-4">
+        <div class="py-12 text-center text-slate-400 text-xs">Memuat data...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ MODAL GENERATOR FORMAT LAPANGAN ============================================================ -->
+  <div id="generatorModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeGeneratorModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 border border-slate-100">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <span class="material-symbols-rounded text-[20px]">post_add</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Generator Format Input Lapangan</h3>
+            <p class="text-xs text-slate-400">Konversi teks SO &amp; Site mentah menjadi format baris siap tempel (Ctrl + V) ke Google Spreadsheet</p>
+          </div>
+        </div>
+        <button onclick="closeGeneratorModal()" class="text-slate-400 hover:text-slate-700">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Tahapan Milestone Lapangan</label>
+          <select id="genTahapan" class="w-full border border-slate-300 rounded-lg p-2 font-medium focus:ring-2 focus:ring-blue-500">
+            <option value="FO & Civil Works">FO &amp; Civil Works</option>
+            <option value="OTDR">OTDR</option>
+            <option value="RFS">RFS</option>
+            <option value="Material Delivery">Material Delivery</option>
+            <option value="Material Onsite">Material Onsite</option>
+            <option value="APD">APD</option>
+            <option value="SSR/TSSR/ESR">SSR/TSSR/ESR</option>
+            <option value="Project Manager Assignment">Project Manager Assignment</option>
+            <option value="STIP">STIP</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nama Mitra Pelaksana</label>
+          <input id="genMitra" type="text" value="Mitra Jatim" placeholder="Contoh: PT Fiber Utama"
+            class="w-full border border-slate-300 rounded-lg p-2 font-medium focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Jenis Pekerjaan</label>
+          <input id="genJenis" type="text" value="FO" placeholder="Contoh: FO / Civil"
+            class="w-full border border-slate-300 rounded-lg p-2 font-medium focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Tanggal Pengajuan Lapangan</label>
+          <input id="genTanggalPengajuan" type="date"
+            class="w-full border border-slate-300 rounded-lg p-2 font-medium focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="text-xs">
+        <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+          <span>Tempelkan Data Mentah (SO Number &amp; Site)</span>
+          <span class="text-[11px] text-slate-400 font-normal">Pisahkan SO dan Site dengan Tab atau Spasi</span>
+        </label>
+        <textarea id="genRawInput" rows="6" placeholder="Contoh tempelan:
+280460400281	JAW-JI-KPN-0058;JAW-JI-KPN-3460
+20260302401	IBS JARIT
+20260302361	IBS TANGGUL WETAN"
+          class="w-full border border-slate-300 rounded-lg p-2.5 font-mono text-[11px] focus:ring-2 focus:ring-blue-500"></textarea>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-1 flex-wrap">
+        <div class="text-[11px] text-slate-500 max-w-sm">
+          <span class="font-semibold text-blue-600">Catatan Keamanan:</span> Kolom Status diset <b>Pending</b>, kolom Approved By &amp; Tgl Approval <b>dikosongkan</b> untuk diisi Admin PM saat verifikasi.
+        </div>
+        <button onclick="generateTrackingTSV()"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition shadow-sm shrink-0 flex items-center gap-1.5">
+          <span class="material-symbols-rounded text-[18px]">auto_fix_high</span>
+          Konversi Format
+        </button>
+      </div>
+
+      <div id="genResultBox" class="hidden space-y-2 pt-3 border-t border-slate-100">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <span id="genCountLabel" class="text-xs font-bold text-slate-700">Hasil Format (0 baris siap tempel):</span>
+          <div class="flex items-center gap-2">
+            <button id="btnCopyTSV" onclick="copyGeneratedTSV()"
+              class="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-sm">
+              <span id="copyIcon" class="material-symbols-rounded text-[16px]">content_copy</span>
+              <span id="copyText">Salin ke Clipboard (Ctrl+V)</span>
+            </button>
+            <a href="https://docs.google.com/spreadsheets/d/1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No/edit?usp=sharing&ouid=102001982908865439766&rtpof=true&sd=true" target="_blank"
+              class="flex items-center gap-1 px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-lg transition">
+              <span class="material-symbols-rounded text-[16px]">open_in_new</span>
+              Buka Sheets
+            </a>
+          </div>
+        </div>
+        <textarea id="genOutputTSV" readonly rows="5"
+          class="w-full border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-mono text-[11px] text-slate-600 focus:outline-none"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <?!= include('Charts'); ?>
+  <?!= include('JavaScript'); ?>
+</body>
+
+</html>

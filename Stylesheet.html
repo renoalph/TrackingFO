@@ -1,0 +1,109 @@
+<!-- Font & Icon Google -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+<style>
+  :root {
+    --brand: #2563eb;
+    --ok: #10b981;
+    --warn: #f59e0b;
+    --crit: #ef4444;
+    --muted: #94a3b8;
+  }
+
+  body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
+
+  .material-symbols-rounded {
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.9rem;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-weight: 700; font-size: 0.8rem; color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .kpi-card {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 0.9rem;
+    padding: 0.85rem; display: flex; flex-direction: column; gap: 0.35rem;
+    position: relative; overflow: hidden;
+  }
+  .kpi-icon {
+    width: 30px; height: 30px; border-radius: 0.6rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .kpi-value { font-size: 1.35rem; font-weight: 800; line-height: 1.1; }
+  .kpi-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.02em; }
+  .kpi-sub { font-size: 0.68rem; color: #94a3b8; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-match { background: #d1fae5; color: #047857; }
+  .badge-gap { background: #fee2e2; color: #b91c1c; }
+  .badge-pending { background: #fef3c7; color: #b45309; }
+
+  .chip-toggle {
+    display: flex; align-items: center; gap: 4px;
+    padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: 600;
+    border: 1px solid #e2e8f0; color: #475569; background: #fff; transition: all .15s;
+  }
+  .chip-toggle:hover { background: #f8fafc; }
+  .chip-toggle.active { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+
+  .pg-btn {
+    width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e2e8f0; color: #475569; background: #fff;
+  }
+  .pg-btn:hover { background: #f8fafc; }
+  .pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: #1e293b; }
+  tr.row-gap { background: #fff5f5; }
+  tr.row-clickable:hover { background: #f8fafc; cursor: pointer; }
+
+  /* Multi-select dropdown */
+  .ms-wrap { position: relative; }
+  .ms-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: 600;
+    border: 1px solid #e2e8f0; color: #475569; background: #fff; white-space: nowrap;
+  }
+  .ms-btn.has-value { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
+  .ms-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 40;
+    width: 230px; max-height: 280px; overflow-y: auto;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(15,23,42,0.12); padding: 8px;
+  }
+  .ms-option { display: flex; align-items: center; gap: 7px; padding: 5px 6px; border-radius: 6px; font-size: 12px; }
+  .ms-option:hover { background: #f1f5f9; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+
+  /* Cegah canvas Chart.js "memanjang tanpa batas": wrapper (div.h-72.relative)
+     punya tinggi tetap, canvas WAJIB absolute agar tidak balik menentukan
+     tinggi wrapper-nya sendiri (mencegah feedback loop tinggi). */
+  .h-72.relative canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .skeleton { background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%); background-size: 400% 100%; animation: sk 1.4s ease infinite; border-radius: 6px; }
+  @keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+</style>
