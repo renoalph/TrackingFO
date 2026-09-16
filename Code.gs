@@ -21,7 +21,8 @@ const CONFIG = {
   DEFAULT_PAGE_SIZE: 50,
   DEFAULT_YEAR_FILTER: '2026', // Default filter tampilan: Proyek Aktif 2026
   APP_TITLE: 'Tracking FO',
-  APP_SUBTITLE: 'Monitoring Milestone & Sinkronisasi Approval Lapangan dengan Sistem Pusat'
+  APP_SUBTITLE: 'Monitoring Milestone & Sinkronisasi Approval Lapangan dengan Sistem Pusat',
+  ADMIN_PIN: '2026' // PIN Admin untuk upload & update data master Excel
 };
 
 // Urutan milestone alur kerja lapangan (dipakai funnel chart & referensi RFS).

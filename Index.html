@@ -9,40 +9,52 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 
   <?!= include('Stylesheet'); ?>
 </head>
 
 <body class="bg-slate-50 text-slate-800 font-sans">
-
   <!-- ============================================================ HEADER ============================================================ -->
   <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
     <div class="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
+        <div
+          class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
           <span class="material-symbols-rounded text-[22px]">router</span>
         </div>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-base md:text-lg font-bold text-slate-900 leading-tight">Tracking FO</h1>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Proyek JATIM</span>
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Proyek
+              JATIM</span>
           </div>
-          <p class="text-xs text-slate-500">Monitoring Milestone &middot; Sinkronisasi Approval Lapangan dengan Sistem Pusat</p>
+          <p class="text-xs text-slate-500">Monitoring Milestone &middot; Sinkronisasi Approval Lapangan dengan Sistem
+            Pusat</p>
         </div>
       </div>
       <div class="flex items-center gap-2.5 flex-wrap">
         <!-- 1 Indikator Tanggal & Waktu Tunggal (Tanpa Emoticon, dengan Icon) -->
-        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm shrink-0">
+        <div
+          class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm shrink-0">
           <span class="material-symbols-rounded text-blue-600 text-[17px]">schedule</span>
           <span id="headerDateDisplay">Memuat waktu...</span>
         </div>
 
-        <a id="btnSpreadsheet" href="https://docs.google.com/spreadsheets/d/1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No/edit?usp=sharing&ouid=102001982908865439766&rtpof=true&sd=true" target="_blank"
+        <button id="btnOpenSpreadsheetPin" onclick="promptSpreadsheetPinModal()"
           class="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-sm whitespace-nowrap"
-          title="Buka Google Spreadsheet">
+          title="Buka Google Spreadsheet (Khusus Admin, perlu PIN)">
           <span class="material-symbols-rounded text-[18px]">table_chart</span>
           Buka Spreadsheet
-        </a>
+        </button>
+
+        <button id="btnOpenUploadMaster" onclick="promptAdminPinModal()"
+          class="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-sm whitespace-nowrap"
+          title="Upload file Excel mentah dan filter otomatis menjadi Kolom Emas ke Google Sheet (Perlu PIN Admin)">
+          <span class="material-symbols-rounded text-[18px]">lock_open</span>
+          Update Data Master (.xlsx)
+        </button>
 
         <button id="btnOpenGenerator" onclick="openGeneratorModal()"
           class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition shadow-sm whitespace-nowrap"
@@ -96,7 +108,8 @@
             <option value="2024">Tahun: 2024</option>
             <option value="Semua Tahun">Semua Portofolio (26k)</option>
           </select>
-          <span class="material-symbols-rounded absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
+          <span
+            class="material-symbols-rounded absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
         </div>
         <div id="msOperator"></div>
         <div id="msKabupaten"></div>
@@ -122,11 +135,11 @@
       </div>
     </section>
 
-    <!-- ============================================================ TABEL ============================================================ -->
+    <!-- ============================================================ TABEL TRACKING HARIAN ============================================================ -->
     <section id="tableSection" class="card overflow-hidden">
       <div class="card-head justify-between">
-        <div class="flex items-center gap-2"><span
-            class="material-symbols-rounded text-slate-400">table_rows</span>Daftar Monitoring Proyek
+        <div class="flex items-center gap-2"><span class="material-symbols-rounded text-blue-600">history_edu</span>Log
+          Tracking Harian Lapangan
           <span id="tableCount" class="text-xs font-normal text-slate-400"></span>
         </div>
         <div class="flex items-center gap-2 text-xs">
@@ -192,7 +205,8 @@
   <!-- ============================================================ MODAL DAFTAR PROYEK KPI (APPROVED HARI INI / MENUNGGU APPROVAL) ============================================================ -->
   <div id="kpiListModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeKpiListModal()"></div>
-    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-100 animate-fadeIn">
+    <div
+      class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-100 animate-fadeIn">
       <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
         <div class="flex items-center gap-3">
           <div id="kpiListIconWrap" class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm">
@@ -201,20 +215,24 @@
           <div>
             <div class="flex items-center gap-2">
               <h3 id="kpiListTitle" class="font-bold text-slate-900 text-sm sm:text-base">Daftar Proyek</h3>
-              <span id="kpiListBadge" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">0</span>
+              <span id="kpiListBadge"
+                class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">0</span>
             </div>
             <p id="kpiListSubtitle" class="text-xs text-slate-500">Memuat data...</p>
           </div>
         </div>
-        <button onclick="closeKpiListModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition">
+        <button onclick="closeKpiListModal()"
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition">
           <span class="material-symbols-rounded">close</span>
         </button>
       </div>
 
       <div class="p-3.5 border-b border-slate-100 bg-white">
         <div class="relative">
-          <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-          <input id="kpiListSearch" type="text" oninput="onKpiListSearch(this.value)" placeholder="Cari SO Number, Site, atau Mitra..."
+          <span
+            class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <input id="kpiListSearch" type="text" oninput="onKpiListSearch(this.value)"
+            placeholder="Cari SO Number, Site, atau Mitra..."
             class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/60 focus:bg-white transition">
         </div>
       </div>
@@ -228,7 +246,8 @@
   <!-- ============================================================ MODAL GENERATOR FORMAT LAPANGAN ============================================================ -->
   <div id="generatorModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeGeneratorModal()"></div>
-    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 border border-slate-100">
+    <div
+      class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 border border-slate-100">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -236,7 +255,8 @@
           </div>
           <div>
             <h3 class="font-bold text-slate-900 text-sm">Generator Format Input Lapangan</h3>
-            <p class="text-xs text-slate-400">Konversi teks SO &amp; Site mentah menjadi format baris siap tempel (Ctrl + V) ke Google Spreadsheet</p>
+            <p class="text-xs text-slate-400">Konversi teks SO &amp; Site mentah menjadi format baris siap tempel (Ctrl
+              + V) ke Google Spreadsheet</p>
           </div>
         </div>
         <button onclick="closeGeneratorModal()" class="text-slate-400 hover:text-slate-700">
@@ -247,7 +267,8 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Tahapan Milestone Lapangan</label>
-          <select id="genTahapan" class="w-full border border-slate-300 rounded-lg p-2 font-medium focus:ring-2 focus:ring-blue-500">
+          <select id="genTahapan"
+            class="w-full border border-slate-300 rounded-lg p-2 font-medium focus:ring-2 focus:ring-blue-500">
             <option value="FO & Civil Works">FO &amp; Civil Works</option>
             <option value="OTDR">OTDR</option>
             <option value="RFS">RFS</option>
@@ -293,7 +314,8 @@
 
       <div class="flex items-center justify-between gap-2 pt-1 flex-wrap">
         <div class="text-[11px] text-slate-500 max-w-sm">
-          <span class="font-semibold text-blue-600">Catatan Keamanan:</span> Kolom Status diset <b>Pending</b>, kolom Approved By &amp; Tgl Approval <b>dikosongkan</b> untuk diisi Admin PM saat verifikasi.
+          <span class="font-semibold text-blue-600">Catatan Keamanan:</span> Kolom Status diset <b>Pending</b>, kolom
+          Approved By &amp; Tgl Approval <b>dikosongkan</b> untuk diisi Admin PM saat verifikasi.
         </div>
         <button onclick="generateTrackingTSV()"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition shadow-sm shrink-0 flex items-center gap-1.5">
@@ -305,21 +327,142 @@
       <div id="genResultBox" class="hidden space-y-2 pt-3 border-t border-slate-100">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <span id="genCountLabel" class="text-xs font-bold text-slate-700">Hasil Format (0 baris siap tempel):</span>
-          <div class="flex items-center gap-2">
-            <button id="btnCopyTSV" onclick="copyGeneratedTSV()"
-              class="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-sm">
-              <span id="copyIcon" class="material-symbols-rounded text-[16px]">content_copy</span>
-              <span id="copyText">Salin ke Clipboard (Ctrl+V)</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="btnDirectSubmitTracking" onclick="confirmAndSubmitTracking()"
+              class="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm">
+              <span id="submitTrackingIcon" class="material-symbols-rounded text-[17px]">send</span>
+              <span id="submitTrackingText">Kirim Langsung ke Tracking</span>
             </button>
-            <a href="https://docs.google.com/spreadsheets/d/1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No/edit?usp=sharing&ouid=102001982908865439766&rtpof=true&sd=true" target="_blank"
-              class="flex items-center gap-1 px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-lg transition">
-              <span class="material-symbols-rounded text-[16px]">open_in_new</span>
-              Buka Sheets
-            </a>
+            <button id="btnCopyTSV" onclick="copyGeneratedTSV()"
+              class="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition border border-slate-200">
+              <span id="copyIcon" class="material-symbols-rounded text-[16px]">content_copy</span>
+              <span id="copyText">Salin Teks (Opsi)</span>
+            </button>
           </div>
         </div>
         <textarea id="genOutputTSV" readonly rows="5"
           class="w-full border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-mono text-[11px] text-slate-600 focus:outline-none"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ MODAL UPLOAD & AUTO-FILTER MASTER DATA (.XLSX) ============================================================ -->
+  <div id="uploadMasterModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeUploadMasterModal()"></div>
+    <div
+      class="relative bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 border border-slate-100 animate-fadeIn">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <span class="material-symbols-rounded text-[22px]">cloud_upload</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Update &amp; Auto-Filter Master Data (.xlsx)</h3>
+            <p class="text-xs text-slate-400">Pilih file Excel mentah &middot; Sistem otomatis mengekstrak 20 Kolom Emas
+            </p>
+          </div>
+        </div>
+        <button onclick="closeUploadMasterModal()" class="text-slate-400 hover:text-slate-700">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <!-- Area Upload Drag & Drop -->
+      <div id="dropZoneMaster"
+        class="border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/40 hover:bg-indigo-50/70 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2"
+        onclick="document.getElementById('fileMasterInput').click()">
+        <input type="file" id="fileMasterInput" accept=".xlsx, .xls, .csv" class="hidden"
+          onchange="handleMasterFileSelect(this.files)">
+        <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-600 mb-1">
+          <span class="material-symbols-rounded text-[28px]">description</span>
+        </div>
+        <div class="text-xs font-bold text-slate-700">Klik atau seret file Excel mentah ke sini</div>
+        <div class="text-[11px] text-slate-400">Mendukung format .xlsx (misal Jatim_ProjectInformation_*.xlsx)</div>
+      </div>
+
+      <!-- Status & Pratinjau Pembersihan -->
+      <div id="uploadMasterPreview"
+        class="hidden space-y-3 bg-slate-50 border border-slate-200/80 rounded-xl p-4 text-xs">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-rounded text-emerald-600 text-[18px]">verified</span>
+            <span id="uploadMasterFileName" class="font-semibold text-slate-800 truncate max-w-[260px]">file.xlsx</span>
+          </div>
+          <span id="uploadMasterFileSize" class="text-slate-400 font-mono text-[11px]">0 MB</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-center pt-1">
+          <div class="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Total Baris Terdeteksi</div>
+            <div id="uploadMasterRowCount" class="text-base font-bold text-indigo-600 font-mono">0</div>
+          </div>
+          <div class="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Kolom Disimpan</div>
+            <div id="uploadMasterColCount" class="text-base font-bold text-emerald-600 font-mono">20 Kolom Emas</div>
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-500 bg-white/80 p-2.5 rounded-lg border border-slate-100">
+          <span class="font-semibold text-indigo-700">Otomatisasi:</span> Kolom konstruksi fisik (soilhammer, PLN,
+          kwhmeter, dll) otomatis dihapus. Hanya 20 kolom penting yang dipertahankan dan diunggah ke Google Sheet.
+        </div>
+      </div>
+
+      <!-- Progress Bar Unggah -->
+      <div id="uploadMasterProgressBox" class="hidden space-y-2">
+        <div class="flex justify-between text-xs font-semibold text-slate-700">
+          <span id="uploadMasterStatusText">Mengunggah ke Sheet...</span>
+          <span id="uploadMasterPercentText" class="font-mono text-indigo-600">0%</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+          <div id="uploadMasterProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
+            style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeUploadMasterModal()"
+          class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold rounded-lg transition">
+          Batal
+        </button>
+        <button id="btnStartMasterUpload" type="button" onclick="startMasterUpload()" disabled
+          class="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition shadow-sm">
+          <span class="material-symbols-rounded text-[17px]">send</span>
+          Mulai Filter &amp; Update Sheet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ MODAL PIN ADMIN ============================================================ -->
+  <div id="adminPinModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeAdminPinModal()"></div>
+    <div
+      class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-100 animate-fadeIn text-center">
+      <div
+        class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center shadow-inner">
+        <span class="material-symbols-rounded text-[26px]">lock</span>
+      </div>
+      <div>
+        <h3 class="font-bold text-slate-900 text-base">Verifikasi Akses Admin</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Masukkan PIN Keamanan untuk memperbarui Data Master Excel</p>
+      </div>
+
+      <div>
+        <input type="password" id="inputAdminPin" maxlength="10" placeholder="Masukkan PIN..."
+          onkeydown="if(event.key==='Enter') submitAdminPin()"
+          class="w-full text-center text-lg tracking-widest font-bold py-2.5 px-4 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        <p id="pinErrorMessage" class="hidden text-xs text-rose-500 font-medium mt-1.5"></p>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 pt-1">
+        <button type="button" onclick="closeAdminPinModal()"
+          class="w-1/2 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold rounded-xl transition">
+          Batal
+        </button>
+        <button type="button" onclick="submitAdminPin()" id="btnSubmitPin"
+          class="w-1/2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-sm">
+          Buka Akses
+        </button>
       </div>
     </div>
   </div>

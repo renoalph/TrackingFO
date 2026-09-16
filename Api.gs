@@ -31,13 +31,18 @@ function getDashboardSummary(forceRefresh) {
     return defaultYearPeriod === 'Semua Tahun' || i.projectYear === defaultYearPeriod;
   });
 
+  const userEmail = (Session.getActiveUser().getEmail() || '').trim().toLowerCase();
+  const canUploadMaster = (userEmail === 'fiberopticjatim@gmail.com');
+
   const payload = {
     summary: computeSummary_(activePeriodMerged, totalMasterRows, defaultYearPeriod),
     charts: computeChartData_(activePeriodMerged),
     filterOptions: data.filterOptions,
     generatedAt: Utilities.formatDate(new Date(), 'GMT+7', 'dd MMM yyyy, HH:mm') + ' WIB',
     totalMasterRows: totalMasterRows,
-    spreadsheetUrl: CONFIG.SPREADSHEET_URL
+    spreadsheetUrl: CONFIG.SPREADSHEET_URL,
+    currentUser: userEmail,
+    canUploadMaster: canUploadMaster
   };
 
   try {
@@ -48,7 +53,7 @@ function getDashboardSummary(forceRefresh) {
   return payload;
 }
 
-const BOOTSTRAP_CACHE_KEY = 'BOOTSTRAP_PAYLOAD_V8';
+const BOOTSTRAP_CACHE_KEY = 'BOOTSTRAP_PAYLOAD_V11';
 
 function isYearMatch_(itemYear, targetPeriod) {
   if (!targetPeriod || targetPeriod === 'Semua Tahun') return true;
@@ -77,17 +82,26 @@ function buildBootstrapPayload_(forceRefresh) {
     activePeriodMerged = data.merged;
   }
 
+  const userEmail = (Session.getActiveUser().getEmail() || '').trim().toLowerCase();
+  const canUploadMaster = (userEmail === 'fiberopticjatim@gmail.com');
+
+  const trackingOnly = (data.merged || []).filter(function (item) {
+    return !!item.hasTracking;
+  });
+
   const now = new Date();
   const payload = {
     summary: computeSummary_(activePeriodMerged, totalMasterRows, defaultYearPeriod),
     charts: computeChartData_(activePeriodMerged),
     filterOptions: data.filterOptions,
-    table: buildTablePayload_(activePeriodMerged, defaultParams),
+    table: buildTablePayload_(trackingOnly, defaultParams),
     generatedAt: Utilities.formatDate(now, 'GMT+7', 'dd/MM/yyyy, HH.mm.ss') + ' WIB',
     tookMs: new Date() - t0,
-    totalRows: activePeriodMerged.length,
+    totalRows: trackingOnly.length,
     totalMasterRows: totalMasterRows,
-    spreadsheetUrl: CONFIG.SPREADSHEET_URL
+    spreadsheetUrl: CONFIG.SPREADSHEET_URL,
+    currentUser: userEmail,
+    canUploadMaster: canUploadMaster
   };
 
   return payload;
@@ -130,10 +144,13 @@ function forceRefreshCache() {
   return payload;
 }
 
-/** Tabel dengan filter + sort + pagination di server. */
+/** Tabel Log Tracking Harian Lapangan (hanya menampilkan proyek yang memiliki pengajuan di Tracking_Harian) */
 function getProjectList(params) {
   const data = getOrBuildDataset_(false);
-  return buildTablePayload_(data.merged, params || {});
+  const trackingOnly = (data.merged || []).filter(function (item) {
+    return !!item.hasTracking;
+  });
+  return buildTablePayload_(trackingOnly, params || {});
 }
 
 function buildTablePayload_(merged, params) {
@@ -141,10 +158,6 @@ function buildTablePayload_(merged, params) {
   const pageSize = Math.min(200, Math.max(10, Number(params.pageSize) || CONFIG.DEFAULT_PAGE_SIZE));
 
   let filtered = applyFilters_(merged, params);
-  // Safety net: jika filter menghasilkan 0 baris dan tidak ada search aktif, tampilkan merged
-  if (filtered.length === 0 && merged.length > 0 && !(params && params.search)) {
-    filtered = merged;
-  }
   if (params.sortBy) filtered = sortItems_(filtered, params.sortBy, params.sortDir === 'desc');
 
   const totalRows = filtered.length;
@@ -386,3 +399,153 @@ function computeChartData_(merged) {
     statusComparison: { categories: categories, aktual: aktual, sistem: sistem }
   };
 }
+
+/**
+ * ============================================================
+ * IMPORT & AUTO-FILTER MASTER DATA (EXCEL BATCH INGESTION)
+ * Menulis data master yang sudah difilter menjadi 18/20 Kolom Emas ke Sheet1.
+ * ============================================================
+ */
+function importMasterDataChunk(headers, rowsChunk, isFirstChunk, isLastChunk, adminPin) {
+  const expectedPin = CONFIG.ADMIN_PIN || '2026';
+  if (String(adminPin).trim() !== String(expectedPin).trim()) {
+    throw new Error('Akses Ditolak: PIN Keamanan Admin tidak valid.');
+  }
+
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(CONFIG.SHEET_MASTER);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.SHEET_MASTER);
+  }
+
+  if (isFirstChunk) {
+    sheet.clearContents();
+    if (headers && headers.length > 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    }
+  }
+
+  if (rowsChunk && rowsChunk.length > 0) {
+    const startRow = sheet.getLastRow() + 1;
+    const numCols = rowsChunk[0].length;
+    sheet.getRange(startRow, 1, rowsChunk.length, numCols).setValues(rowsChunk);
+  }
+
+  if (isLastChunk) {
+    // Segarkan cache dan dataset setelah chunk terakhir selesai
+    forceRefreshCache();
+  }
+
+  return { success: true, processedRows: rowsChunk ? rowsChunk.length : 0, isComplete: !!isLastChunk };
+}
+
+/**
+ * Validasi PIN Admin dari modal
+ */
+function verifyAdminPin(pin) {
+  const expectedPin = CONFIG.ADMIN_PIN || '2026';
+  return { valid: String(pin).trim() === String(expectedPin).trim() };
+}
+
+/**
+ * ============================================================
+ * SUBMIT PENGISIAN TRACKING HARIAN LANGSUNG DARI WEB
+ * Kontraktor submit baris pengajuan, sistem memvalidasi anti-duplikasi,
+ * mengunci status_approval = Pending, dan mengupdate cache.
+ * ============================================================
+ */
+function submitTrackingBatch(records) {
+  if (!records || !records.length) {
+    throw new Error('Tidak ada data yang diajukan.');
+  }
+
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(CONFIG.SHEET_TRACKING);
+  if (!sheet) {
+    throw new Error('Sheet "' + CONFIG.SHEET_TRACKING + '" tidak ditemukan.');
+  }
+
+  const lastRow = sheet.getLastRow();
+  const existingKeys = {};
+
+  // Baca data yang ada untuk deteksi duplikasi (jika sheet sudah ada isinya)
+  if (lastRow >= 2) {
+    const dataRange = sheet.getDataRange().getValues();
+    const headers = dataRange.shift();
+    const col = buildColIndex_(headers);
+    const cSo = col['sonumb'];
+    const cTahapan = col['tahapan'];
+    const cTgl = col['tanggal_pengajuan'];
+
+    if (cSo !== undefined && cTahapan !== undefined && cTgl !== undefined) {
+      dataRange.forEach(function (r) {
+        const so = cleanStr_(r[cSo]);
+        const tahapan = cleanStr_(r[cTahapan]).toLowerCase();
+        let tgl = cleanStr_(r[cTgl]);
+        if (r[cTgl] instanceof Date) {
+          tgl = Utilities.formatDate(r[cTgl], 'GMT+7', 'yyyy-MM-dd');
+        }
+        if (so) {
+          existingKeys[so + '||' + tahapan + '||' + tgl] = true;
+          existingKeys[stripLeadingZero_(so) + '||' + tahapan + '||' + tgl] = true;
+        }
+      });
+    }
+  }
+
+  const newRows = [];
+  let duplicateCount = 0;
+
+  records.forEach(function (rec) {
+    const sonumb = cleanStr_(rec.sonumb);
+    const tahapan = cleanStr_(rec.tahapan);
+    const tgl = cleanStr_(rec.tanggal_pengajuan);
+    const key = sonumb + '||' + tahapan.toLowerCase() + '||' + tgl;
+
+    // Lewati jika kombinasi SO + Tahapan + Tanggal sudah pernah diajukan sebelumnya
+    if (existingKeys[key] || existingKeys[stripLeadingZero_(sonumb) + '||' + tahapan.toLowerCase() + '||' + tgl]) {
+      duplicateCount++;
+      return;
+    }
+
+    // Tandai agar tidak dobel dalam batch yang sama
+    existingKeys[key] = true;
+
+    // Susunan kolom sesuai TRACKING_COLS:
+    // ['sonumb', 'site_id', 'mitra', 'jenis', 'tahapan', 'tanggal_pengajuan', 'status_approval', 'approved_by', 'tanggal_approval', 'remarks']
+    newRows.push([
+      "'" + sonumb,                         // Pastikan format teks agar 0 depan aman
+      cleanStr_(rec.site_id),
+      cleanStr_(rec.mitra),
+      cleanStr_(rec.jenis || 'Project'),
+      tahapan,
+      tgl,
+      'Pending',                            // Otomatis Pending (Anti Manipulasi)
+      '',                                   // approved_by dikosongkan (hanya PM saat verifikasi)
+      '',                                   // tanggal_approval dikosongkan
+      cleanStr_(rec.remarks || '')
+    ]);
+  });
+
+  if (newRows.length === 0) {
+    if (duplicateCount > 0) {
+      throw new Error('Semua data yang diajukan (' + duplicateCount + ' baris) terdeteksi sudah pernah ada di sheet sebelumnya (Duplikat).');
+    }
+    throw new Error('Tidak ada baris data valid untuk ditambahkan.');
+  }
+
+  // Tulis ke Google Sheet
+  const insertStart = sheet.getLastRow() + 1;
+  sheet.getRange(insertStart, 1, newRows.length, 10).setValues(newRows);
+
+  // Segarkan cache agar dashboard langsung update
+  forceRefreshCache();
+
+  return {
+    success: true,
+    insertedCount: newRows.length,
+    duplicateCount: duplicateCount
+  };
+}
+
+

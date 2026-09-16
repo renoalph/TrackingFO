@@ -113,7 +113,10 @@ const MASTER_COL_ALIASES = {
   Project_Manager: ['Project_Manager', 'project_manager', 'pm', 'lead_pm'],
   WaspangName: ['WaspangName', 'waspang', 'FieldController', 'field_controller'],
   STIP_Submit_Date: ['STIP_Submit_Date', 'stip_submit_date', 'stip_date', 'SubmitDate'],
-  STIP_Number: ['STIP_Number', 'stip_number', 'stip number', 'STIPNumber']
+  STIP_Number: ['STIP_Number', 'stip_number', 'stip number', 'STIPNumber'],
+  Supplier_CME: ['Supplier_CME', 'supplier_cme', 'supplier cme', 'vendor_cme', 'vendor'],
+  STIPCategory: ['STIPCategory', 'stipcategory', 'stip_category', 'stip category'],
+  COMPANY_ID: ['COMPANY_ID', 'company_id', 'company']
 };
 
 function normalizeTahapan_(t) {
@@ -249,7 +252,10 @@ function buildMasterMap_(raw, trackingResult) {
       pm: col.Project_Manager !== undefined ? cleanStr_(row[col.Project_Manager]) : '',
       waspang: col.WaspangName !== undefined ? cleanStr_(row[col.WaspangName]) : '',
       masterRfsDate: rfsDate,
-      rfiDate: rfiDate
+      rfiDate: rfiDate,
+      supplierCme: col.Supplier_CME !== undefined ? cleanStr_(row[col.Supplier_CME]) : '',
+      stipCategory: col.STIPCategory !== undefined ? cleanStr_(row[col.STIPCategory]) : '',
+      companyId: col.COMPANY_ID !== undefined ? cleanStr_(row[col.COMPANY_ID]) : ''
     };
 
     map[key] = entry;
@@ -467,6 +473,10 @@ function mergeData_(masterResult, trackingResult) {
       pm: m.pm,
       waspang: m.waspang,
       masterRfsDate: m.masterRfsDate ? formatDate_(m.masterRfsDate) : '',
+      rfiDate: m.rfiDate ? formatDate_(m.rfiDate) : '',
+      supplierCme: m.supplierCme || '',
+      stipCategory: m.stipCategory || '',
+      companyId: m.companyId || '',
 
       // STIP Number: gunakan STIP_Number dari Master jika ada, fallback ke site_id dari Tracking
       stipNumber: m.stipNumber || (t ? t.siteId : ''),

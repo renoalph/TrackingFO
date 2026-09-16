@@ -21,15 +21,15 @@
 
   const TABLE_COLUMNS = [
     { key: 'sonumb', label: 'SO Number', sortable: true },
-    { key: 'siteName', label: 'Site Name', sortable: true },
-    { key: 'operatorId', label: 'Operator', sortable: true },
-    { key: 'kabupaten', label: 'Kabupaten', sortable: true },
+    { key: 'siteName', label: 'Site / Site ID', sortable: true },
     { key: 'mitra', label: 'Mitra', sortable: true },
-    { key: 'stipNumber', label: 'STIP Number', sortable: true },
-    { key: 'tahapanMaster', label: 'Update Sistem', sortable: true },
-    { key: 'tahapan', label: 'Update Aktual', sortable: true },
-    { key: 'tanggalUpdateDisplay', label: 'Tgl Update', sortable: false },
-    { key: 'statusBadge', label: 'Status', sortable: true }
+    { key: 'jenis', label: 'Jenis', sortable: true },
+    { key: 'tahapan', label: 'Tahapan Pengajuan', sortable: true },
+    { key: 'tanggalPengajuan', label: 'Tgl Pengajuan', sortable: true },
+    { key: 'statusApproval', label: 'Status Approval', sortable: true },
+    { key: 'approvedBy', label: 'Disetujui Oleh', sortable: true },
+    { key: 'tanggalApproval', label: 'Tgl Approval', sortable: true },
+    { key: 'remarks', label: 'Remarks', sortable: false }
   ];
 
   const MULTISELECT_DEFS = [
@@ -254,8 +254,8 @@
         '<div class="kpi-icon" style="background:' + d.bg + ';color:' + d.color + '"><span class="material-symbols-rounded">' + d.icon + '</span></div>' +
         '<div class="kpi-value" style="color:' + d.color + '">' + display + '</div>' +
         '<div class="kpi-label flex items-center justify-between">' +
-          '<span>' + d.label + '</span>' +
-          (isPopup ? '<span class="material-symbols-rounded text-slate-300 text-[14px]">open_in_new</span>' : '<span class="material-symbols-rounded text-slate-300 text-[14px]">arrow_downward</span>') +
+        '<span>' + d.label + '</span>' +
+        (isPopup ? '<span class="material-symbols-rounded text-slate-300 text-[14px]">open_in_new</span>' : '<span class="material-symbols-rounded text-slate-300 text-[14px]">arrow_downward</span>') +
         '</div>' +
         (d.sub ? '<div class="kpi-sub">' + d.sub + '</div>' : '') +
         '</div>';
@@ -287,14 +287,14 @@
     container.className = 'ms-wrap';
     container.innerHTML =
       '<button type="button" class="ms-btn ' + (selected.length ? 'has-value' : '') + '" data-ms-toggle-panel="' + panelId + '">' +
-        '<span class="material-symbols-rounded text-[15px]">tune</span>' + escapeHtml(btnLabel) +
-        '<span class="material-symbols-rounded text-[15px]">expand_more</span>' +
+      '<span class="material-symbols-rounded text-[15px]">tune</span>' + escapeHtml(btnLabel) +
+      '<span class="material-symbols-rounded text-[15px]">expand_more</span>' +
       '</button>' +
       '<div id="' + panelId + '" class="ms-panel hidden" data-filter-key="' + filterKey + '" data-container-id="' + containerId + '">' +
-        (options.length ? options.map(function (opt) {
-          const checked = selected.indexOf(opt.value) !== -1 ? 'checked' : '';
-          return '<label class="ms-option"><input type="checkbox" ' + checked + ' data-ms-value="' + escapeHtml(opt.value) + '"> ' + escapeHtml(opt.label) + '</label>';
-        }).join('') : '<div class="text-xs text-slate-400 p-2">Tidak ada opsi</div>') +
+      (options.length ? options.map(function (opt) {
+        const checked = selected.indexOf(opt.value) !== -1 ? 'checked' : '';
+        return '<label class="ms-option"><input type="checkbox" ' + checked + ' data-ms-value="' + escapeHtml(opt.value) + '"> ' + escapeHtml(opt.label) + '</label>';
+      }).join('') : '<div class="text-xs text-slate-400 p-2">Tidak ada opsi</div>') +
       '</div>';
   }
 
@@ -454,26 +454,27 @@
         if (item.key) state.tableItemsMap[item.key] = item;
         if (item.sonumb) state.tableItemsMap[item.sonumb] = item;
       }
-      const rowClass = 'row-clickable' + (item.statusBadge === 'GAP' ? ' row-gap' : '');
-      const rawDate = item.tanggalApproval || item.tanggalPengajuan || '-';
-      const tglUpdate = formatDisplayDate(rawDate);
-      const updateAktual = item.tahapan
-        ? (escapeHtml(item.tahapan) + (item.statusApproval ? ' <span class="text-slate-400">(' + escapeHtml(item.statusApproval) + ')</span>' : ''))
-        : '<span class="text-slate-400">Belum ada pengajuan</span>';
+      const rowClass = 'row-clickable';
+      const tglAjuan = formatDisplayDate(item.tanggalPengajuan || '-');
+      const tglApprove = formatDisplayDate(item.tanggalApproval || '-');
+      const statusAppr = item.statusApproval ? String(item.statusApproval).trim() : 'Belum Ada';
+      const isDone = statusAppr.toLowerCase() === 'done';
+      const isPending = statusAppr.toLowerCase() === 'pending';
+      const badgeClass = isDone ? 'badge-match' : (isPending ? 'badge-pending' : 'bg-slate-100 text-slate-500');
 
       return '<tr class="' + rowClass + '" data-key="' + escapeHtml(item.key) + '">' +
-        '<td class="p-3 font-semibold text-slate-900">' + escapeHtml(item.sonumb) +
-          (item.ambiguousTracking ? ' <span class="material-symbols-rounded text-[13px] text-amber-500 align-middle" title="Kecocokan tracking ambigu (SO intersite)">help</span>' : '') +
+        '<td class="p-3 font-semibold text-slate-900 font-mono">' + escapeHtml(item.sonumb) +
+        (item.ambiguousTracking ? ' <span class="material-symbols-rounded text-[13px] text-amber-500 align-middle" title="Kecocokan tracking ambigu (SO intersite)">help</span>' : '') +
         '</td>' +
-        '<td class="p-3">' + escapeHtml(item.siteName) + '</td>' +
-        '<td class="p-3">' + escapeHtml(item.operatorId) + '</td>' +
-        '<td class="p-3 text-slate-600">' + escapeHtml(item.kabupaten || '-') + '</td>' +
-        '<td class="p-3">' + escapeHtml(item.mitra || '-') + '</td>' +
-        '<td class="p-3">' + escapeHtml(item.stipNumber || '-') + '</td>' +
-        '<td class="p-3">' + escapeHtml(item.tahapanMaster || '-') + '</td>' +
-        '<td class="p-3">' + updateAktual + '</td>' +
-        '<td class="p-3 text-slate-500">' + escapeHtml(tglUpdate) + '</td>' +
-        '<td class="p-3"><span class="badge ' + badgeClass(item.statusBadge) + '">' + escapeHtml(labelBadge(item.statusBadge)) + '</span></td>' +
+        '<td class="p-3 font-medium text-slate-800">' + escapeHtml(item.siteName || item.stipNumber || '-') + '</td>' +
+        '<td class="p-3 text-slate-700">' + escapeHtml(item.mitra || '-') + '</td>' +
+        '<td class="p-3 text-slate-500">' + escapeHtml(item.jenis || 'FO') + '</td>' +
+        '<td class="p-3 font-semibold text-blue-700">' + escapeHtml(item.tahapan || item.tahapanMaster || '-') + '</td>' +
+        '<td class="p-3 text-slate-600">' + escapeHtml(tglAjuan) + '</td>' +
+        '<td class="p-3"><span class="badge ' + badgeClass + '">' + escapeHtml(statusAppr) + '</span></td>' +
+        '<td class="p-3 text-slate-700 font-medium">' + escapeHtml(item.approvedBy || '-') + '</td>' +
+        '<td class="p-3 text-slate-600">' + escapeHtml(tglApprove) + '</td>' +
+        '<td class="p-3 text-slate-500 max-w-[200px] truncate" title="' + escapeHtml(item.remarks || '-') + '">' + escapeHtml(item.remarks || '-') + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -481,8 +482,8 @@
   function updatePaginationUI() {
     document.getElementById('pageNumDisplay').innerText = state.page + ' / ' + state.totalPages;
     document.getElementById('pageInfo').innerText =
-      'Halaman ' + state.page + ' dari ' + state.totalPages + ' (' + state.totalRows.toLocaleString('id-ID') + ' proyek cocok filter)';
-    document.getElementById('tableCount').innerText = '(' + state.totalRows.toLocaleString('id-ID') + ' proyek)';
+      'Halaman ' + state.page + ' dari ' + state.totalPages + ' (' + state.totalRows.toLocaleString('id-ID') + ' log pengajuan)';
+    document.getElementById('tableCount').innerText = '(' + state.totalRows.toLocaleString('id-ID') + ' baris)';
   }
 
   function gotoPage(p) {
@@ -584,11 +585,14 @@
     const rows = [
       ['SO Number', it.sonumb], ['STIP Number', it.stipNumber || '-'],
       ['Nama Site', it.siteName], ['Operator', it.operatorId],
-      ['Mitra', it.mitra || '-'], ['Jenis', it.jenis || '-'],
-      ['Update Sistem (Master)', it.tahapanMaster || '-'], ['Status Master', it.statusMaster || '-'],
-      ['Update Aktual (Tracking)', it.tahapan || '-'], ['Status Approval', it.statusApproval || '-'],
+      ['Site Type', it.siteType || '-'], ['Company ID', it.companyId || '-'],
+      ['STIP Category', it.stipCategory || '-'], ['Supplier CME', it.supplierCme || '-'],
+      ['Mitra Lapangan', it.mitra || '-'], ['Jenis', it.jenis || '-'],
+      ['Tahapan Project (Master)', it.tahapanMaster || '-'], ['Status Master', it.statusMaster || '-'],
+      ['Tahapan Lapangan', it.tahapan || '-'], ['Status Approval', it.statusApproval || '-'],
       ['Disetujui Oleh', it.approvedBy || '-'], ['Tgl Pengajuan', it.tanggalPengajuan || '-'],
-      ['Tgl Approval', it.tanggalApproval || '-'], ['Tgl RFS Master', it.masterRfsDate || '-']
+      ['Tgl Approval', it.tanggalApproval || '-'], ['Tgl RFI', it.rfiDate || '-'],
+      ['Tgl RFS Master', it.masterRfsDate || '-']
     ];
 
     let html = '<div class="flex flex-wrap items-center gap-2">' +
@@ -681,7 +685,6 @@
       title.textContent = 'Daftar Proyek Sudah RFS';
       subtitle.textContent = 'Proyek yang telah selesai pengerjaannya (Ready For Service)';
     }
-
     badge.textContent = '...';
     body.innerHTML = '<div class="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">' +
       '<span class="material-symbols-rounded text-2xl spin text-blue-500">autorenew</span>' +
@@ -713,11 +716,11 @@
     } else {
       state.kpiModalFiltered = state.kpiModalItems.filter(function (it) {
         return (it.sonumb && it.sonumb.toLowerCase().indexOf(q) !== -1) ||
-               (it.siteName && it.siteName.toLowerCase().indexOf(q) !== -1) ||
-               (it.kabupaten && it.kabupaten.toLowerCase().indexOf(q) !== -1) ||
-               (it.operatorId && it.operatorId.toLowerCase().indexOf(q) !== -1) ||
-               (it.mitra && it.mitra.toLowerCase().indexOf(q) !== -1) ||
-               (it.tahapan && it.tahapan.toLowerCase().indexOf(q) !== -1);
+          (it.siteName && it.siteName.toLowerCase().indexOf(q) !== -1) ||
+          (it.kabupaten && it.kabupaten.toLowerCase().indexOf(q) !== -1) ||
+          (it.operatorId && it.operatorId.toLowerCase().indexOf(q) !== -1) ||
+          (it.mitra && it.mitra.toLowerCase().indexOf(q) !== -1) ||
+          (it.tahapan && it.tahapan.toLowerCase().indexOf(q) !== -1);
       });
     }
     renderKpiListTable(state.kpiModalFiltered);
@@ -734,15 +737,15 @@
       '<table class="w-full text-left text-xs border-collapse">' +
       '<thead class="bg-slate-50 text-slate-600 uppercase font-semibold text-[11px] border-b border-slate-200">' +
       '<tr>' +
-        '<th class="p-3 w-10 text-center">No</th>' +
-        '<th class="p-3">SO Number</th>' +
-        '<th class="p-3">Nama Site</th>' +
-        '<th class="p-3">Kabupaten</th>' +
-        '<th class="p-3">Mitra</th>' +
-        '<th class="p-3">Tahapan</th>' +
-        '<th class="p-3">Tgl Update / Ajuan</th>' +
-        '<th class="p-3">Status</th>' +
-        '<th class="p-3 text-center w-20">Aksi</th>' +
+      '<th class="p-3 w-10 text-center">No</th>' +
+      '<th class="p-3">SO Number</th>' +
+      '<th class="p-3">Nama Site</th>' +
+      '<th class="p-3">Kabupaten</th>' +
+      '<th class="p-3">Mitra</th>' +
+      '<th class="p-3">Tahapan</th>' +
+      '<th class="p-3">Tgl Update / Ajuan</th>' +
+      '<th class="p-3">Status</th>' +
+      '<th class="p-3 text-center w-20">Aksi</th>' +
       '</tr>' +
       '</thead>' +
       '<tbody class="divide-y divide-slate-100 bg-white">';
@@ -773,11 +776,11 @@
         '<td class="p-3 text-slate-500">' + escapeHtml(formatDisplayDate(tgl)) + '</td>' +
         '<td class="p-3">' + badgeHtml + '</td>' +
         '<td class="p-3 text-center">' +
-          '<button type="button" onclick="openDetailFromKpi(\'' + escapeHtml(it.key) + '\')" class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">' +
-            'Detail' +
-          '</button>' +
+        '<button type="button" onclick="openDetailFromKpi(\'' + escapeHtml(it.key) + '\')" class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">' +
+        'Detail' +
+        '</button>' +
         '</td>' +
-      '</tr>';
+        '</tr>';
     });
 
     html += '</tbody></table></div>';
@@ -821,6 +824,7 @@
 
     const lines = raw.split(/\r?\n/);
     const rows = [];
+    const parsedRecords = [];
 
     lines.forEach(function (line) {
       const trimmed = line.trim();
@@ -859,6 +863,16 @@
             'Pengajuan ' + tahapan + ' oleh ' + mitra // remarks
           ].join('\t');
           rows.push(rowTsv);
+
+          parsedRecords.push({
+            sonumb: so,
+            site_id: siteId,
+            mitra: mitra,
+            jenis: jenis,
+            tahapan: tahapan,
+            tanggal_pengajuan: tglAjuan,
+            remarks: 'Pengajuan ' + tahapan + ' oleh ' + mitra
+          });
         }
       }
     });
@@ -873,8 +887,74 @@
     }
 
     outputTextarea.value = rows.join('\n');
-    countLabel.textContent = 'Hasil Format (' + rows.length + ' baris siap tempel di kolom A baris terakhir):';
+    countLabel.textContent = 'Hasil Format (' + rows.length + ' baris siap dikirim):';
     resultBox.classList.remove('hidden');
+
+    // Simpan objek terstruktur untuk pengiriman langsung
+    window.generatedTrackingRecords = parsedRecords;
+  }
+
+  function confirmAndSubmitTracking() {
+    const records = window.generatedTrackingRecords;
+    if (!records || !records.length) {
+      alert('Tidak ada data pengajuan yang valid. Silakan klik "Konversi Format" terlebih dahulu.');
+      return;
+    }
+
+    const tgl = records[0].tanggal_pengajuan || 'hari ini';
+    const tahapan = records[0].tahapan || '';
+    const mitra = records[0].mitra || '';
+    const promptMsg = 'Kirim ' + records.length + ' baris data pengajuan berikut langsung ke Google Sheet?\n\n' +
+      '• Mitra: ' + mitra + '\n' +
+      '• Tahapan: ' + tahapan + '\n' +
+      '• Tanggal Pengajuan: ' + tgl + '\n' +
+      '• Status: Otomatis diset "Pending" untuk verifikasi PM\n\n' +
+      'Lanjutkan pengiriman?';
+
+    if (!confirm(promptMsg)) return;
+
+    const btn = document.getElementById('btnDirectSubmitTracking');
+    const btnText = document.getElementById('submitTrackingText');
+    const btnIcon = document.getElementById('submitTrackingIcon');
+
+    btn.disabled = true;
+    btn.classList.add('opacity-70');
+    btnText.textContent = 'Mengirim data...';
+    btnIcon.textContent = 'sync';
+    btnIcon.classList.add('animate-spin');
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
+        btnText.textContent = 'Kirim Langsung ke Tracking';
+        btnIcon.textContent = 'send';
+        btnIcon.classList.remove('animate-spin');
+
+        let msg = 'Berhasil! ' + res.insertedCount + ' baris pengajuan berhasil dicatat ke Tracking Harian.';
+        if (res.duplicateCount > 0) {
+          msg += '\n(' + res.duplicateCount + ' baris diabaikan karena terdeteksi duplikat pada tanggal & tahapan yang sama)';
+        }
+        alert(msg);
+
+        // Bersihkan form & tutup modal
+        document.getElementById('genRawInput').value = '';
+        document.getElementById('genResultBox').classList.add('hidden');
+        window.generatedTrackingRecords = [];
+        closeGeneratorModal();
+
+        // Segarkan data dashboard
+        refreshAll(true);
+      })
+      .withFailureHandler(function (err) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
+        btnText.textContent = 'Kirim Langsung ke Tracking';
+        btnIcon.textContent = 'send';
+        btnIcon.classList.remove('animate-spin');
+        alert('Gagal mengirim data: ' + (err.message || err));
+      })
+      .submitTrackingBatch(records);
   }
 
   function copyGeneratedTSV() {
@@ -909,6 +989,275 @@
       copyText.textContent = prevText;
       copyIcon.textContent = 'content_copy';
     }, 2500);
+  }
+
+  // ---------------------------------------------------------------
+  // UPLOAD & AUTO-FILTER MASTER EXCEL (.XLSX)
+  // ---------------------------------------------------------------
+
+  const MASTER_UPLOAD_GOLDEN_COLS = [
+    'sonumb', 'Site_Type', 'operator_id', 'Tahapan_Project', 'Supplier_CME', 'RFI_date',
+    'STIPCategory', 'COMPANY_ID', 'SONumberNew', 'STIP_Number', 'SiteName', 'Status',
+    'kabupaten_name', 'CLUSTER', 'Project_Manager', 'WaspangName', 'SubmitDate',
+    'IntegrationDate', 'latitude', 'longitude'
+  ];
+
+  const MASTER_UPLOAD_ALIASES = {
+    'sonumb': ['sonumb', 'so_number', 'so number'],
+    'Site_Type': ['Site_Type', 'site_type', 'sitetype'],
+    'operator_id': ['operator_id', 'operator', 'operator id'],
+    'Tahapan_Project': ['Tahapan_Project', 'tahapan_project', 'tahapan'],
+    'Supplier_CME': ['Supplier_CME', 'supplier_cme', 'supplier cme', 'vendor_cme', 'vendor'],
+    'RFI_date': ['RFI_date', 'rfi_date', 'rfi date'],
+    'STIPCategory': ['STIPCategory', 'stipcategory', 'stip_category', 'stip category'],
+    'COMPANY_ID': ['COMPANY_ID', 'company_id', 'company'],
+    'SONumberNew': ['SONumberNew', 'sonumber_new', 'so number new'],
+    'STIP_Number': ['STIP_Number', 'stip_number', 'stip number'],
+    'SiteName': ['SiteName', 'sitename', 'site_name'],
+    'Status': ['Status', 'status_project', 'status'],
+    'kabupaten_name': ['kabupaten_name', 'kabupaten', 'city'],
+    'CLUSTER': ['CLUSTER', 'cluster'],
+    'Project_Manager': ['Project_Manager', 'project_manager', 'pm'],
+    'WaspangName': ['WaspangName', 'FieldController', 'waspang', 'field_controller'],
+    'SubmitDate': ['SubmitDate', 'STIP_Submit_Date', 'stip_submit_date', 'stip_date'],
+    'IntegrationDate': ['IntegrationDate', 'RFS_FinishAactual', 'latest_updated_date', 'rfs_actual'],
+    'latitude': ['latitude', 'lat'],
+    'longitude': ['longitude', 'long', 'lng']
+  };
+
+  let masterUploadState = {
+    file: null,
+    headers: [],
+    rows: [],
+    totalRows: 0
+  };
+
+  let currentVerifiedPin = '';
+  let pinActionTarget = 'upload'; // 'upload' | 'spreadsheet'
+
+  function promptAdminPinModal() {
+    pinActionTarget = 'upload';
+    currentVerifiedPin = '';
+    const input = document.getElementById('inputAdminPin');
+    const err = document.getElementById('pinErrorMessage');
+    if (input) input.value = '';
+    if (err) err.classList.add('hidden');
+    document.getElementById('adminPinModal').classList.remove('hidden');
+    setTimeout(function () { if (input) input.focus(); }, 150);
+  }
+
+  function promptSpreadsheetPinModal() {
+    pinActionTarget = 'spreadsheet';
+    currentVerifiedPin = '';
+    const input = document.getElementById('inputAdminPin');
+    const err = document.getElementById('pinErrorMessage');
+    if (input) input.value = '';
+    if (err) err.classList.add('hidden');
+    document.getElementById('adminPinModal').classList.remove('hidden');
+    setTimeout(function () { if (input) input.focus(); }, 150);
+  }
+
+  function closeAdminPinModal() {
+    document.getElementById('adminPinModal').classList.add('hidden');
+  }
+
+  function submitAdminPin() {
+    const input = document.getElementById('inputAdminPin');
+    const err = document.getElementById('pinErrorMessage');
+    const pin = (input ? input.value : '').trim();
+
+    if (!pin) {
+      if (err) { err.textContent = 'Masukkan PIN terlebih dahulu!'; err.classList.remove('hidden'); }
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitPin');
+    btn.disabled = true;
+    btn.textContent = 'Memeriksa...';
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        btn.disabled = false;
+        btn.textContent = 'Buka Akses';
+        if (res && res.valid) {
+          currentVerifiedPin = pin;
+          closeAdminPinModal();
+          if (pinActionTarget === 'spreadsheet') {
+            const sheetUrl = (state.spreadsheetUrl) || 'https://docs.google.com/spreadsheets/d/1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No/edit?usp=sharing';
+            window.open(sheetUrl, '_blank');
+          } else {
+            openUploadMasterModal();
+          }
+        } else {
+          if (err) { err.textContent = 'PIN salah! Silakan coba lagi.'; err.classList.remove('hidden'); }
+          if (input) { input.value = ''; input.focus(); }
+        }
+      })
+      .withFailureHandler(function () {
+        btn.disabled = false;
+        btn.textContent = 'Buka Akses';
+        if (err) { err.textContent = 'Gagal verifikasi PIN ke server.'; err.classList.remove('hidden'); }
+      })
+      .verifyAdminPin(pin);
+  }
+
+  function openUploadMasterModal() {
+    masterUploadState = { file: null, headers: [], rows: [], totalRows: 0 };
+    document.getElementById('fileMasterInput').value = '';
+    document.getElementById('uploadMasterPreview').classList.add('hidden');
+    document.getElementById('uploadMasterProgressBox').classList.add('hidden');
+    document.getElementById('btnStartMasterUpload').disabled = true;
+    document.getElementById('btnStartMasterUpload').innerHTML = '<span class="material-symbols-rounded text-[17px]">send</span> Mulai Filter &amp; Update Sheet';
+    document.getElementById('uploadMasterModal').classList.remove('hidden');
+  }
+
+  function closeUploadMasterModal() {
+    document.getElementById('uploadMasterModal').classList.add('hidden');
+  }
+
+  function handleMasterFileSelect(files) {
+    if (!files || !files.length) return;
+    const file = files[0];
+    masterUploadState.file = file;
+
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+    document.getElementById('uploadMasterFileName').textContent = file.name;
+    document.getElementById('uploadMasterFileSize').textContent = sizeMb + ' MB';
+    document.getElementById('uploadMasterRowCount').textContent = 'Membaca file...';
+    document.getElementById('uploadMasterPreview').classList.remove('hidden');
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        if (typeof XLSX === 'undefined') {
+          alert('Library XLSX belum dimuat. Mohon periksa koneksi internet Anda.');
+          return;
+        }
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // Ekstrak sebagai array of array (header + baris)
+        const sheetJson = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        if (!sheetJson || sheetJson.length < 2) {
+          alert('File Excel tidak memiliki data atau baris kosong.');
+          return;
+        }
+
+        const rawHeaders = sheetJson[0];
+        const rawRows = sheetJson.slice(1);
+
+        // Buat map index header kolom asli
+        const headerMap = {};
+        rawHeaders.forEach(function (h, idx) {
+          if (h !== null && h !== undefined) {
+            const clean = String(h).trim().toLowerCase().replace(/[\s_]/g, '');
+            headerMap[clean] = idx;
+          }
+        });
+
+        // Petakan ke 20 Kolom Emas
+        const colIndices = [];
+        MASTER_UPLOAD_GOLDEN_COLS.forEach(function (colName) {
+          const aliases = MASTER_UPLOAD_ALIASES[colName] || [colName];
+          let matchedIdx = -1;
+          for (let i = 0; i < aliases.length; i++) {
+            const norm = aliases[i].toLowerCase().replace(/[\s_]/g, '');
+            if (headerMap[norm] !== undefined) {
+              matchedIdx = headerMap[norm];
+              break;
+            }
+          }
+          colIndices.push(matchedIdx);
+        });
+
+        // Filter tiap baris menjadi tepat 20 kolom emas
+        const filteredRows = [];
+        for (let r = 0; r < rawRows.length; r++) {
+          const rawRow = rawRows[r];
+          // Cek apakah baris tidak sepenuhnya kosong
+          const hasVal = rawRow.some(function (cell) { return cell !== '' && cell !== null && cell !== undefined; });
+          if (!hasVal) continue;
+
+          const newRow = [];
+          for (let c = 0; c < colIndices.length; c++) {
+            const idx = colIndices[c];
+            const val = (idx !== -1 && rawRow[idx] !== undefined && rawRow[idx] !== null) ? String(rawRow[idx]).trim() : '';
+            newRow.push(val);
+          }
+          filteredRows.push(newRow);
+        }
+
+        masterUploadState.headers = MASTER_UPLOAD_GOLDEN_COLS;
+        masterUploadState.rows = filteredRows;
+        masterUploadState.totalRows = filteredRows.length;
+
+        document.getElementById('uploadMasterRowCount').textContent = filteredRows.length.toLocaleString() + ' Baris';
+        document.getElementById('btnStartMasterUpload').disabled = false;
+      } catch (err) {
+        alert('Gagal membaca file Excel: ' + (err.message || err));
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function startMasterUpload() {
+    if (!masterUploadState.rows || !masterUploadState.rows.length) return;
+
+    const totalRows = masterUploadState.rows.length;
+    const CHUNK_SIZE = 1500; // Batch aman per request GAS
+    const totalChunks = Math.ceil(totalRows / CHUNK_SIZE);
+    let currentChunk = 0;
+
+    const btn = document.getElementById('btnStartMasterUpload');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-rounded text-[17px] animate-spin">sync</span> Mengunggah...';
+
+    const progressBox = document.getElementById('uploadMasterProgressBox');
+    const progressBar = document.getElementById('uploadMasterProgressBar');
+    const statusText = document.getElementById('uploadMasterStatusText');
+    const percentText = document.getElementById('uploadMasterPercentText');
+    progressBox.classList.remove('hidden');
+
+    function sendNextChunk() {
+      const start = currentChunk * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, totalRows);
+      const chunkRows = masterUploadState.rows.slice(start, end);
+      const isFirst = (currentChunk === 0);
+      const isLast = (currentChunk === totalChunks - 1);
+
+      const percent = Math.round(((start + chunkRows.length) / totalRows) * 100);
+      progressBar.style.width = percent + '%';
+      percentText.textContent = percent + '%';
+      statusText.textContent = 'Mengunggah batch ' + (currentChunk + 1) + ' dari ' + totalChunks + ' (' + (start + chunkRows.length).toLocaleString() + '/' + totalRows.toLocaleString() + ' baris)...';
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          currentChunk++;
+          if (!isLast) {
+            sendNextChunk();
+          } else {
+            progressBar.style.width = '100%';
+            percentText.textContent = '100%';
+            statusText.textContent = 'Selesai! Data master berhasil diperbarui.';
+            btn.innerHTML = '<span class="material-symbols-rounded text-[17px]">check_circle</span> Selesai';
+            setTimeout(function () {
+              closeUploadMasterModal();
+              refreshAll(true);
+            }, 1200);
+          }
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = '<span class="material-symbols-rounded text-[17px]">send</span> Coba Lagi';
+          statusText.textContent = 'Gagal mengunggah batch: ' + (err.message || err);
+          alert('Terjadi kesalahan saat mengunggah data: ' + (err.message || err));
+        })
+        .importMasterDataChunk(masterUploadState.headers, chunkRows, isFirst, isLast, currentVerifiedPin);
+    }
+
+    sendNextChunk();
   }
 
   // ---------------------------------------------------------------

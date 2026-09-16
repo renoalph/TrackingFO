@@ -22,8 +22,8 @@ const CACHE_FIELDS = [
 /** Kolom ringan yang dikirim ke browser untuk render tabel */
 const TABLE_PAYLOAD_FIELDS = [
   'key', 'sonumb', 'siteName', 'operatorId', 'kabupaten', 'mitra', 'stipNumber',
-  'tahapanMaster', 'tahapan', 'statusApproval', 'tanggalPengajuan',
-  'tanggalApproval', 'statusBadge', 'ambiguousTracking', 'projectYear'
+  'jenis', 'tahapanMaster', 'tahapan', 'statusApproval', 'approvedBy', 'tanggalPengajuan',
+  'tanggalApproval', 'remarks', 'statusBadge', 'ambiguousTracking', 'projectYear'
 ];
 
 /**
@@ -37,7 +37,7 @@ function getOrBuildDataset_(forceRefresh) {
   return rebuildAndCache_();
 }
 
-const CACHE_VERSION = 'V_2026_LEAN_8';
+const CACHE_VERSION = 'V_2026_LEAN_10';
 
 function isCacheValid_() {
   const props = PropertiesService.getScriptProperties();
