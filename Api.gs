@@ -40,7 +40,6 @@ function getDashboardSummary(forceRefresh) {
     filterOptions: data.filterOptions,
     generatedAt: Utilities.formatDate(new Date(), 'GMT+7', 'dd MMM yyyy, HH:mm') + ' WIB',
     totalMasterRows: totalMasterRows,
-    spreadsheetUrl: CONFIG.SPREADSHEET_URL,
     currentUser: userEmail,
     canUploadMaster: canUploadMaster
   };
@@ -99,7 +98,6 @@ function buildBootstrapPayload_(forceRefresh) {
     tookMs: new Date() - t0,
     totalRows: trackingOnly.length,
     totalMasterRows: totalMasterRows,
-    spreadsheetUrl: CONFIG.SPREADSHEET_URL,
     currentUser: userEmail,
     canUploadMaster: canUploadMaster
   };
@@ -444,7 +442,11 @@ function importMasterDataChunk(headers, rowsChunk, isFirstChunk, isLastChunk, ad
  */
 function verifyAdminPin(pin) {
   const expectedPin = CONFIG.ADMIN_PIN || '2026';
-  return { valid: String(pin).trim() === String(expectedPin).trim() };
+  const isValid = String(pin).trim() === String(expectedPin).trim();
+  return {
+    valid: isValid,
+    spreadsheetUrl: isValid ? CONFIG.SPREADSHEET_URL : ''
+  };
 }
 
 /**

@@ -218,10 +218,6 @@
     try {
       state.filterOptions = res.filterOptions || {};
       buildMultiSelects();
-      if (res.spreadsheetUrl) {
-        const btn = document.getElementById('btnSpreadsheet');
-        if (btn) btn.href = res.spreadsheetUrl;
-      }
     } catch (errFilters) {
       console.error('Error filter options:', errFilters);
     }
@@ -1083,8 +1079,11 @@
           currentVerifiedPin = pin;
           closeAdminPinModal();
           if (pinActionTarget === 'spreadsheet') {
-            const sheetUrl = (state.spreadsheetUrl) || 'https://docs.google.com/spreadsheets/d/1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No/edit?usp=sharing';
-            window.open(sheetUrl, '_blank');
+            if (res.spreadsheetUrl) {
+              window.open(res.spreadsheetUrl, '_blank');
+            } else {
+              alert('Gagal membuka spreadsheet: URL tidak tersedia atau akses ditolak.');
+            }
           } else {
             openUploadMasterModal();
           }

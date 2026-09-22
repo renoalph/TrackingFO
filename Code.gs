@@ -9,9 +9,41 @@
  *   status_approval (Done/Pending), approved_by, tanggal_approval, remarks
  */
 
+// Helper untuk membaca secret/konfigurasi dinamis dari Script Properties (Environment Variables)
+function getSpreadsheetId_() {
+  try {
+    const prop = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+    if (prop && prop.trim()) return prop.trim();
+  } catch (e) {}
+  return '1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No';
+}
+
+function getSpreadsheetUrl_() {
+  try {
+    const prop = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_URL');
+    if (prop && prop.trim()) return prop.trim();
+  } catch (e) {}
+  return 'https://docs.google.com/spreadsheets/d/' + getSpreadsheetId_() + '/edit';
+}
+
+function getAdminPin_() {
+  try {
+    const prop = PropertiesService.getScriptProperties().getProperty('ADMIN_PIN');
+    if (prop && prop.trim()) return prop.trim();
+  } catch (e) {}
+  return '2026';
+}
+
 const CONFIG = {
-  SPREADSHEET_ID: '1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No',
-  SPREADSHEET_URL: 'https://docs.google.com/spreadsheets/d/1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No/edit?usp=sharing&ouid=102001982908865439766&rtpof=true&sd=true',
+  get SPREADSHEET_ID() {
+    return getSpreadsheetId_();
+  },
+  get SPREADSHEET_URL() {
+    return getSpreadsheetUrl_();
+  },
+  get ADMIN_PIN() {
+    return getAdminPin_();
+  },
 
   SHEET_MASTER: 'Sheet1',
   SHEET_TRACKING: 'Tracking_Harian',
@@ -21,8 +53,7 @@ const CONFIG = {
   DEFAULT_PAGE_SIZE: 50,
   DEFAULT_YEAR_FILTER: '2026', // Default filter tampilan: Proyek Aktif 2026
   APP_TITLE: 'Tracking FO',
-  APP_SUBTITLE: 'Monitoring Milestone & Sinkronisasi Approval Lapangan dengan Sistem Pusat',
-  ADMIN_PIN: '2026' // PIN Admin untuk upload & update data master Excel
+  APP_SUBTITLE: 'Monitoring Milestone & Sinkronisasi Approval Lapangan dengan Sistem Pusat'
 };
 
 // Urutan milestone alur kerja lapangan (dipakai funnel chart & referensi RFS).
