@@ -995,7 +995,7 @@
     'sonumb', 'Site_Type', 'operator_id', 'Tahapan_Project', 'Supplier_CME', 'RFI_date',
     'STIPCategory', 'COMPANY_ID', 'SONumberNew', 'STIP_Number', 'SiteName', 'Status',
     'kabupaten_name', 'CLUSTER', 'Project_Manager', 'WaspangName', 'SubmitDate',
-    'IntegrationDate', 'latitude', 'longitude'
+    'IntegrationDate'
   ];
 
   const MASTER_UPLOAD_ALIASES = {
@@ -1088,14 +1088,16 @@
             openUploadMasterModal();
           }
         } else {
-          if (err) { err.textContent = 'PIN salah! Silakan coba lagi.'; err.classList.remove('hidden'); }
+          const msg = (res && res.message) ? res.message : 'PIN salah! Silakan coba lagi.';
+          if (err) { err.textContent = msg; err.classList.remove('hidden'); }
           if (input) { input.value = ''; input.focus(); }
         }
       })
-      .withFailureHandler(function () {
+      .withFailureHandler(function (errServer) {
         btn.disabled = false;
         btn.textContent = 'Buka Akses';
-        if (err) { err.textContent = 'Gagal verifikasi PIN ke server.'; err.classList.remove('hidden'); }
+        const msg = (errServer && errServer.message) ? errServer.message : 'Gagal verifikasi PIN ke server.';
+        if (err) { err.textContent = msg; err.classList.remove('hidden'); }
       })
       .verifyAdminPin(pin);
   }
@@ -1182,8 +1184,19 @@
           const newRow = [];
           for (let c = 0; c < colIndices.length; c++) {
             const idx = colIndices[c];
-            const val = (idx !== -1 && rawRow[idx] !== undefined && rawRow[idx] !== null) ? String(rawRow[idx]).trim() : '';
-            newRow.push(val);
+            let val = (idx !== -1 && rawRow[idx] !== undefined && rawRow[idx] !== null) ? rawRow[idx] : '';
+            const colName = MASTER_UPLOAD_GOLDEN_COLS[c];
+            if ((colName === 'SubmitDate' || colName === 'RFI_date' || colName === 'IntegrationDate') && val) {
+              const num = Number(val);
+              if (!isNaN(num) && num >= 25000 && num <= 65000) {
+                const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+                const yr = date.getUTCFullYear();
+                const mo = String(date.getUTCMonth() + 1).padStart(2, '0');
+                const da = String(date.getUTCDate()).padStart(2, '0');
+                val = yr + '-' + mo + '-' + da;
+              }
+            }
+            newRow.push(String(val).trim());
           }
           filteredRows.push(newRow);
         }

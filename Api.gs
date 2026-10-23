@@ -5,6 +5,11 @@
  * ============================================================
  */
 
+const ALLOWED_ADMIN_EMAILS = [
+  'fiberopticjatim@gmail.com',
+  'tbig.improve@tbigway.com'
+];
+
 /**
  * Mengambil ringkasan KPI, Chart, dan Opsi Filter dengan sangat cepat.
  * Memanfaatkan ScriptCache (RAM GAS) sehingga reload halaman hanya butuh < 500ms.
@@ -32,7 +37,7 @@ function getDashboardSummary(forceRefresh) {
   });
 
   const userEmail = (Session.getActiveUser().getEmail() || '').trim().toLowerCase();
-  const canUploadMaster = (userEmail === 'fiberopticjatim@gmail.com');
+  const canUploadMaster = (ALLOWED_ADMIN_EMAILS.indexOf(userEmail) !== -1);
 
   const payload = {
     summary: computeSummary_(activePeriodMerged, totalMasterRows, defaultYearPeriod),
@@ -82,7 +87,7 @@ function buildBootstrapPayload_(forceRefresh) {
   }
 
   const userEmail = (Session.getActiveUser().getEmail() || '').trim().toLowerCase();
-  const canUploadMaster = (userEmail === 'fiberopticjatim@gmail.com');
+  const canUploadMaster = (ALLOWED_ADMIN_EMAILS.indexOf(userEmail) !== -1);
 
   const trackingOnly = (data.merged || []).filter(function (item) {
     return !!item.hasTracking;
@@ -410,6 +415,11 @@ function importMasterDataChunk(headers, rowsChunk, isFirstChunk, isLastChunk, ad
     throw new Error('Akses Ditolak: PIN Keamanan Admin tidak valid.');
   }
 
+  const userEmail = (Session.getActiveUser().getEmail() || '').trim().toLowerCase();
+  if (userEmail && ALLOWED_ADMIN_EMAILS.indexOf(userEmail) === -1) {
+    throw new Error('Akses Ditolak: Akun Google Anda (' + userEmail + ') tidak memiliki izin mengubah Data Master.');
+  }
+
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.SHEET_MASTER);
   if (!sheet) {
@@ -438,14 +448,25 @@ function importMasterDataChunk(headers, rowsChunk, isFirstChunk, isLastChunk, ad
 }
 
 /**
- * Validasi PIN Admin dari modal
+ * Validasi PIN Admin dari modal dengan pengecekan ganda whitelist email
  */
 function verifyAdminPin(pin) {
   const expectedPin = CONFIG.ADMIN_PIN || '2026';
   const isValid = String(pin).trim() === String(expectedPin).trim();
+  const userEmail = (Session.getActiveUser().getEmail() || '').trim().toLowerCase();
+
+  if (userEmail && ALLOWED_ADMIN_EMAILS.indexOf(userEmail) === -1) {
+    return {
+      valid: false,
+      message: 'Akses Ditolak: Akun (' + userEmail + ') tidak memiliki hak akses Admin.',
+      spreadsheetUrl: ''
+    };
+  }
+
   return {
     valid: isValid,
-    spreadsheetUrl: isValid ? CONFIG.SPREADSHEET_URL : ''
+    spreadsheetUrl: isValid ? CONFIG.SPREADSHEET_URL : '',
+    message: isValid ? '' : 'PIN salah! Silakan coba lagi.'
   };
 }
 

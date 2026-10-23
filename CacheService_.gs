@@ -37,7 +37,7 @@ function getOrBuildDataset_(forceRefresh) {
   return rebuildAndCache_();
 }
 
-const CACHE_VERSION = 'V_2026_LEAN_10';
+const CACHE_VERSION = 'V_2026_LEAN_12';
 
 function isCacheValid_() {
   const props = PropertiesService.getScriptProperties();

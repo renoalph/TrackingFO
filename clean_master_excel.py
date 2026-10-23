@@ -12,8 +12,9 @@ import os
 import zipfile
 import xml.etree.ElementTree as ET
 import csv
+from datetime import datetime, timedelta
 
-# Daftar 18 Kolom Emas yang dipertahankan
+# Daftar 18 Kolom Emas yang dipertahankan (setelah penghapusan latitude & longitude)
 GOLDEN_COLUMNS = [
     # 1. Kebutuhan Klien Wajib (Kuning)
     'sonumb',
@@ -37,10 +38,23 @@ GOLDEN_COLUMNS = [
     'Project_Manager',
     'WaspangName',      # FieldController
     'SubmitDate',       # STIP_Submit_Date
-    'IntegrationDate',   # RFS_FinishAactual / latest_updated_date
-    'latitude',
-    'longitude'
+    'IntegrationDate'   # RFS_FinishAactual / latest_updated_date
 ]
+
+DATE_COLUMNS = {'RFI_date', 'SubmitDate', 'IntegrationDate'}
+
+def excel_serial_to_date_str(val):
+    if not val:
+        return ''
+    try:
+        fval = float(val)
+        if 25000 <= fval <= 65000:
+            # Excel base date is 1899-12-30 (due to Excel's 1900 leap year bug)
+            d = datetime(1899, 12, 30) + timedelta(days=fval)
+            return d.strftime('%Y-%m-%d')
+    except (ValueError, TypeError):
+        pass
+    return str(val).strip()
 
 COLUMN_ALIASES = {
     'sonumb': ['sonumb', 'so_number', 'so number'],
@@ -141,7 +155,10 @@ def clean_excel(input_path, output_csv_path):
                             row_out = []
                             for g_col in GOLDEN_COLUMNS:
                                 let = target_indices.get(g_col)
-                                row_out.append(row_vals.get(let, '') if let else '')
+                                val = row_vals.get(let, '') if let else ''
+                                if g_col in DATE_COLUMNS and val:
+                                    val = excel_serial_to_date_str(val)
+                                row_out.append(val)
                             writer.writerow(row_out)
                             total_rows += 1
                             if total_rows % 5000 == 0:
