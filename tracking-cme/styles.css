@@ -1,0 +1,134 @@
+/* styles.css — Styling khusus Mobile-First Tracking CME */
+
+/* Reset & Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Chips Filter */
+.chip-filter {
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+}
+.chip-filter:hover {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+.chip-filter.active {
+  background-color: #2b7fff;
+  border-color: #2b7fff;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(43, 127, 255, 0.25);
+}
+
+/* Percentage Progress Selector Buttons */
+.btn-progress {
+  padding: 8px 4px;
+  border-radius: 10px;
+  background-color: #020617;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 11px;
+  transition: all 0.15s ease;
+}
+.btn-progress.active {
+  background-color: #155dfc;
+  border-color: #2b7fff;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(21, 93, 252, 0.3);
+}
+
+/* Bottom Navigation Tab */
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.15s ease;
+}
+.nav-tab.active {
+  color: #38bdf8;
+}
+.nav-tab.active .nav-icon {
+  font-variation-settings: 'FILL' 1;
+  color: #38bdf8;
+}
+
+/* Milestone Progress Stepper ("Udah Sampai Mana") */
+.stepper-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+}
+.stepper-line {
+  position: absolute;
+  left: 13px;
+  top: 24px;
+  bottom: -12px;
+  width: 2px;
+  background-color: #1e293b;
+}
+.stepper-item:last-child .stepper-line {
+  display: none;
+}
+.stepper-item.completed .stepper-line {
+  background-color: #059669;
+}
+.stepper-item.current .stepper-line {
+  background-color: #155dfc;
+}
+
+.stepper-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 10;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid #334155;
+  background-color: #0f172a;
+  color: #64748b;
+}
+.stepper-item.completed .stepper-dot {
+  border-color: #059669;
+  background-color: #064e3b;
+  color: #34d399;
+}
+.stepper-item.current .stepper-dot {
+  border-color: #38bdf8;
+  background-color: #1e3a8a;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Micro-animations */
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-scaleUp {
+  animation: scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

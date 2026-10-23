@@ -1,0 +1,1295 @@
+<script>
+  // ============================================================
+  // JavaScript.html — logic client dashboard approval RFS.
+  // Data berpotensi berisi karakter spesial ditangani via
+  // data-attribute + event delegation, bukan onclick inline
+  // dengan string yang disisipkan langsung.
+  // ============================================================
+
+  const state = {
+    page: 1, pageSize: 50, totalPages: 1, totalRows: 0,
+    sortBy: 'sonumb', sortDir: 'asc',
+    search: '',
+    filters: { yearPeriod: '2026', operator: [], kabupaten: [], mitra: [], tahapan: [], approvedBy: [], statusBadge: [], onlyGap: false, onlyApprovedToday: false, onlyPending: false },
+    filterOptions: { operator: [], kabupaten: [], mitra: [], tahapan: [], approvedBy: [] },
+    reqId: 0,
+    lastHandledReqId: 0,
+    tableItemsMap: {},
+    kpiModalItems: [],
+    kpiModalFiltered: []
+  };
+
+  const TABLE_COLUMNS = [
+    { key: 'sonumb', label: 'SO Number', sortable: true },
+    { key: 'siteName', label: 'Site / Site ID', sortable: true },
+    { key: 'mitra', label: 'Mitra', sortable: true },
+    { key: 'jenis', label: 'Jenis', sortable: true },
+    { key: 'tahapan', label: 'Tahapan Pengajuan', sortable: true },
+    { key: 'tanggalPengajuan', label: 'Tgl Pengajuan', sortable: true },
+    { key: 'statusApproval', label: 'Status Approval', sortable: true },
+    { key: 'approvedBy', label: 'Disetujui Oleh', sortable: true },
+    { key: 'tanggalApproval', label: 'Tgl Approval', sortable: true },
+    { key: 'remarks', label: 'Remarks', sortable: false }
+  ];
+
+  const MULTISELECT_DEFS = [
+    { containerId: 'msOperator', filterKey: 'operator', label: 'Operator', optionsSource: 'operator' },
+    { containerId: 'msKabupaten', filterKey: 'kabupaten', label: 'Kabupaten/Kota', optionsSource: 'kabupaten' },
+    { containerId: 'msMitra', filterKey: 'mitra', label: 'Mitra', optionsSource: 'mitra' },
+    { containerId: 'msTahapan', filterKey: 'tahapan', label: 'Tahapan', optionsSource: 'tahapan' },
+    { containerId: 'msApprovedBy', filterKey: 'approvedBy', label: 'Disetujui Oleh', optionsSource: 'approvedBy' },
+    { containerId: 'msStatus', filterKey: 'statusBadge', label: 'Status', optionsSource: '__fixed_status__' }
+  ];
+
+  const FIXED_STATUS_OPTIONS = [
+    { value: 'MATCH', label: 'Match' },
+    { value: 'GAP', label: 'Gap' },
+    { value: 'PENDING', label: 'Pending Approval' }
+  ];
+
+  // ---------------------------------------------------------------
+  // LIVE CLOCK WIB (REALTIME)
+  // ---------------------------------------------------------------
+
+  function startLiveClock() {
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+    function tick() {
+      const now = new Date();
+      // UTC + 7 jam (WIB)
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const wib = new Date(utc + (3600000 * 7));
+
+      const dayName = days[wib.getDay()];
+      const d = wib.getDate();
+      const m = months[wib.getMonth()];
+      const y = wib.getFullYear();
+
+      const hh = String(wib.getHours()).padStart(2, '0');
+      const mm = String(wib.getMinutes()).padStart(2, '0');
+      const ss = String(wib.getSeconds()).padStart(2, '0');
+
+      const text = dayName + ', ' + d + ' ' + m + ' ' + y + ' · ' + hh + '.' + mm + '.' + ss + ' WIB';
+      const el = document.getElementById('headerDateDisplay');
+      if (el) el.innerText = text;
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  // ---------------------------------------------------------------
+  // HELPERS
+  // ---------------------------------------------------------------
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function formatDisplayDate(val) {
+    if (!val || val === '-') return '-';
+    if (val instanceof Date) {
+      const d = String(val.getDate()).padStart(2, '0');
+      const m = String(val.getMonth() + 1).padStart(2, '0');
+      const y = val.getFullYear();
+      return d + '/' + m + '/' + y;
+    }
+    const s = String(val).trim();
+    if (!s) return '-';
+    // Tangani format YYYY-MM-DD atau ISO
+    const ym = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (ym) {
+      const day = String(ym[3]).padStart(2, '0');
+      const month = String(ym[2]).padStart(2, '0');
+      return day + '/' + month + '/' + ym[1];
+    }
+    return s;
+  }
+
+  function labelBadge(code) {
+    return { MATCH: 'Match', GAP: 'Gap', PENDING: 'Pending Approval' }[code] || code;
+  }
+
+  function badgeClass(code) {
+    return { MATCH: 'badge-match', GAP: 'badge-gap', PENDING: 'badge-pending' }[code] || 'badge-pending';
+  }
+
+  function onError(err) {
+    console.error(err);
+    const tbody = document.getElementById('tableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="' + TABLE_COLUMNS.length + '" class="p-6 text-center text-red-500">Gagal memuat data: ' + escapeHtml(err && err.message ? err.message : err) + '</td></tr>';
+  }
+
+  function setRefreshing(isLoading) {
+    const icon = document.getElementById('refreshIcon');
+    const btn = document.getElementById('btnRefresh');
+    if (isLoading) { icon.classList.add('spin'); btn.disabled = true; btn.classList.add('opacity-60'); }
+    else { icon.classList.remove('spin'); btn.disabled = false; btn.classList.remove('opacity-60'); }
+  }
+
+  // ---------------------------------------------------------------
+  // BOOTSTRAP (PROGRESSIVE LOADING - CEPAT SEPERTI JATIM WANI)
+  // ---------------------------------------------------------------
+
+  function renderKPISkeletons() {
+    const grid = document.getElementById('kpiGrid');
+    if (!grid) return;
+    const skeletonCards = Array(7).fill(0).map(function () {
+      return '<div class="kpi-card">' +
+        '<div class="skeleton w-8 h-8 rounded-lg mb-1"></div>' +
+        '<div class="skeleton h-7 w-20 mb-1"></div>' +
+        '<div class="skeleton h-3 w-28 mb-1"></div>' +
+        '<div class="skeleton h-2 w-24"></div>' +
+        '</div>';
+    }).join('');
+    grid.innerHTML = skeletonCards;
+  }
+
+  function refreshAll(forceRefresh) {
+    setRefreshing(true);
+    showTableLoading();
+    renderKPISkeletons();
+
+    const successHandler = function (res) {
+      onBootstrap(res);
+      setRefreshing(false);
+    };
+    const failureHandler = function (err) {
+      onError(err);
+      setRefreshing(false);
+    };
+
+    if (forceRefresh) {
+      google.script.run
+        .withSuccessHandler(successHandler)
+        .withFailureHandler(failureHandler)
+        .forceRefreshCache();
+    } else {
+      google.script.run
+        .withSuccessHandler(successHandler)
+        .withFailureHandler(failureHandler)
+        .getDashboardBootstrap();
+    }
+  }
+
+  function onBootstrap(res) {
+    if (!res) {
+      onError('Data respons kosong dari server');
+      return;
+    }
+
+    // 1. PRIORITAS UTAMA: Render tabel halaman 1 langsung jika data tersedia di payload bootstrap
+    let hasRenderedTable = false;
+    try {
+      if (res.table && res.table.items && res.table.items.length > 0) {
+        state.totalPages = res.table.totalPages || 1;
+        state.totalRows = res.table.totalRows || 0;
+        state.page = res.table.page || 1;
+        renderTable(res.table.items);
+        updatePaginationUI();
+        hasRenderedTable = true;
+      }
+    } catch (errTable) {
+      console.error('Error renderTable dari bootstrap:', errTable);
+    }
+
+    // 2. Render KPI
+    try {
+      if (res.summary) renderKPI(res.summary);
+    } catch (errKPI) {
+      console.error('Error renderKPI:', errKPI);
+    }
+
+    // 3. Render Chart
+    try {
+      if (res.charts) {
+        if (res.charts.funnel) renderFunnel(res.charts.funnel);
+        if (res.charts.statusComparison) renderStatusComparison(res.charts.statusComparison);
+      }
+    } catch (errCharts) {
+      console.error('Error renderCharts:', errCharts);
+    }
+
+    // 4. Filter & Link Spreadsheet
+    try {
+      state.filterOptions = res.filterOptions || {};
+      buildMultiSelects();
+    } catch (errFilters) {
+      console.error('Error filter options:', errFilters);
+    }
+
+    // 5. Fallback Anti Blank / Race Condition: jika tabel belum terisi data dari bootstrap, load via loadTable()
+    if (!hasRenderedTable) {
+      loadTable();
+    }
+  }
+
+  function renderKPI(summary) {
+    const periodLabel = summary.periodLabel || 'Proyek CIP';
+    const defs = [
+      { key: 'totalMaster', label: 'Total Portofolio', icon: 'inventory_2', color: '#1e293b', bg: '#f1f5f9', sub: 'Seluruh Data Master' },
+      { key: 'total', label: 'Total Proyek Aktif', icon: 'folder_open', color: '#2563eb', bg: '#eff6ff', sub: 'Proyek CIP (2025–2026)' },
+      { key: 'rfs', label: 'Sudah RFS', icon: 'check_circle', color: '#059669', bg: '#ecfdf5', sub: summary.persenRfs + '% (Proyek CIP)' },
+      { key: 'onProgress', label: 'On-Progress', icon: 'autorenew', color: '#d97706', bg: '#fffbeb', sub: 'Proyek CIP' },
+      { key: 'gap', label: 'Gap Sistem vs Aktual', icon: 'compare_arrows', color: '#b91c1c', bg: '#fef2f2', sub: 'Perlu Update Master PI' },
+      { key: 'pending', label: 'Menunggu Approval', icon: 'pending_actions', color: '#ca8a04', bg: '#fef9c3', sub: 'Pending Review PM' },
+      { key: 'approvedToday', label: 'Approved Hari Ini', icon: 'task_alt', color: '#0284c7', bg: '#f0f9ff', sub: 'Persetujuan Hari Ini' }
+    ];
+    const grid = document.getElementById('kpiGrid');
+    if (!grid) return;
+    grid.innerHTML = defs.map(function (d) {
+      const raw = summary[d.key];
+      const display = (raw === null || raw === undefined) ? '-' : (raw.toLocaleString ? raw.toLocaleString('id-ID') : raw);
+      const isPopup = (d.key === 'approvedToday' || d.key === 'pending' || d.key === 'gap' || d.key === 'onProgress' || d.key === 'rfs');
+      const tooltip = isPopup ? 'Klik untuk melihat popup daftar proyek (' + d.label + ')' : 'Klik untuk scroll ke tabel monitoring proyek';
+      return '<div class="kpi-card cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200" onclick="handleCardClick(\'' + d.key + '\')" title="' + tooltip + '">' +
+        '<div class="kpi-icon" style="background:' + d.bg + ';color:' + d.color + '"><span class="material-symbols-rounded">' + d.icon + '</span></div>' +
+        '<div class="kpi-value" style="color:' + d.color + '">' + display + '</div>' +
+        '<div class="kpi-label flex items-center justify-between">' +
+        '<span>' + d.label + '</span>' +
+        (isPopup ? '<span class="material-symbols-rounded text-slate-300 text-[14px]">open_in_new</span>' : '<span class="material-symbols-rounded text-slate-300 text-[14px]">arrow_downward</span>') +
+        '</div>' +
+        (d.sub ? '<div class="kpi-sub">' + d.sub + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  // ---------------------------------------------------------------
+  // MULTI-SELECT FILTER
+  // ---------------------------------------------------------------
+
+  function buildMultiSelects() {
+    MULTISELECT_DEFS.forEach(function (def) {
+      renderMultiSelect(def.containerId, def.label, def.filterKey, getOptionsFor_(def));
+    });
+  }
+
+  function getOptionsFor_(def) {
+    if (def.optionsSource === '__fixed_status__') return FIXED_STATUS_OPTIONS;
+    return (state.filterOptions[def.optionsSource] || []).map(function (v) { return { value: v, label: v }; });
+  }
+
+  function renderMultiSelect(containerId, label, filterKey, options) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const selected = state.filters[filterKey] || [];
+    const btnLabel = selected.length ? (label + ' (' + selected.length + ')') : label;
+    const panelId = containerId + '_panel';
+
+    container.className = 'ms-wrap';
+    container.innerHTML =
+      '<button type="button" class="ms-btn ' + (selected.length ? 'has-value' : '') + '" data-ms-toggle-panel="' + panelId + '">' +
+      '<span class="material-symbols-rounded text-[15px]">tune</span>' + escapeHtml(btnLabel) +
+      '<span class="material-symbols-rounded text-[15px]">expand_more</span>' +
+      '</button>' +
+      '<div id="' + panelId + '" class="ms-panel hidden" data-filter-key="' + filterKey + '" data-container-id="' + containerId + '">' +
+      (options.length ? options.map(function (opt) {
+        const checked = selected.indexOf(opt.value) !== -1 ? 'checked' : '';
+        return '<label class="ms-option"><input type="checkbox" ' + checked + ' data-ms-value="' + escapeHtml(opt.value) + '"> ' + escapeHtml(opt.label) + '</label>';
+      }).join('') : '<div class="text-xs text-slate-400 p-2">Tidak ada opsi</div>') +
+      '</div>';
+  }
+
+  document.addEventListener('click', function (e) {
+    const toggleBtn = e.target.closest('[data-ms-toggle-panel]');
+    if (toggleBtn) {
+      const panelId = toggleBtn.getAttribute('data-ms-toggle-panel');
+      document.querySelectorAll('.ms-panel').forEach(function (p) { if (p.id !== panelId) p.classList.add('hidden'); });
+      document.getElementById(panelId).classList.toggle('hidden');
+      return;
+    }
+    if (!e.target.closest('.ms-wrap')) {
+      document.querySelectorAll('.ms-panel').forEach(function (p) { p.classList.add('hidden'); });
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.matches('.ms-panel input[type=checkbox]')) {
+      const panel = e.target.closest('.ms-panel');
+      const filterKey = panel.getAttribute('data-filter-key');
+      const containerId = panel.getAttribute('data-container-id');
+      const value = e.target.getAttribute('data-ms-value');
+
+      const arr = state.filters[filterKey] || (state.filters[filterKey] = []);
+      const idx = arr.indexOf(value);
+      if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+
+      const def = MULTISELECT_DEFS.filter(function (d) { return d.containerId === containerId; })[0];
+      renderMultiSelect(containerId, def.label, filterKey, getOptionsFor_(def));
+      document.getElementById(containerId + '_panel').classList.remove('hidden');
+
+      state.page = 1;
+      loadTable();
+    }
+  });
+
+  function toggleChip(el) {
+    const key = el.getAttribute('data-toggle');
+    state.filters[key] = !state.filters[key];
+    el.classList.toggle('active', state.filters[key]);
+    state.page = 1;
+    loadTable();
+  }
+
+  function onYearPeriodChange(val) {
+    state.filters.yearPeriod = val;
+    state.page = 1;
+    loadTable();
+  }
+
+  function resetFilters() {
+    state.filters = {
+      yearPeriod: '2026', operator: [], kabupaten: [], mitra: [], tahapan: [],
+      approvedBy: [], statusBadge: [], onlyGap: false, onlyApprovedToday: false, onlyPending: false
+    };
+    state.search = '';
+    document.getElementById('searchInput').value = '';
+    const selYear = document.getElementById('selectYearPeriod');
+    if (selYear) selYear.value = '2026';
+    document.querySelectorAll('.chip-toggle').forEach(function (el) { el.classList.remove('active'); });
+    buildMultiSelects();
+    state.page = 1;
+    loadTable();
+  }
+
+  let searchDebounceTimer = null;
+  function bindSearch() {
+    document.getElementById('searchInput').addEventListener('input', function () {
+      clearTimeout(searchDebounceTimer);
+      const val = this.value.trim();
+      searchDebounceTimer = setTimeout(function () {
+        state.search = val;
+        state.page = 1;
+        loadTable();
+      }, 300);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // TABEL + PAGINATION
+  // ---------------------------------------------------------------
+
+  function renderTableHead() {
+    const row = document.getElementById('tableHeadRow');
+    row.innerHTML = TABLE_COLUMNS.map(function (col) {
+      let icon = '';
+      if (state.sortBy === col.key) {
+        icon = state.sortDir === 'asc'
+          ? '<span class="material-symbols-rounded text-[13px]">arrow_upward</span>'
+          : '<span class="material-symbols-rounded text-[13px]">arrow_downward</span>';
+      }
+      const cls = col.sortable ? 'sortable' : '';
+      const attr = col.sortable ? 'data-sort-key="' + col.key + '"' : '';
+      return '<th class="p-3 border-b ' + cls + '" ' + attr + '>' + col.label + ' ' + icon + '</th>';
+    }).join('');
+  }
+
+  function onSort(key) {
+    if (state.sortBy === key) { state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'; }
+    else { state.sortBy = key; state.sortDir = 'asc'; }
+    renderTableHead();
+    state.page = 1;
+    loadTable();
+  }
+
+  function showTableLoading() {
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="' + TABLE_COLUMNS.length + '" class="p-6 text-center text-slate-400">Memuat data...</td></tr>';
+  }
+
+  function loadTable() {
+    showTableLoading();
+    state.reqId = (state.reqId || 0) + 1;
+    const currentReq = state.reqId;
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        // Anti race condition: buang respons jika ada request yang lebih baru telah dikirim
+        if (currentReq < state.lastHandledReqId) return;
+        state.lastHandledReqId = currentReq;
+        onTableData(res);
+      })
+      .withFailureHandler(function (err) {
+        if (currentReq < state.lastHandledReqId) return;
+        state.lastHandledReqId = currentReq;
+        onError(err);
+      })
+      .getProjectList({
+        page: state.page,
+        pageSize: state.pageSize,
+        sortBy: state.sortBy,
+        sortDir: state.sortDir,
+        search: state.search,
+        filters: state.filters,
+        reqId: currentReq
+      });
+  }
+
+  function onTableData(res) {
+    if (!res) return;
+    state.totalPages = res.totalPages || 1;
+    state.totalRows = res.totalRows || 0;
+    state.page = res.page || 1;
+    renderTable(res.items || []);
+    updatePaginationUI();
+  }
+
+  function renderTable(items) {
+    const tbody = document.getElementById('tableBody');
+    state.tableItemsMap = {};
+    if (!items || !items.length) {
+      tbody.innerHTML = '<tr><td colspan="' + TABLE_COLUMNS.length + '" class="p-6 text-center text-slate-400">Tidak ada data yang cocok dengan filter.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map(function (item) {
+      if (item) {
+        if (item.key) state.tableItemsMap[item.key] = item;
+        if (item.sonumb) state.tableItemsMap[item.sonumb] = item;
+      }
+      const rowClass = 'row-clickable';
+      const tglAjuan = formatDisplayDate(item.tanggalPengajuan || '-');
+      const tglApprove = formatDisplayDate(item.tanggalApproval || '-');
+      const statusAppr = item.statusApproval ? String(item.statusApproval).trim() : 'Belum Ada';
+      const isDone = statusAppr.toLowerCase() === 'done';
+      const isPending = statusAppr.toLowerCase() === 'pending';
+      const badgeClass = isDone ? 'badge-match' : (isPending ? 'badge-pending' : 'bg-slate-100 text-slate-500');
+
+      return '<tr class="' + rowClass + '" data-key="' + escapeHtml(item.key) + '">' +
+        '<td class="p-3 font-semibold text-slate-900 font-mono">' + escapeHtml(item.sonumb) +
+        (item.ambiguousTracking ? ' <span class="material-symbols-rounded text-[13px] text-amber-500 align-middle" title="Kecocokan tracking ambigu (SO intersite)">help</span>' : '') +
+        '</td>' +
+        '<td class="p-3 font-medium text-slate-800">' + escapeHtml(item.siteName || item.stipNumber || '-') + '</td>' +
+        '<td class="p-3 text-slate-700">' + escapeHtml(item.mitra || '-') + '</td>' +
+        '<td class="p-3 text-slate-500">' + escapeHtml(item.jenis || 'FO') + '</td>' +
+        '<td class="p-3 font-semibold text-blue-700">' + escapeHtml(item.tahapan || item.tahapanMaster || '-') + '</td>' +
+        '<td class="p-3 text-slate-600">' + escapeHtml(tglAjuan) + '</td>' +
+        '<td class="p-3"><span class="badge ' + badgeClass + '">' + escapeHtml(statusAppr) + '</span></td>' +
+        '<td class="p-3 text-slate-700 font-medium">' + escapeHtml(item.approvedBy || '-') + '</td>' +
+        '<td class="p-3 text-slate-600">' + escapeHtml(tglApprove) + '</td>' +
+        '<td class="p-3 text-slate-500 max-w-[200px] truncate" title="' + escapeHtml(item.remarks || '-') + '">' + escapeHtml(item.remarks || '-') + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function updatePaginationUI() {
+    document.getElementById('pageNumDisplay').innerText = state.page + ' / ' + state.totalPages;
+    document.getElementById('pageInfo').innerText =
+      'Halaman ' + state.page + ' dari ' + state.totalPages + ' (' + state.totalRows.toLocaleString('id-ID') + ' log pengajuan)';
+    document.getElementById('tableCount').innerText = '(' + state.totalRows.toLocaleString('id-ID') + ' baris)';
+  }
+
+  function gotoPage(p) {
+    if (p < 1 || p > state.totalPages || p === state.page) return;
+    state.page = p;
+    loadTable();
+  }
+
+  function onPageSizeChange() {
+    state.pageSize = Number(document.getElementById('pageSizeSelect').value);
+    state.page = 1;
+    loadTable();
+  }
+
+  // ---------------------------------------------------------------
+  // MODAL DETAIL
+  // ---------------------------------------------------------------
+
+  function openDetail(key) {
+    document.getElementById('detailModal').classList.remove('hidden');
+    const localItem = (state.tableItemsMap && (state.tableItemsMap[key] || state.tableItemsMap[String(key).trim()])) || null;
+
+    if (localItem) {
+      // Langsung render data dasar proyek secara instan dari memori tabel browser
+      renderDetailBase(localItem, true);
+    } else {
+      document.getElementById('detailContent').innerHTML = '<div class="skeleton h-24 w-full"></div>';
+    }
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (res && res.found) {
+          renderDetail(res);
+        } else if (localItem) {
+          renderDetailBase(localItem, false);
+        } else {
+          document.getElementById('detailContent').innerHTML = '<p class="text-sm text-slate-400">Data tidak ditemukan.</p>';
+        }
+      })
+      .withFailureHandler(function (err) {
+        if (localItem) {
+          renderDetailBase(localItem, false);
+        } else {
+          document.getElementById('detailContent').innerHTML = '<p class="text-sm text-red-500">Gagal memuat detail: ' + escapeHtml(err.message || err) + '</p>';
+        }
+      })
+      .getProjectDetail(key);
+  }
+
+  function closeDetail() {
+    document.getElementById('detailModal').classList.add('hidden');
+  }
+
+  function renderDetailBase(it, isLoadingHistory) {
+    const content = document.getElementById('detailContent');
+    const rows = [
+      ['SO Number', it.sonumb], ['STIP Number', it.stipNumber || '-'],
+      ['Nama Site', it.siteName], ['Operator', it.operatorId],
+      ['Mitra', it.mitra || '-'], ['Jenis', it.jenis || '-'],
+      ['Update Sistem (Master)', it.tahapanMaster || '-'], ['Status Master', it.statusMaster || '-'],
+      ['Update Aktual (Tracking)', it.tahapan || '-'], ['Status Approval', it.statusApproval || '-'],
+      ['Disetujui Oleh', it.approvedBy || '-'], ['Tgl Pengajuan', it.tanggalPengajuan || '-'],
+      ['Tgl Approval', it.tanggalApproval || '-'], ['Tgl RFS Master', it.masterRfsDate || '-']
+    ];
+
+    let html = '<div class="flex flex-wrap items-center gap-2">' +
+      '<span class="badge ' + badgeClass(it.statusBadge) + '">' + escapeHtml(labelBadge(it.statusBadge)) + '</span>' +
+      '</div>';
+
+    html += '<div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">' +
+      rows.map(function (r) {
+        return '<div><div class="text-slate-400">' + escapeHtml(r[0]) + '</div><div class="font-semibold text-slate-800">' + escapeHtml(String(r[1])) + '</div></div>';
+      }).join('') +
+      '</div>';
+
+    if (it.remarks) {
+      html += '<div class="text-xs bg-slate-50 border border-slate-100 rounded-lg p-2.5"><span class="text-slate-400">Remarks:</span> ' + escapeHtml(it.remarks) + '</div>';
+    }
+
+    html += '<div class="pt-3 border-t border-slate-100">' +
+      '<div class="font-bold text-xs text-slate-700 mb-2 flex items-center gap-1"><span class="material-symbols-rounded text-[16px]">history</span>Riwayat Pengajuan Approval</div>';
+
+    if (isLoadingHistory) {
+      html += '<div class="text-xs text-slate-400 flex items-center gap-2 py-3">' +
+        '<span class="material-symbols-rounded text-base spin text-blue-500">autorenew</span>Memuat riwayat pengajuan...</div>';
+    } else {
+      html += '<p class="text-xs text-slate-400">Belum ada riwayat pengajuan untuk SO ini.</p>';
+    }
+    html += '</div>';
+
+    content.innerHTML = html;
+  }
+
+  function renderDetail(res) {
+    const content = document.getElementById('detailContent');
+    if (!res || !res.found) { content.innerHTML = '<p class="text-sm text-slate-400">Data tidak ditemukan.</p>'; return; }
+    const it = res.item;
+
+    const rows = [
+      ['SO Number', it.sonumb], ['STIP Number', it.stipNumber || '-'],
+      ['Nama Site', it.siteName], ['Operator', it.operatorId],
+      ['Site Type', it.siteType || '-'], ['Company ID', it.companyId || '-'],
+      ['STIP Category', it.stipCategory || '-'], ['Supplier CME', it.supplierCme || '-'],
+      ['Mitra Lapangan', it.mitra || '-'], ['Jenis', it.jenis || '-'],
+      ['Tahapan Project (Master)', it.tahapanMaster || '-'], ['Status Master', it.statusMaster || '-'],
+      ['Tahapan Lapangan', it.tahapan || '-'], ['Status Approval', it.statusApproval || '-'],
+      ['Disetujui Oleh', it.approvedBy || '-'], ['Tgl Pengajuan', it.tanggalPengajuan || '-'],
+      ['Tgl Approval', it.tanggalApproval || '-'], ['Tgl RFI', it.rfiDate || '-'],
+      ['Tgl RFS Master', it.masterRfsDate || '-']
+    ];
+
+    let html = '<div class="flex flex-wrap items-center gap-2">' +
+      '<span class="badge ' + badgeClass(it.statusBadge) + '">' + escapeHtml(labelBadge(it.statusBadge)) + '</span>' +
+      '</div>';
+
+    html += '<div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">' +
+      rows.map(function (r) {
+        return '<div><div class="text-slate-400">' + escapeHtml(r[0]) + '</div><div class="font-semibold text-slate-800">' + escapeHtml(String(r[1])) + '</div></div>';
+      }).join('') +
+      '</div>';
+
+    if (it.remarks) {
+      html += '<div class="text-xs bg-slate-50 border border-slate-100 rounded-lg p-2.5"><span class="text-slate-400">Remarks:</span> ' + escapeHtml(it.remarks) + '</div>';
+    }
+
+    html += '<div class="pt-3 border-t border-slate-100">' +
+      '<div class="font-bold text-xs text-slate-700 mb-2 flex items-center gap-1"><span class="material-symbols-rounded text-[16px]">history</span>Riwayat Pengajuan Approval</div>';
+
+    if (!res.history || !res.history.length) {
+      html += '<p class="text-xs text-slate-400">Belum ada riwayat pengajuan untuk SO ini.</p>';
+    } else {
+      html += '<div class="space-y-2">' + res.history.map(function (h) {
+        return '<div class="border border-slate-100 rounded-lg p-2.5 text-xs">' +
+          '<div class="flex justify-between"><span class="font-semibold">' + escapeHtml(h.tahapan || '-') + '</span><span class="text-slate-400">' + escapeHtml(h.tanggalPengajuan) + '</span></div>' +
+          '<div class="mt-1">Status: <b>' + escapeHtml(h.statusApproval || '-') + '</b>' + (h.approvedBy ? ' oleh ' + escapeHtml(h.approvedBy) + (h.tanggalApproval ? ' (' + escapeHtml(h.tanggalApproval) + ')' : '') : '') + '</div>' +
+          (h.remarks ? '<div class="text-slate-500 mt-1">Remarks: ' + escapeHtml(h.remarks) + '</div>' : '') +
+          '</div>';
+      }).join('') + '</div>';
+    }
+    html += '</div>';
+
+    content.innerHTML = html;
+  }
+
+  // ---------------------------------------------------------------
+  // MODAL LIST KPI (APPROVED HARI INI / MENUNGGU APPROVAL) & SCROLL
+  // ---------------------------------------------------------------
+
+  function handleCardClick(key) {
+    if (key === 'approvedToday' || key === 'pending' || key === 'gap' || key === 'onProgress' || key === 'rfs') {
+      openKpiModal(key);
+      return;
+    }
+
+    // Scroll otomatis ke bawah ke tabel monitoring proyek (untuk 'total' & 'totalMaster')
+    const tableEl = document.getElementById('tableSection') || document.getElementById('tableBody');
+    if (tableEl) {
+      tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function openKpiModal(type) {
+    const modal = document.getElementById('kpiListModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const iconWrap = document.getElementById('kpiListIconWrap');
+    const icon = document.getElementById('kpiListIcon');
+    const title = document.getElementById('kpiListTitle');
+    const subtitle = document.getElementById('kpiListSubtitle');
+    const badge = document.getElementById('kpiListBadge');
+    const body = document.getElementById('kpiListBody');
+    const searchInput = document.getElementById('kpiListSearch');
+    if (searchInput) searchInput.value = '';
+
+    if (type === 'approvedToday') {
+      iconWrap.className = 'w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm bg-sky-600';
+      icon.textContent = 'task_alt';
+      title.textContent = 'Daftar Proyek Approved Hari Ini';
+      subtitle.textContent = 'Persetujuan milestone yang selesai disetujui PM hari ini';
+    } else if (type === 'pending') {
+      iconWrap.className = 'w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm bg-amber-500';
+      icon.textContent = 'pending_actions';
+      title.textContent = 'Daftar Proyek Menunggu Approval';
+      subtitle.textContent = 'Pengajuan milestone lapangan yang menunggu verifikasi & approval PM';
+    } else if (type === 'gap') {
+      iconWrap.className = 'w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm bg-rose-600';
+      icon.textContent = 'compare_arrows';
+      title.textContent = 'Daftar Proyek Gap Sistem vs Aktual';
+      subtitle.textContent = 'Proyek yang sudah selesai di lapangan namun belum tercatat RFS di Master PI';
+    } else if (type === 'onProgress') {
+      iconWrap.className = 'w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm bg-amber-600';
+      icon.textContent = 'autorenew';
+      title.textContent = 'Daftar Proyek On-Progress (Aktual)';
+      subtitle.textContent = 'Proyek yang sedang dalam proses pengerjaan lapangan (belum RFS)';
+    } else if (type === 'rfs') {
+      iconWrap.className = 'w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm bg-emerald-600';
+      icon.textContent = 'check_circle';
+      title.textContent = 'Daftar Proyek Sudah RFS';
+      subtitle.textContent = 'Proyek yang telah selesai pengerjaannya (Ready For Service)';
+    }
+    badge.textContent = '...';
+    body.innerHTML = '<div class="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">' +
+      '<span class="material-symbols-rounded text-2xl spin text-blue-500">autorenew</span>' +
+      '<span>Memuat daftar proyek...</span></div>';
+
+    google.script.run
+      .withSuccessHandler(function (items) {
+        state.kpiModalItems = items || [];
+        state.kpiModalFiltered = state.kpiModalItems;
+        badge.textContent = state.kpiModalItems.length + ' Proyek';
+        renderKpiListTable(state.kpiModalFiltered);
+      })
+      .withFailureHandler(function (err) {
+        body.innerHTML = '<div class="py-8 text-center text-red-500 text-xs">Gagal memuat data: ' + escapeHtml(err.message || err) + '</div>';
+      })
+      .getKpiProjectList(type);
+  }
+
+  function closeKpiListModal() {
+    const modal = document.getElementById('kpiListModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+  }
+
+  function onKpiListSearch(val) {
+    const q = (val || '').toLowerCase().trim();
+    if (!q) {
+      state.kpiModalFiltered = state.kpiModalItems;
+    } else {
+      state.kpiModalFiltered = state.kpiModalItems.filter(function (it) {
+        return (it.sonumb && it.sonumb.toLowerCase().indexOf(q) !== -1) ||
+          (it.siteName && it.siteName.toLowerCase().indexOf(q) !== -1) ||
+          (it.kabupaten && it.kabupaten.toLowerCase().indexOf(q) !== -1) ||
+          (it.operatorId && it.operatorId.toLowerCase().indexOf(q) !== -1) ||
+          (it.mitra && it.mitra.toLowerCase().indexOf(q) !== -1) ||
+          (it.tahapan && it.tahapan.toLowerCase().indexOf(q) !== -1);
+      });
+    }
+    renderKpiListTable(state.kpiModalFiltered);
+  }
+
+  function renderKpiListTable(items) {
+    const body = document.getElementById('kpiListBody');
+    if (!items || !items.length) {
+      body.innerHTML = '<div class="py-10 text-center text-slate-400 text-xs">Tidak ada data proyek yang sesuai.</div>';
+      return;
+    }
+
+    let html = '<div class="overflow-x-auto border border-slate-100 rounded-xl">' +
+      '<table class="w-full text-left text-xs border-collapse">' +
+      '<thead class="bg-slate-50 text-slate-600 uppercase font-semibold text-[11px] border-b border-slate-200">' +
+      '<tr>' +
+      '<th class="p-3 w-10 text-center">No</th>' +
+      '<th class="p-3">SO Number</th>' +
+      '<th class="p-3">Nama Site</th>' +
+      '<th class="p-3">Kabupaten</th>' +
+      '<th class="p-3">Mitra</th>' +
+      '<th class="p-3">Tahapan</th>' +
+      '<th class="p-3">Tgl Update / Ajuan</th>' +
+      '<th class="p-3">Status</th>' +
+      '<th class="p-3 text-center w-20">Aksi</th>' +
+      '</tr>' +
+      '</thead>' +
+      '<tbody class="divide-y divide-slate-100 bg-white">';
+
+    items.forEach(function (it, idx) {
+      const tgl = it.tanggalApproval && it.tanggalApproval !== '-' ? it.tanggalApproval : it.tanggalPengajuan;
+      let badgeHtml = '';
+      if (it.statusBadge === 'GAP') {
+        badgeHtml = '<span class="badge badge-gap">Gap</span>';
+      } else if (it.statusBadge === 'MATCH') {
+        badgeHtml = '<span class="badge badge-match">Match</span>';
+      } else if (it.statusBadge === 'PENDING') {
+        badgeHtml = '<span class="badge badge-pending">Pending</span>';
+      } else {
+        const isDone = String(it.statusApproval || '').toLowerCase() === 'done';
+        badgeHtml = isDone
+          ? '<span class="badge badge-match">Approved</span>'
+          : '<span class="badge badge-pending">Pending</span>';
+      }
+
+      html += '<tr class="hover:bg-slate-50 transition">' +
+        '<td class="p-3 text-center text-slate-400">' + (idx + 1) + '</td>' +
+        '<td class="p-3 font-semibold text-slate-800">' + escapeHtml(it.sonumb) + '</td>' +
+        '<td class="p-3 font-medium text-slate-900">' + escapeHtml(it.siteName) + '</td>' +
+        '<td class="p-3 text-slate-500">' + escapeHtml(it.kabupaten || '-') + '</td>' +
+        '<td class="p-3 text-slate-600">' + escapeHtml(it.mitra || '-') + '</td>' +
+        '<td class="p-3 font-medium text-blue-600">' + escapeHtml(it.tahapan) + '</td>' +
+        '<td class="p-3 text-slate-500">' + escapeHtml(formatDisplayDate(tgl)) + '</td>' +
+        '<td class="p-3">' + badgeHtml + '</td>' +
+        '<td class="p-3 text-center">' +
+        '<button type="button" onclick="openDetailFromKpi(\'' + escapeHtml(it.key) + '\')" class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">' +
+        'Detail' +
+        '</button>' +
+        '</td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    body.innerHTML = html;
+  }
+
+  function openDetailFromKpi(key) {
+    closeKpiListModal();
+    openDetail(key);
+  }
+
+  // ---------------------------------------------------------------
+  // GENERATOR INPUT LAPANGAN (Text-to-TSV)
+  // ---------------------------------------------------------------
+
+  function openGeneratorModal() {
+    const modal = document.getElementById('generatorModal');
+    if (!modal) return;
+    const tglInput = document.getElementById('genTanggalPengajuan');
+    if (tglInput && !tglInput.value) {
+      const now = new Date();
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, '0');
+      const da = String(now.getDate()).padStart(2, '0');
+      tglInput.value = yr + '-' + mo + '-' + da;
+    }
+    modal.classList.remove('hidden');
+  }
+
+  function closeGeneratorModal() {
+    const modal = document.getElementById('generatorModal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function generateTrackingTSV() {
+    const raw = document.getElementById('genRawInput').value || '';
+    const tahapan = document.getElementById('genTahapan').value || 'FO & Civil Works';
+    const mitra = (document.getElementById('genMitra').value || 'Mitra Jatim').trim();
+    const jenis = (document.getElementById('genJenis').value || 'FO').trim();
+    const tglAjuan = document.getElementById('genTanggalPengajuan').value || '';
+
+    const lines = raw.split(/\r?\n/);
+    const rows = [];
+    const parsedRecords = [];
+
+    lines.forEach(function (line) {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      // Lewati baris header judul jika ada
+      if (trimmed.toLowerCase().indexOf('approval') !== -1 && trimmed.indexOf('\t') === -1) return;
+
+      let parts = trimmed.split('\t');
+      if (parts.length < 2) {
+        parts = trimmed.split(/\s{2,}/);
+      }
+      if (parts.length < 2) {
+        const firstSpace = trimmed.indexOf(' ');
+        if (firstSpace !== -1) {
+          parts = [trimmed.slice(0, firstSpace), trimmed.slice(firstSpace + 1)];
+        }
+      }
+
+      if (parts.length >= 1) {
+        const so = parts[0].trim();
+        const siteId = parts[1] ? parts[1].trim() : '';
+        if (so) {
+          // Format 10 kolom:
+          // sonumb | site_id | mitra | jenis | tahapan | tanggal_pengajuan | status_approval | approved_by | tanggal_approval | remarks
+          // Kolom approval dikosongkan agar diisi oleh Admin PM saat verifikasi!
+          const rowTsv = [
+            so,
+            siteId,
+            mitra,
+            jenis,
+            tahapan,
+            tglAjuan,
+            'Pending',   // status_approval
+            '',          // approved_by (dikosongkan untuk Admin PM)
+            '',          // tanggal_approval (dikosongkan untuk Admin PM)
+            'Pengajuan ' + tahapan + ' oleh ' + mitra // remarks
+          ].join('\t');
+          rows.push(rowTsv);
+
+          parsedRecords.push({
+            sonumb: so,
+            site_id: siteId,
+            mitra: mitra,
+            jenis: jenis,
+            tahapan: tahapan,
+            tanggal_pengajuan: tglAjuan,
+            remarks: 'Pengajuan ' + tahapan + ' oleh ' + mitra
+          });
+        }
+      }
+    });
+
+    const resultBox = document.getElementById('genResultBox');
+    const outputTextarea = document.getElementById('genOutputTSV');
+    const countLabel = document.getElementById('genCountLabel');
+
+    if (rows.length === 0) {
+      alert('Tidak ada baris SO Number yang valid ditemukan. Pastikan data mentah terisi.');
+      return;
+    }
+
+    outputTextarea.value = rows.join('\n');
+    countLabel.textContent = 'Hasil Format (' + rows.length + ' baris siap dikirim):';
+    resultBox.classList.remove('hidden');
+
+    // Simpan objek terstruktur untuk pengiriman langsung
+    window.generatedTrackingRecords = parsedRecords;
+  }
+
+  function confirmAndSubmitTracking() {
+    const records = window.generatedTrackingRecords;
+    if (!records || !records.length) {
+      alert('Tidak ada data pengajuan yang valid. Silakan klik "Konversi Format" terlebih dahulu.');
+      return;
+    }
+
+    const tgl = records[0].tanggal_pengajuan || 'hari ini';
+    const tahapan = records[0].tahapan || '';
+    const mitra = records[0].mitra || '';
+    const promptMsg = 'Kirim ' + records.length + ' baris data pengajuan berikut langsung ke Google Sheet?\n\n' +
+      '• Mitra: ' + mitra + '\n' +
+      '• Tahapan: ' + tahapan + '\n' +
+      '• Tanggal Pengajuan: ' + tgl + '\n' +
+      '• Status: Otomatis diset "Pending" untuk verifikasi PM\n\n' +
+      'Lanjutkan pengiriman?';
+
+    if (!confirm(promptMsg)) return;
+
+    const btn = document.getElementById('btnDirectSubmitTracking');
+    const btnText = document.getElementById('submitTrackingText');
+    const btnIcon = document.getElementById('submitTrackingIcon');
+
+    btn.disabled = true;
+    btn.classList.add('opacity-70');
+    btnText.textContent = 'Mengirim data...';
+    btnIcon.textContent = 'sync';
+    btnIcon.classList.add('animate-spin');
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
+        btnText.textContent = 'Kirim Langsung ke Tracking';
+        btnIcon.textContent = 'send';
+        btnIcon.classList.remove('animate-spin');
+
+        let msg = 'Berhasil! ' + res.insertedCount + ' baris pengajuan berhasil dicatat ke Tracking Harian.';
+        if (res.duplicateCount > 0) {
+          msg += '\n(' + res.duplicateCount + ' baris diabaikan karena terdeteksi duplikat pada tanggal & tahapan yang sama)';
+        }
+        alert(msg);
+
+        // Bersihkan form & tutup modal
+        document.getElementById('genRawInput').value = '';
+        document.getElementById('genResultBox').classList.add('hidden');
+        window.generatedTrackingRecords = [];
+        closeGeneratorModal();
+
+        // Segarkan data dashboard
+        refreshAll(true);
+      })
+      .withFailureHandler(function (err) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
+        btnText.textContent = 'Kirim Langsung ke Tracking';
+        btnIcon.textContent = 'send';
+        btnIcon.classList.remove('animate-spin');
+        alert('Gagal mengirim data: ' + (err.message || err));
+      })
+      .submitTrackingBatch(records);
+  }
+
+  function copyGeneratedTSV() {
+    const textarea = document.getElementById('genOutputTSV');
+    if (!textarea || !textarea.value) return;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textarea.value).then(function () {
+        showCopyFeedback();
+      }).catch(function () {
+        fallbackCopy(textarea);
+      });
+    } else {
+      fallbackCopy(textarea);
+    }
+  }
+
+  function fallbackCopy(textarea) {
+    textarea.select();
+    document.execCommand('copy');
+    showCopyFeedback();
+  }
+
+  function showCopyFeedback() {
+    const copyText = document.getElementById('copyText');
+    const copyIcon = document.getElementById('copyIcon');
+    if (!copyText || !copyIcon) return;
+    const prevText = copyText.textContent;
+    copyText.textContent = 'Tersalin!';
+    copyIcon.textContent = 'check';
+    setTimeout(function () {
+      copyText.textContent = prevText;
+      copyIcon.textContent = 'content_copy';
+    }, 2500);
+  }
+
+  // ---------------------------------------------------------------
+  // UPLOAD & AUTO-FILTER MASTER EXCEL (.XLSX)
+  // ---------------------------------------------------------------
+
+  const MASTER_UPLOAD_GOLDEN_COLS = [
+    'sonumb', 'Site_Type', 'operator_id', 'Tahapan_Project', 'Supplier_CME', 'RFI_date',
+    'STIPCategory', 'COMPANY_ID', 'SONumberNew', 'STIP_Number', 'SiteName', 'Status',
+    'kabupaten_name', 'CLUSTER', 'Project_Manager', 'WaspangName', 'SubmitDate',
+    'IntegrationDate'
+  ];
+
+  const MASTER_UPLOAD_ALIASES = {
+    'sonumb': ['sonumb', 'so_number', 'so number'],
+    'Site_Type': ['Site_Type', 'site_type', 'sitetype'],
+    'operator_id': ['operator_id', 'operator', 'operator id'],
+    'Tahapan_Project': ['Tahapan_Project', 'tahapan_project', 'tahapan'],
+    'Supplier_CME': ['Supplier_CME', 'supplier_cme', 'supplier cme', 'vendor_cme', 'vendor'],
+    'RFI_date': ['RFI_date', 'rfi_date', 'rfi date'],
+    'STIPCategory': ['STIPCategory', 'stipcategory', 'stip_category', 'stip category'],
+    'COMPANY_ID': ['COMPANY_ID', 'company_id', 'company'],
+    'SONumberNew': ['SONumberNew', 'sonumber_new', 'so number new'],
+    'STIP_Number': ['STIP_Number', 'stip_number', 'stip number'],
+    'SiteName': ['SiteName', 'sitename', 'site_name'],
+    'Status': ['Status', 'status_project', 'status'],
+    'kabupaten_name': ['kabupaten_name', 'kabupaten', 'city'],
+    'CLUSTER': ['CLUSTER', 'cluster'],
+    'Project_Manager': ['Project_Manager', 'project_manager', 'pm'],
+    'WaspangName': ['WaspangName', 'FieldController', 'waspang', 'field_controller'],
+    'SubmitDate': ['SubmitDate', 'STIP_Submit_Date', 'stip_submit_date', 'stip_date'],
+    'IntegrationDate': ['IntegrationDate', 'RFS_FinishAactual', 'latest_updated_date', 'rfs_actual'],
+    'latitude': ['latitude', 'lat'],
+    'longitude': ['longitude', 'long', 'lng']
+  };
+
+  let masterUploadState = {
+    file: null,
+    headers: [],
+    rows: [],
+    totalRows: 0
+  };
+
+  let currentVerifiedPin = '';
+  let pinActionTarget = 'upload'; // 'upload' | 'spreadsheet'
+
+  function promptAdminPinModal() {
+    pinActionTarget = 'upload';
+    currentVerifiedPin = '';
+    const input = document.getElementById('inputAdminPin');
+    const err = document.getElementById('pinErrorMessage');
+    if (input) input.value = '';
+    if (err) err.classList.add('hidden');
+    document.getElementById('adminPinModal').classList.remove('hidden');
+    setTimeout(function () { if (input) input.focus(); }, 150);
+  }
+
+  function promptSpreadsheetPinModal() {
+    pinActionTarget = 'spreadsheet';
+    currentVerifiedPin = '';
+    const input = document.getElementById('inputAdminPin');
+    const err = document.getElementById('pinErrorMessage');
+    if (input) input.value = '';
+    if (err) err.classList.add('hidden');
+    document.getElementById('adminPinModal').classList.remove('hidden');
+    setTimeout(function () { if (input) input.focus(); }, 150);
+  }
+
+  function closeAdminPinModal() {
+    document.getElementById('adminPinModal').classList.add('hidden');
+  }
+
+  function submitAdminPin() {
+    const input = document.getElementById('inputAdminPin');
+    const err = document.getElementById('pinErrorMessage');
+    const pin = (input ? input.value : '').trim();
+
+    if (!pin) {
+      if (err) { err.textContent = 'Masukkan PIN terlebih dahulu!'; err.classList.remove('hidden'); }
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitPin');
+    btn.disabled = true;
+    btn.textContent = 'Memeriksa...';
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        btn.disabled = false;
+        btn.textContent = 'Buka Akses';
+        if (res && res.valid) {
+          currentVerifiedPin = pin;
+          closeAdminPinModal();
+          if (pinActionTarget === 'spreadsheet') {
+            if (res.spreadsheetUrl) {
+              window.open(res.spreadsheetUrl, '_blank');
+            } else {
+              alert('Gagal membuka spreadsheet: URL tidak tersedia atau akses ditolak.');
+            }
+          } else {
+            openUploadMasterModal();
+          }
+        } else {
+          const msg = (res && res.message) ? res.message : 'PIN salah! Silakan coba lagi.';
+          if (err) { err.textContent = msg; err.classList.remove('hidden'); }
+          if (input) { input.value = ''; input.focus(); }
+        }
+      })
+      .withFailureHandler(function (errServer) {
+        btn.disabled = false;
+        btn.textContent = 'Buka Akses';
+        const msg = (errServer && errServer.message) ? errServer.message : 'Gagal verifikasi PIN ke server.';
+        if (err) { err.textContent = msg; err.classList.remove('hidden'); }
+      })
+      .verifyAdminPin(pin);
+  }
+
+  function openUploadMasterModal() {
+    masterUploadState = { file: null, headers: [], rows: [], totalRows: 0 };
+    document.getElementById('fileMasterInput').value = '';
+    document.getElementById('uploadMasterPreview').classList.add('hidden');
+    document.getElementById('uploadMasterProgressBox').classList.add('hidden');
+    document.getElementById('btnStartMasterUpload').disabled = true;
+    document.getElementById('btnStartMasterUpload').innerHTML = '<span class="material-symbols-rounded text-[17px]">send</span> Mulai Filter &amp; Update Sheet';
+    document.getElementById('uploadMasterModal').classList.remove('hidden');
+  }
+
+  function closeUploadMasterModal() {
+    document.getElementById('uploadMasterModal').classList.add('hidden');
+  }
+
+  function handleMasterFileSelect(files) {
+    if (!files || !files.length) return;
+    const file = files[0];
+    masterUploadState.file = file;
+
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+    document.getElementById('uploadMasterFileName').textContent = file.name;
+    document.getElementById('uploadMasterFileSize').textContent = sizeMb + ' MB';
+    document.getElementById('uploadMasterRowCount').textContent = 'Membaca file...';
+    document.getElementById('uploadMasterPreview').classList.remove('hidden');
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        if (typeof XLSX === 'undefined') {
+          alert('Library XLSX belum dimuat. Mohon periksa koneksi internet Anda.');
+          return;
+        }
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // Ekstrak sebagai array of array (header + baris)
+        const sheetJson = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        if (!sheetJson || sheetJson.length < 2) {
+          alert('File Excel tidak memiliki data atau baris kosong.');
+          return;
+        }
+
+        const rawHeaders = sheetJson[0];
+        const rawRows = sheetJson.slice(1);
+
+        // Buat map index header kolom asli
+        const headerMap = {};
+        rawHeaders.forEach(function (h, idx) {
+          if (h !== null && h !== undefined) {
+            const clean = String(h).trim().toLowerCase().replace(/[\s_]/g, '');
+            headerMap[clean] = idx;
+          }
+        });
+
+        // Petakan ke 20 Kolom Emas
+        const colIndices = [];
+        MASTER_UPLOAD_GOLDEN_COLS.forEach(function (colName) {
+          const aliases = MASTER_UPLOAD_ALIASES[colName] || [colName];
+          let matchedIdx = -1;
+          for (let i = 0; i < aliases.length; i++) {
+            const norm = aliases[i].toLowerCase().replace(/[\s_]/g, '');
+            if (headerMap[norm] !== undefined) {
+              matchedIdx = headerMap[norm];
+              break;
+            }
+          }
+          colIndices.push(matchedIdx);
+        });
+
+        // Filter tiap baris menjadi tepat 20 kolom emas
+        const filteredRows = [];
+        for (let r = 0; r < rawRows.length; r++) {
+          const rawRow = rawRows[r];
+          // Cek apakah baris tidak sepenuhnya kosong
+          const hasVal = rawRow.some(function (cell) { return cell !== '' && cell !== null && cell !== undefined; });
+          if (!hasVal) continue;
+
+          const newRow = [];
+          for (let c = 0; c < colIndices.length; c++) {
+            const idx = colIndices[c];
+            let val = (idx !== -1 && rawRow[idx] !== undefined && rawRow[idx] !== null) ? rawRow[idx] : '';
+            const colName = MASTER_UPLOAD_GOLDEN_COLS[c];
+            if ((colName === 'SubmitDate' || colName === 'RFI_date' || colName === 'IntegrationDate') && val) {
+              const num = Number(val);
+              if (!isNaN(num) && num >= 25000 && num <= 65000) {
+                const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+                const yr = date.getUTCFullYear();
+                const mo = String(date.getUTCMonth() + 1).padStart(2, '0');
+                const da = String(date.getUTCDate()).padStart(2, '0');
+                val = yr + '-' + mo + '-' + da;
+              }
+            }
+            newRow.push(String(val).trim());
+          }
+          filteredRows.push(newRow);
+        }
+
+        masterUploadState.headers = MASTER_UPLOAD_GOLDEN_COLS;
+        masterUploadState.rows = filteredRows;
+        masterUploadState.totalRows = filteredRows.length;
+
+        document.getElementById('uploadMasterRowCount').textContent = filteredRows.length.toLocaleString() + ' Baris';
+        document.getElementById('btnStartMasterUpload').disabled = false;
+      } catch (err) {
+        alert('Gagal membaca file Excel: ' + (err.message || err));
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function startMasterUpload() {
+    if (!masterUploadState.rows || !masterUploadState.rows.length) return;
+
+    const totalRows = masterUploadState.rows.length;
+    const CHUNK_SIZE = 1500; // Batch aman per request GAS
+    const totalChunks = Math.ceil(totalRows / CHUNK_SIZE);
+    let currentChunk = 0;
+
+    const btn = document.getElementById('btnStartMasterUpload');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-rounded text-[17px] animate-spin">sync</span> Mengunggah...';
+
+    const progressBox = document.getElementById('uploadMasterProgressBox');
+    const progressBar = document.getElementById('uploadMasterProgressBar');
+    const statusText = document.getElementById('uploadMasterStatusText');
+    const percentText = document.getElementById('uploadMasterPercentText');
+    progressBox.classList.remove('hidden');
+
+    function sendNextChunk() {
+      const start = currentChunk * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, totalRows);
+      const chunkRows = masterUploadState.rows.slice(start, end);
+      const isFirst = (currentChunk === 0);
+      const isLast = (currentChunk === totalChunks - 1);
+
+      const percent = Math.round(((start + chunkRows.length) / totalRows) * 100);
+      progressBar.style.width = percent + '%';
+      percentText.textContent = percent + '%';
+      statusText.textContent = 'Mengunggah batch ' + (currentChunk + 1) + ' dari ' + totalChunks + ' (' + (start + chunkRows.length).toLocaleString() + '/' + totalRows.toLocaleString() + ' baris)...';
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          currentChunk++;
+          if (!isLast) {
+            sendNextChunk();
+          } else {
+            progressBar.style.width = '100%';
+            percentText.textContent = '100%';
+            statusText.textContent = 'Selesai! Data master berhasil diperbarui.';
+            btn.innerHTML = '<span class="material-symbols-rounded text-[17px]">check_circle</span> Selesai';
+            setTimeout(function () {
+              closeUploadMasterModal();
+              refreshAll(true);
+            }, 1200);
+          }
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = '<span class="material-symbols-rounded text-[17px]">send</span> Coba Lagi';
+          statusText.textContent = 'Gagal mengunggah batch: ' + (err.message || err);
+          alert('Terjadi kesalahan saat mengunggah data: ' + (err.message || err));
+        })
+        .importMasterDataChunk(masterUploadState.headers, chunkRows, isFirst, isLast, currentVerifiedPin);
+    }
+
+    sendNextChunk();
+  }
+
+  // ---------------------------------------------------------------
+  // INIT
+  // ---------------------------------------------------------------
+
+  document.getElementById('tableBody').addEventListener('click', function (e) {
+    const tr = e.target.closest('tr[data-key]');
+    if (tr) openDetail(tr.getAttribute('data-key'));
+  });
+
+  document.getElementById('tableHeadRow').addEventListener('click', function (e) {
+    const th = e.target.closest('th[data-sort-key]');
+    if (th) onSort(th.getAttribute('data-sort-key'));
+  });
+
+  window.onload = function () {
+    renderTableHead();
+    bindSearch();
+    startLiveClock();
+    refreshAll(false);
+  };
+</script>

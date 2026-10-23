@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tracking CME — Monitoring &amp; Form Pengajuan Lapangan</title>
+  <meta name="description" content="Aplikasi mobile tracking progres CME dan pengajuan milestone lapangan - Proyek JATIM">
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols-Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef6ff',
+              100: '#d9ebff',
+              200: '#bcdbff',
+              500: '#2b7fff',
+              600: '#155dfc',
+              700: '#1447e6',
+              800: '#1939b7',
+              900: '#1a338f',
+              950: '#142057',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-slate-900 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white min-h-screen flex justify-center">
+
+  <!-- Mobile App Frame Container -->
+  <div class="w-full max-w-md min-h-screen bg-slate-950 flex flex-col relative shadow-2xl border-x border-slate-800/60 pb-20">
+
+    <!-- Top App Bar -->
+    <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/25">
+          <span class="material-symbols-rounded text-[20px]">cell_tower</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm font-extrabold tracking-tight text-white">Tracking CME</h1>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">JATIM</span>
+          </div>
+          <p class="text-[10px] text-slate-400">Civil, Mechanical &amp; Electrical</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-semibold text-emerald-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Live Sync</span>
+        </div>
+        <button id="btnOpenConfig" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition" title="Pengaturan Koneksi">
+          <span class="material-symbols-rounded text-[18px]">settings</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Content Views -->
+    <main class="flex-1 p-4 space-y-4">
+
+      <!-- ============================================================
+           VIEW 1: TRACKER (CEK STATUS "UDAH SAMPAI MANA")
+      ============================================================ -->
+      <section id="viewTracker" class="space-y-4">
+        
+        <!-- Search & Quick Filter Box -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-sm space-y-2.5">
+          <div class="relative">
+            <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+            <input type="text" id="trackerSearchInput" placeholder="Ketik SO Number / Nama Site..."
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-9 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition">
+            <button id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+              <span class="material-symbols-rounded text-[16px]">close</span>
+            </button>
+          </div>
+
+          <!-- Quick Chips -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] no-scrollbar">
+            <button class="chip-filter active" data-filter="all">Semua</button>
+            <button class="chip-filter" data-filter="onprogress">Sedang Dikerjakan</button>
+            <button class="chip-filter" data-filter="rfs">Sudah RFS</button>
+            <button class="chip-filter" data-filter="pending">Review PM</button>
+          </div>
+        </div>
+
+        <!-- Project Overview Card -->
+        <div id="projectDetailContainer" class="space-y-3.5">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           VIEW 2: FORM PENGAJUAN LAPANGAN
+      ============================================================ -->
+      <section id="viewForm" class="hidden space-y-4">
+        
+        <!-- Form Header Card -->
+        <div class="bg-gradient-to-r from-brand-900/40 via-indigo-950/40 to-slate-900 border border-brand-500/20 rounded-2xl p-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+              <span class="material-symbols-rounded text-[18px]">assignment_add</span>
+            </div>
+            <div>
+              <h2 class="text-xs font-bold text-white">Form Pengajuan Progres CME</h2>
+              <p class="text-[10px] text-slate-400">Submit pembaruan pekerjaan fisik lapangan langsung ke PM</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submission Form -->
+        <form id="submissionForm" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3.5 text-xs">
+          
+          <!-- SO Number Picker -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1 flex items-center justify-between">
+              <span>SO Number <span class="text-rose-400">*</span></span>
+              <span class="text-[10px] text-brand-400 cursor-pointer hover:underline" id="btnAutoSelectSO">Pilih dari Daftar</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="formSoNumber" required placeholder="Contoh: 0040372120041"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <!-- Site Name & ID -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Site ID / Operator</label>
+              <input type="text" id="formSiteId" placeholder="ISAT / 16GSK0308"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Nama Site</label>
+              <input type="text" id="formSiteName" placeholder="TBG-SBY-Phase4a..."
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <!-- Mitra Pelaksana -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Mitra Pelaksana CME <span class="text-rose-400">*</span></label>
+            <select id="formMitra" required
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-500">
+              <option value="">Pilih Mitra...</option>
+              <option value="PT. FAJAR MITRA KRIDA ABADI">PT. FAJAR MITRA KRIDA ABADI</option>
+              <option value="PT. TELAGA PASIR KUTA">PT. TELAGA PASIR KUTA</option>
+              <option value="PT. MITRA KARYA TELEKOM">PT. MITRA KARYA TELEKOM</option>
+              <option value="PT. SINERGI FIBER UTAMA">PT. SINERGI FIBER UTAMA</option>
+              <option value="Mitra Mandiri Lainnya">Mitra Mandiri Lainnya</option>
+            </select>
+          </div>
+
+          <!-- Tahapan Milestone yang Diajukan -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Tahapan Milestone Lapangan <span class="text-rose-400">*</span></label>
+            <select id="formTahapan" required
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-medium focus:outline-none focus:border-brand-500">
+              <option value="Survey & APD">1. Survey &amp; APD Lapangan</option>
+              <option value="Material Delivery">2. Material Delivery (Pengiriman)</option>
+              <option value="Material Onsite">3. Material Onsite (Tiba di Lokasi)</option>
+              <option value="CME & Civil Works" selected>4. CME &amp; Civil Works (Galian, Tiang, Tray)</option>
+              <option value="OTDR & Testing">5. OTDR Testing &amp; Pengukuran</option>
+              <option value="RFS (Ready For Service)">6. RFS (Ready For Service / Siap Aktif)</option>
+            </select>
+          </div>
+
+          <!-- Persentase Progres Slider/Buttons -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="font-semibold text-slate-300">Persentase Progres Pekerjaan</label>
+              <span id="progressPercentDisplay" class="font-mono font-bold text-brand-400 text-xs">75%</span>
+            </div>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" class="btn-progress" data-pct="25">25%</button>
+              <button type="button" class="btn-progress" data-pct="50">50%</button>
+              <button type="button" class="btn-progress active" data-pct="75">75%</button>
+              <button type="button" class="btn-progress" data-pct="100">100%</button>
+            </div>
+            <input type="hidden" id="formProgressPercent" value="75">
+          </div>
+
+          <!-- Tanggal Pekerjaan -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Tanggal Pengajuan Lapangan</label>
+            <input type="date" id="formDate" required
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+          </div>
+
+          <!-- Foto Dokumentasi Lapangan -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Foto Bukti Lapangan / Berita Acara</label>
+            <div id="dropzonePhoto" class="border-2 border-dashed border-slate-700 hover:border-brand-500/60 rounded-xl p-4 text-center cursor-pointer transition bg-slate-950/60">
+              <input type="file" id="filePhoto" accept="image/*" class="hidden" capture="environment">
+              <div id="photoPlaceholder" class="space-y-1">
+                <span class="material-symbols-rounded text-slate-400 text-[26px]">add_a_photo</span>
+                <p class="text-[11px] text-slate-300 font-medium">Ambil Foto atau Pilih Gambar</p>
+                <p class="text-[9px] text-slate-500">Mendukung format JPG, PNG (maks. 5MB)</p>
+              </div>
+              <div id="photoPreviewContainer" class="hidden relative">
+                <img id="photoPreviewImg" src="" alt="Bukti Foto" class="max-h-36 mx-auto rounded-lg object-cover shadow-md border border-slate-700">
+                <button type="button" id="btnRemovePhoto" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg">
+                  <span class="material-symbols-rounded text-[14px]">close</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Catatan / Remarks -->
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Catatan Tambahan / Kendala Lapangan</label>
+            <textarea id="formRemarks" rows="2.5" placeholder="Contoh: Pekerjaan tray & tiang sudah selesai, tinggal penarikan kabel drop FO..."
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button type="submit" id="btnSubmitForm"
+              class="w-full py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+              <span id="submitIcon" class="material-symbols-rounded text-[18px]">send</span>
+              <span id="submitText">Kirim Pengajuan Progres</span>
+            </button>
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- ============================================================
+           VIEW 3: RIWAYAT PENGAJUAN
+      ============================================================ -->
+      <section id="viewHistory" class="hidden space-y-3.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xs font-bold text-white">Riwayat Pengajuan Lapangan</h2>
+            <p class="text-[10px] text-slate-400">Daftar pengajuan terkini oleh mitra</p>
+          </div>
+          <button id="btnRefreshHistory" class="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">
+            <span class="material-symbols-rounded text-[16px]">sync</span>
+          </button>
+        </div>
+
+        <div id="historyListContainer" class="space-y-2.5">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (App Tabs) -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-950/90 backdrop-blur-lg border-t border-slate-800 px-6 py-2.5 flex items-center justify-around z-40">
+      
+      <button class="nav-tab active" data-tab="tracker">
+        <span class="material-symbols-rounded text-[22px] nav-icon">explore</span>
+        <span class="text-[10px] font-semibold">Cek Status</span>
+      </button>
+
+      <button class="nav-tab" data-tab="form">
+        <div class="relative">
+          <div class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 -mt-4 active:scale-95 transition">
+            <span class="material-symbols-rounded text-[22px]">add</span>
+          </div>
+        </div>
+        <span class="text-[10px] font-semibold mt-1">Ajukan</span>
+      </button>
+
+      <button class="nav-tab" data-tab="history">
+        <span class="material-symbols-rounded text-[22px] nav-icon">history</span>
+        <span class="text-[10px] font-semibold">Riwayat</span>
+      </button>
+
+    </nav>
+
+    <!-- Success Feedback Modal -->
+    <div id="modalSuccess" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeSuccessModal()"></div>
+      <div class="relative bg-slate-900 border border-slate-700/80 rounded-2xl max-w-xs w-full p-5 text-center space-y-3.5 shadow-2xl animate-scaleUp">
+        <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30">
+          <span class="material-symbols-rounded text-[26px]">task_alt</span>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-white">Pengajuan Berhasil Dikirim!</h3>
+          <p class="text-xs text-slate-400 mt-1">Status pengajuan otomatis diset <b>Pending Review PM</b> untuk verifikasi approval.</p>
+        </div>
+        <button onclick="closeSuccessModal()" class="w-full py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl transition shadow-md">
+          Lihat di Riwayat
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
