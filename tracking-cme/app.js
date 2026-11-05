@@ -145,59 +145,59 @@ async function loadData() {
   setRefreshing(true);
   const gasUrl = getStoredGasUrl();
 
-  // Mode 1: Coba koneksi Live ke Google Apps Script jika URL tersedia
-  if (gasUrl) {
-    try {
-      updateConnectionStatusUI('fallback', 'Menghubungkan GAS...');
-      const targetUrl = `${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=getData`;
-      const res = await fetch(targetUrl);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const dataset = await res.json();
-
-      if (dataset && (dataset.summary || dataset.table || dataset.items)) {
-        processLoadedDataset(dataset, true);
-        updateConnectionStatusUI('connected', 'Live Google Sheet');
-        setRefreshing(false);
-        return;
-      }
-    } catch (err) {
-      console.warn('Gagal memuat live dari Google Apps Script, beralih ke cache data lokal:', err);
-      updateConnectionStatusUI('fallback', 'Offline (Cache Lokal)');
-    }
-  } else {
-    updateConnectionStatusUI('offline', 'Cache Lokal');
+  if (!gasUrl) {
+    updateConnectionStatusUI('offline', 'URL GAS Belum Diisi');
+    showFatalError('URL Google Apps Script belum diisi. Silakan klik tombol "Pengaturan" di header untuk memasukkan URL Web App.');
+    setRefreshing(false);
+    return;
   }
 
-  // Mode 2: Fallback ke data snapshot lokal (data.json)
   try {
-    const res = await fetch('data.json');
-    if (!res.ok) throw new Error(`HTTP ${res.status}: Gagal memuat data.json`);
+    updateConnectionStatusUI('fallback', 'Menghubungkan GAS...');
+    const targetUrl = `${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=getData&_t=${Date.now()}`;
+    const res = await fetch(targetUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: Gagal memanggil endpoint Google Apps Script`);
     const dataset = await res.json();
-    processLoadedDataset(dataset, false);
-  } catch (err) {
-    console.error('Error loading fallback data:', err);
-    const tbody = document.getElementById('tableBody');
-    if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="${TABLE_COLUMNS.length}" class="p-8 text-center text-red-500 font-semibold">Gagal memuat basis data: ${escapeHtml(err.message)}</td></tr>`;
+
+    // Jika Google Apps Script mengembalikan error (misal ID sheet salah)
+    if (dataset.error) {
+      throw new Error(`Google Apps Script Error: ${dataset.error}`);
     }
+
+    if (!dataset || (!dataset.summary && !dataset.table && !dataset.items)) {
+      throw new Error('Respons Google Apps Script kosong atau tidak memiliki struktur summary / table.');
+    }
+
+    processLoadedDataset(dataset, true);
+    updateConnectionStatusUI('connected', 'Live Google Sheet');
+  } catch (err) {
+    console.error('Error memuat data dari Google Apps Script:', err);
+    updateConnectionStatusUI('fallback', 'Gagal Terhubung');
+    showFatalError(`Gagal mengambil data dari Google Apps Script:<br><strong class="text-red-700">${escapeHtml(err.message)}</strong><br><br><span class="text-xs text-slate-500">Periksa konfigurasi SPREADSHEET_ID di Code.gs pada Google Apps Script Anda.</span>`);
   } finally {
     setRefreshing(false);
+  }
+}
+
+function showFatalError(msg) {
+  const tbody = document.getElementById('tableBody');
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="${TABLE_COLUMNS.length}" class="p-8 text-center text-red-600 bg-red-50/50">${msg}</td></tr>`;
+  }
+  const grid = document.getElementById('kpiGrid');
+  if (grid) {
+    grid.innerHTML = `<div class="col-span-full p-4 rounded-xl bg-red-100 border border-red-200 text-red-800 text-xs font-medium">${msg}</div>`;
   }
 }
 
 function processLoadedDataset(dataset, isLive) {
   state.rawDataset = dataset;
 
-  // Normalisasi items (apakah dari bootstrap GAS atau format data.json)
+  // Data murni 100% langsung dari Google Sheet (tanpa ditalangi localStorage / data.json)
   const items = dataset.table?.items || dataset.items || [];
+  state.allProjects = items;
 
-  // Ambil data pengajuan lokal jika ada
-  const savedLocal = JSON.parse(localStorage.getItem('tracking_cme_submissions') || '[]');
-  
-  // Gabungkan (pengajuan lokal terbaru di atas)
-  state.allProjects = [...savedLocal, ...items];
-
-  // Hitung Opsi Filter
+  // Hitung Opsi Filter langsung dari data Google Sheet
   state.filterOptions = {
     operator: dataset.filterOptions?.operator || getUniqueValues(state.allProjects, 'operatorId'),
     kabupaten: dataset.filterOptions?.kabupaten || getUniqueValues(state.allProjects, 'kabupaten'),
@@ -205,8 +205,8 @@ function processLoadedDataset(dataset, isLive) {
     tahapan: dataset.filterOptions?.tahapan || getUniqueValues(state.allProjects, 'tahapan')
   };
 
-  // Render komponen dashboard
-  renderKPI(dataset.summary, savedLocal.length);
+  // Render komponen dashboard langsung dari summary & charts Google Sheet
+  renderKPI(dataset.summary);
   renderCharts(dataset.charts);
   buildMultiSelects();
   renderTableHead();
@@ -1034,54 +1034,61 @@ async function sendSubmissionsToBackend(newItems) {
   }
 
   const gasUrl = getStoredGasUrl();
-  let liveSent = false;
 
-  // Jika live sync terkonfigurasi, kirim POST ke Google Apps Script
-  if (gasUrl) {
-    try {
-      const payload = {
-        action: 'submitTracking',
-        records: newItems.map(p => ({
-          sonumb: p.sonumb,
-          site_id: p.siteName,
-          mitra: p.mitra,
-          jenis: p.jenis,
-          tahapan: p.tahapan,
-          tanggal_pengajuan: p.tanggalPengajuan,
-          remarks: p.remarks
-        }))
-      };
-
-      await fetch(gasUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' }, // CORS preflight avoidance for Google Apps Script
-        body: JSON.stringify(payload),
-        mode: 'no-cors' // Google Apps Script redirects require no-cors or redirect handling
-      });
-
-      liveSent = true;
-    } catch (err) {
-      console.warn('Gagal POST langsung ke Google Apps Script, menyimpan ke lokal:', err);
+  if (!gasUrl) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-rounded text-[18px]">send</span> Kirim Pengajuan';
     }
+    alert('Error: URL Google Apps Script belum terhubung!');
+    return;
   }
 
-  // Simpan ke memory & localStorage browser
-  const savedLocal = JSON.parse(localStorage.getItem('tracking_cme_submissions') || '[]');
-  const updatedLocal = [...newItems, ...savedLocal];
-  localStorage.setItem('tracking_cme_submissions', JSON.stringify(updatedLocal));
+  try {
+    const payload = {
+      action: 'submitTracking',
+      records: newItems.map(p => ({
+        sonumb: p.sonumb,
+        site_id: p.siteName,
+        mitra: p.mitra,
+        jenis: p.jenis,
+        tahapan: p.tahapan,
+        tanggal_pengajuan: p.tanggalPengajuan,
+        remarks: p.remarks
+      }))
+    };
 
-  if (btn) {
-    btn.disabled = false;
-    btn.innerHTML = '<span class="material-symbols-rounded text-[18px]">send</span> Kirim Pengajuan';
+    // Gunakan Content-Type text/plain agar tidak memicu CORS preflight OPTIONS yang ditolak GAS
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}: Gagal memanggil endpoint GAS`);
+    const data = await res.json();
+
+    if (data.error || data.success === false) {
+      throw new Error(data.error || 'Terjadi kesalahan di server Google Apps Script.');
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-rounded text-[18px]">send</span> Kirim Pengajuan';
+    }
+
+    alert(`✅ SUKSES! ${newItems.length} baris pengajuan berhasil disimpan langsung ke Google Sheet (tab Tracking_Harian)!`);
+    
+    // Refresh data live dari server
+    await loadData();
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-rounded text-[18px]">send</span> Kirim Pengajuan';
+    }
+    console.error('Gagal mengirim ke Google Apps Script:', err);
+    alert(`❌ GAGAL MENYIMPAN KE GOOGLE SHEET:\n\n${err.message}\n\nPastikan SPREADSHEET_ID di Code.gs pada Apps Script sudah benar.`);
   }
-
-  if (liveSent) {
-    alert(`Sukses! ${newItems.length} baris pengajuan berhasil dikirim langsung ke Google Sheet & dicatat di sistem tracking.`);
-  } else {
-    alert(`Berhasil! ${newItems.length} baris pengajuan dicatat di sistem lokal (Pending Approval).`);
-  }
-
-  loadData();
 }
 
 // -------------------------------------------------------------------------
