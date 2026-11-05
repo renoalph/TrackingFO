@@ -112,8 +112,10 @@ function initFormDates() {
 // -------------------------------------------------------------------------
 // DATA FETCHING & LIVE GSHEET SYNC
 // -------------------------------------------------------------------------
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwT0Av5QbG9qdOwQu3N7scHIFziV11vj6uGxqMRjacKTY6VXRcJcwEvQn4yiZdlK_9T/exec';
+
 function getStoredGasUrl() {
-  return (localStorage.getItem('tracking_cme_gas_url') || '').trim();
+  return (localStorage.getItem('tracking_cme_gas_url') || DEFAULT_GAS_URL).trim();
 }
 
 function updateConnectionStatusUI(status, label) {
