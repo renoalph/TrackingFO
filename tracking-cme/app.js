@@ -197,12 +197,19 @@ function processLoadedDataset(dataset, isLive) {
   const items = dataset.table?.items || dataset.items || [];
   state.allProjects = items;
 
-  // Hitung Opsi Filter langsung dari data Google Sheet
+  // Hitung Opsi Filter langsung dari data Google Sheet (normalisasi object set ke array)
+  const rawFo = dataset.filterOptions || {};
+  function normalizeOptions(val, fallbackKey) {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') return Object.keys(val).sort();
+    return getUniqueValues(state.allProjects, fallbackKey);
+  }
+
   state.filterOptions = {
-    operator: dataset.filterOptions?.operator || getUniqueValues(state.allProjects, 'operatorId'),
-    kabupaten: dataset.filterOptions?.kabupaten || getUniqueValues(state.allProjects, 'kabupaten'),
-    mitra: dataset.filterOptions?.mitra || getUniqueValues(state.allProjects, 'mitra'),
-    tahapan: dataset.filterOptions?.tahapan || getUniqueValues(state.allProjects, 'tahapan')
+    operator: normalizeOptions(rawFo.operator, 'operatorId'),
+    kabupaten: normalizeOptions(rawFo.kabupaten, 'kabupaten'),
+    mitra: normalizeOptions(rawFo.mitra, 'mitra'),
+    tahapan: normalizeOptions(rawFo.tahapan, 'tahapan')
   };
 
   // Render komponen dashboard langsung dari summary & charts Google Sheet
@@ -454,7 +461,10 @@ function buildMultiSelects() {
 
 function getOptionsFor_(def) {
   if (def.optionsSource === '__fixed_status__') return FIXED_STATUS_OPTIONS;
-  return (state.filterOptions[def.optionsSource] || []).map(v => ({ value: v, label: v }));
+  const raw = state.filterOptions[def.optionsSource];
+  if (!raw) return [];
+  const list = Array.isArray(raw) ? raw : (typeof raw === 'object' ? Object.keys(raw) : [raw]);
+  return list.filter(v => v && v !== '-').map(v => ({ value: v, label: v }));
 }
 
 function renderMultiSelect(containerId, label, filterKey, options) {
