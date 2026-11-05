@@ -9,29 +9,13 @@
  *   status_approval (Done/Pending), approved_by, tanggal_approval, remarks
  */
 
-// Helper untuk membaca secret/konfigurasi dinamis dari Script Properties (Environment Variables)
+// ID Google Spreadsheet Aktif (Proyek JATIM)
 function getSpreadsheetId_() {
-  try {
-    const active = SpreadsheetApp.getActiveSpreadsheet();
-    if (active && active.getId()) return active.getId();
-  } catch (e) {}
-  try {
-    const prop = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-    if (prop && prop.trim()) return prop.trim();
-  } catch (e) {}
-  return '1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No';
+  return '1s5xoXsVrvB1sP4nNxd1cjJtxPEa-9uUx';
 }
 
 function getSpreadsheetUrl_() {
-  try {
-    const active = SpreadsheetApp.getActiveSpreadsheet();
-    if (active && active.getUrl()) return active.getUrl();
-  } catch (e) {}
-  try {
-    const prop = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_URL');
-    if (prop && prop.trim()) return prop.trim();
-  } catch (e) {}
-  return 'https://docs.google.com/spreadsheets/d/' + getSpreadsheetId_() + '/edit';
+  return 'https://docs.google.com/spreadsheets/d/1s5xoXsVrvB1sP4nNxd1cjJtxPEa-9uUx/edit';
 }
 
 function getAdminPin_() {
