@@ -12,14 +12,10 @@
 // Helper untuk membaca secret/konfigurasi dinamis dari Script Properties (Environment Variables)
 function getSpreadsheetId_() {
   try {
-    const active = SpreadsheetApp.getActiveSpreadsheet();
-    if (active && active.getId()) return active.getId();
-  } catch (e) {}
-  try {
     const prop = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
     if (prop && prop.trim()) return prop.trim();
   } catch (e) {}
-  return '1LSH_HHMbYaWYEoRAnEyMm-0xHKjTm1No';
+  return '1s5xoXsVrvB1sP4nNxd1cjJtxPEa-9uUx';
 }
 
 function getSpreadsheetUrl_() {
