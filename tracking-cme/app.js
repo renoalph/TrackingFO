@@ -1,6 +1,8 @@
 /**
  * app.js — Standalone Engine for Tracking CME (Proyek JATIM)
- * Mirror of Tracking FO Enterprise System with Full Client-Side Interactivity & Local Persistence
+ * Dual-Mode Engine:
+ * 1. Live 2-Way Sync via Google Apps Script (REST API to Google Sheets)
+ * 2. High-Performance Offline Fallback via Local Cache & LocalStorage
  */
 
 // Application State
@@ -33,8 +35,7 @@ const state = {
     tahapan: []
   },
   tableItemsMap: {},
-  kpiModalItems: [],
-  kpiModalFiltered: []
+  isLiveGSheet: false
 };
 
 const TABLE_COLUMNS = [
@@ -109,38 +110,70 @@ function initFormDates() {
 }
 
 // -------------------------------------------------------------------------
-// DATA FETCHING & LOCAL PERSISTENCE
+// DATA FETCHING & LIVE GSHEET SYNC
 // -------------------------------------------------------------------------
+function getStoredGasUrl() {
+  return (localStorage.getItem('tracking_cme_gas_url') || '').trim();
+}
+
+function updateConnectionStatusUI(status, label) {
+  const btn = document.getElementById('btnConnectionStatus');
+  const dot = document.getElementById('connectionDot');
+  const lbl = document.getElementById('connectionStatusLabel');
+  if (!btn || !dot || !lbl) return;
+
+  lbl.innerText = label;
+
+  if (status === 'connected') {
+    state.isLiveGSheet = true;
+    dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+    btn.className = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200 shadow-sm shrink-0 hover:bg-emerald-100 transition cursor-pointer';
+  } else if (status === 'fallback') {
+    state.isLiveGSheet = false;
+    dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+    btn.className = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 text-amber-700 text-xs font-semibold border border-amber-200 shadow-sm shrink-0 hover:bg-amber-100 transition cursor-pointer';
+  } else {
+    state.isLiveGSheet = false;
+    dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+    btn.className = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm shrink-0 hover:bg-slate-200 transition cursor-pointer';
+  }
+}
+
 async function loadData() {
   setRefreshing(true);
+  const gasUrl = getStoredGasUrl();
+
+  // Mode 1: Coba koneksi Live ke Google Apps Script jika URL tersedia
+  if (gasUrl) {
+    try {
+      updateConnectionStatusUI('fallback', 'Menghubungkan GAS...');
+      const targetUrl = `${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=getData`;
+      const res = await fetch(targetUrl);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const dataset = await res.json();
+
+      if (dataset && (dataset.summary || dataset.table || dataset.items)) {
+        processLoadedDataset(dataset, true);
+        updateConnectionStatusUI('connected', 'Live Google Sheet');
+        setRefreshing(false);
+        return;
+      }
+    } catch (err) {
+      console.warn('Gagal memuat live dari Google Apps Script, beralih ke cache data lokal:', err);
+      updateConnectionStatusUI('fallback', 'Offline (Cache Lokal)');
+    }
+  } else {
+    updateConnectionStatusUI('offline', 'Cache Lokal');
+  }
+
+  // Mode 2: Fallback ke data snapshot lokal (data.json)
   try {
     const res = await fetch('data.json');
     if (!res.ok) throw new Error(`HTTP ${res.status}: Gagal memuat data.json`);
     const dataset = await res.json();
-    state.rawDataset = dataset;
-
-    // Load any user-submitted items from localStorage
-    const savedLocal = JSON.parse(localStorage.getItem('tracking_cme_submissions') || '[]');
-    
-    // Combine dataset items with locally stored submissions (local first)
-    state.allProjects = [...savedLocal, ...(dataset.items || [])];
-
-    // Compute or update Filter Options
-    state.filterOptions = {
-      operator: dataset.filterOptions?.operator || getUniqueValues(state.allProjects, 'operatorId'),
-      kabupaten: dataset.filterOptions?.kabupaten || getUniqueValues(state.allProjects, 'kabupaten'),
-      mitra: dataset.filterOptions?.mitra || getUniqueValues(state.allProjects, 'mitra'),
-      tahapan: dataset.filterOptions?.tahapan || getUniqueValues(state.allProjects, 'tahapan')
-    };
-
-    // Build UI Components
-    renderKPI(dataset.summary, savedLocal.length);
-    renderCharts(dataset.charts);
-    buildMultiSelects();
-    renderTableHead();
-    applyFilters();
+    processLoadedDataset(dataset, false);
   } catch (err) {
-    console.error('Error loading data:', err);
+    console.error('Error loading fallback data:', err);
     const tbody = document.getElementById('tableBody');
     if (tbody) {
       tbody.innerHTML = `<tr><td colspan="${TABLE_COLUMNS.length}" class="p-8 text-center text-red-500 font-semibold">Gagal memuat basis data: ${escapeHtml(err.message)}</td></tr>`;
@@ -148,6 +181,34 @@ async function loadData() {
   } finally {
     setRefreshing(false);
   }
+}
+
+function processLoadedDataset(dataset, isLive) {
+  state.rawDataset = dataset;
+
+  // Normalisasi items (apakah dari bootstrap GAS atau format data.json)
+  const items = dataset.table?.items || dataset.items || [];
+
+  // Ambil data pengajuan lokal jika ada
+  const savedLocal = JSON.parse(localStorage.getItem('tracking_cme_submissions') || '[]');
+  
+  // Gabungkan (pengajuan lokal terbaru di atas)
+  state.allProjects = [...savedLocal, ...items];
+
+  // Hitung Opsi Filter
+  state.filterOptions = {
+    operator: dataset.filterOptions?.operator || getUniqueValues(state.allProjects, 'operatorId'),
+    kabupaten: dataset.filterOptions?.kabupaten || getUniqueValues(state.allProjects, 'kabupaten'),
+    mitra: dataset.filterOptions?.mitra || getUniqueValues(state.allProjects, 'mitra'),
+    tahapan: dataset.filterOptions?.tahapan || getUniqueValues(state.allProjects, 'tahapan')
+  };
+
+  // Render komponen dashboard
+  renderKPI(dataset.summary, savedLocal.length);
+  renderCharts(dataset.charts);
+  buildMultiSelects();
+  renderTableHead();
+  applyFilters();
 }
 
 function refreshAll() {
@@ -178,6 +239,74 @@ function getUniqueValues(items, key) {
 }
 
 // -------------------------------------------------------------------------
+// MODAL PENGATURAN KONEKSI GOOGLE SHEET (LIVE SYNC)
+// -------------------------------------------------------------------------
+function openConfigModal() {
+  const modal = document.getElementById('configModal');
+  const input = document.getElementById('cfgGasUrl');
+  const statusBox = document.getElementById('cfgTestStatus');
+  if (input) input.value = getStoredGasUrl();
+  if (statusBox) statusBox.classList.add('hidden');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeConfigModal() {
+  const modal = document.getElementById('configModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function saveAndTestGasConfig() {
+  const input = document.getElementById('cfgGasUrl');
+  const btn = document.getElementById('btnSaveConfig');
+  const statusBox = document.getElementById('cfgTestStatus');
+  const rawUrl = input ? input.value.trim() : '';
+
+  if (!rawUrl) {
+    alert('Mohon masukkan URL Web App Google Apps Script.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-rounded spin text-[18px]">sync</span> Menguji Koneksi...';
+  statusBox.className = 'p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs';
+  statusBox.innerText = 'Menguji ping ke server Google Apps Script...';
+  statusBox.classList.remove('hidden');
+
+  try {
+    const pingUrl = `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}action=ping`;
+    const res = await fetch(pingUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (data.status === 'ok' || data.summary || data.table || data.items) {
+      localStorage.setItem('tracking_cme_gas_url', rawUrl);
+      statusBox.className = 'p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold text-xs';
+      statusBox.innerText = '✅ Berhasil terhubung! Sinkronisasi Google Sheet aktif.';
+      setTimeout(() => {
+        closeConfigModal();
+        loadData();
+      }, 1000);
+      return;
+    }
+    throw new Error('Respons dari server Apps Script tidak valid.');
+  } catch (err) {
+    statusBox.className = 'p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs';
+    statusBox.innerHTML = `❌ Gagal menghubungi Google Apps Script: ${escapeHtml(err.message)}<br><span class="text-[11px] text-red-500 font-normal">Pastikan opsi 'Who has access' di Google Apps Script diset ke 'Anyone'.</span>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-rounded text-[18px]">save</span> Simpan &amp; Hubungkan';
+  }
+}
+
+function clearGasConfig() {
+  if (confirm('Gunakan mode Cache Data Lokal dan putuskan tautan Google Apps Script?')) {
+    localStorage.removeItem('tracking_cme_gas_url');
+    closeConfigModal();
+    loadData();
+  }
+}
+
+// -------------------------------------------------------------------------
 // KPI CARDS
 // -------------------------------------------------------------------------
 function renderKPI(summary, extraPending = 0) {
@@ -201,7 +330,7 @@ function renderKPI(summary, extraPending = 0) {
   grid.innerHTML = defs.map(d => {
     const valStr = typeof d.value === 'number' ? d.value.toLocaleString('id-ID') : (d.value || '0');
     return `
-      <div class="kpi-card cursor-pointer" onclick="handleCardClick('${d.key}')" title="Klik untuk filter atau lihat daftar proyek ${d.label}">
+      <div class="kpi-card cursor-pointer" onclick="handleCardClick('${d.key}')" title="Klik untuk filter daftar proyek ${d.label}">
         <div class="kpi-icon" style="background:${d.bg}; color:${d.color}">
           <span class="material-symbols-rounded">${d.icon}</span>
         </div>
@@ -241,11 +370,9 @@ function handleCardClick(key) {
     resetChipUIs();
     applyFilters();
   } else {
-    // Reset filters and scroll to table
     resetFilters();
   }
 
-  // Smooth scroll down to table section
   const section = document.getElementById('tableSection');
   if (section) section.scrollIntoView({ behavior: 'smooth' });
 }
@@ -356,7 +483,7 @@ function renderMultiSelect(containerId, label, filterKey, options) {
 }
 
 function initEventDelegation() {
-  // Close panels on click outside
+  // Tutup panel dropdown jika klik di luar
   document.addEventListener('click', (e) => {
     const toggleBtn = e.target.closest('[data-ms-toggle-panel]');
     if (toggleBtn) {
@@ -484,7 +611,7 @@ function applyFilters() {
 
   // 2. Year Period
   if (state.filters.yearPeriod === '2026') {
-    list = list.filter(it => it.projectYear === '2025-2026' || !it.projectYear);
+    list = list.filter(it => it.projectYear === '2025-2026' || it.projectYear === '2026' || !it.projectYear);
   }
 
   // 3. Multi-Selects
@@ -734,7 +861,7 @@ function closeDetail() {
 }
 
 // -------------------------------------------------------------------------
-// FORM PENGAJUAN PROGRES LAPANGAN (LOCALSTORAGE + LIVE UPDATE)
+// FORM PENGAJUAN PROGRES LAPANGAN (LIVE POST TO GSHEET + LOCAL BACKUP)
 // -------------------------------------------------------------------------
 let currentFormTab = 'single';
 
@@ -756,27 +883,27 @@ function switchFormTab(tab) {
   const paneBulk = document.getElementById('paneBulk');
 
   if (tab === 'single') {
-    btnSingle.className = 'px-3 py-1.5 font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200';
-    btnBulk.className = 'px-3 py-1.5 font-semibold rounded-lg text-slate-600 hover:bg-slate-100';
+    btnSingle.className = 'px-3 py-1.5 font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 cursor-pointer';
+    btnBulk.className = 'px-3 py-1.5 font-semibold rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer';
     paneSingle.classList.remove('hidden');
     paneBulk.classList.add('hidden');
   } else {
-    btnBulk.className = 'px-3 py-1.5 font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200';
-    btnSingle.className = 'px-3 py-1.5 font-semibold rounded-lg text-slate-600 hover:bg-slate-100';
+    btnBulk.className = 'px-3 py-1.5 font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 cursor-pointer';
+    btnSingle.className = 'px-3 py-1.5 font-semibold rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer';
     paneBulk.classList.remove('hidden');
     paneSingle.classList.add('hidden');
   }
 }
 
-function submitFormPengajuan() {
+async function submitFormPengajuan() {
   if (currentFormTab === 'single') {
-    submitSingleForm();
+    await submitSingleForm();
   } else {
-    submitBulkForm();
+    await submitBulkForm();
   }
 }
 
-function submitSingleForm() {
+async function submitSingleForm() {
   const so = document.getElementById('singleSoNumber').value.trim();
   const site = document.getElementById('singleSiteName').value.trim();
   const op = document.getElementById('singleOperator').value;
@@ -820,18 +947,17 @@ function submitSingleForm() {
     hasTracking: true
   };
 
-  saveSubmissions([newProject]);
+  await sendSubmissionsToBackend([newProject]);
 
-  // Reset form fields
+  // Reset form
   document.getElementById('singleSoNumber').value = '';
   document.getElementById('singleSiteName').value = '';
   document.getElementById('singleRemarks').value = '';
 
   closeGeneratorModal();
-  alert(`Sukses! Pengajuan SO ${so} (${tahapan}) berhasil dicatat dengan status 'Pending Approval'.`);
 }
 
-function submitBulkForm() {
+async function submitBulkForm() {
   const raw = document.getElementById('genRawInput').value.trim();
   const tahapan = document.getElementById('genTahapan').value;
   const mitra = document.getElementById('genMitra').value.trim() || 'Mitra Jatim';
@@ -893,18 +1019,66 @@ function submitBulkForm() {
     return;
   }
 
-  saveSubmissions(newProjects);
+  await sendSubmissionsToBackend(newProjects);
   document.getElementById('genRawInput').value = '';
   closeGeneratorModal();
-  alert(`Berhasil! ${newProjects.length} pengajuan SO berhasil dicatat ke sistem tracking.`);
 }
 
-function saveSubmissions(newItems) {
+async function sendSubmissionsToBackend(newItems) {
+  const btn = document.getElementById('btnSubmitForm');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-rounded spin text-[18px]">sync</span> Mengirim...';
+  }
+
+  const gasUrl = getStoredGasUrl();
+  let liveSent = false;
+
+  // Jika live sync terkonfigurasi, kirim POST ke Google Apps Script
+  if (gasUrl) {
+    try {
+      const payload = {
+        action: 'submitTracking',
+        records: newItems.map(p => ({
+          sonumb: p.sonumb,
+          site_id: p.siteName,
+          mitra: p.mitra,
+          jenis: p.jenis,
+          tahapan: p.tahapan,
+          tanggal_pengajuan: p.tanggalPengajuan,
+          remarks: p.remarks
+        }))
+      };
+
+      await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' }, // CORS preflight avoidance for Google Apps Script
+        body: JSON.stringify(payload),
+        mode: 'no-cors' // Google Apps Script redirects require no-cors or redirect handling
+      });
+
+      liveSent = true;
+    } catch (err) {
+      console.warn('Gagal POST langsung ke Google Apps Script, menyimpan ke lokal:', err);
+    }
+  }
+
+  // Simpan ke memory & localStorage browser
   const savedLocal = JSON.parse(localStorage.getItem('tracking_cme_submissions') || '[]');
   const updatedLocal = [...newItems, ...savedLocal];
   localStorage.setItem('tracking_cme_submissions', JSON.stringify(updatedLocal));
 
-  // Reload and refresh
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-rounded text-[18px]">send</span> Kirim Pengajuan';
+  }
+
+  if (liveSent) {
+    alert(`Sukses! ${newItems.length} baris pengajuan berhasil dikirim langsung ke Google Sheet & dicatat di sistem tracking.`);
+  } else {
+    alert(`Berhasil! ${newItems.length} baris pengajuan dicatat di sistem lokal (Pending Approval).`);
+  }
+
   loadData();
 }
 

@@ -1,7 +1,7 @@
 /**
  * ============================================================
  * MONITORING APPROVAL RFS - PROYEK JATIM
- * Code.gs — Entry point & konfigurasi utama
+ * Code.gs — Entry point, REST API & konfigurasi utama
  * ============================================================
  * Versi ini fokus ke alur kerja approval mitra->PM, sesuai
  * skema baru tab "Tracking_Harian":
@@ -63,12 +63,78 @@ const MILESTONE_STAGES = [
   'Material Delivery', 'Material Onsite', 'FO & Civil Works', 'OTDR', 'RFS'
 ];
 
+/**
+ * Endpoint GET:
+ * 1. Jika diakses via browser biasa -> Menampilkan HTML Web App internal
+ * 2. Jika dipanggil dari web luar (Vercel/CME) dengan ?action=... -> Menghasilkan JSON REST API
+ */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.action) {
+    return handleApiGet_(e);
+  }
+
   return HtmlService.createTemplateFromFile('Index')
     .evaluate()
     .setTitle(CONFIG.APP_TITLE)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/**
+ * Endpoint POST:
+ * Menerima pengajuan baru dari frontend eksternal (Vercel/HP) dan menulis ke Google Sheet
+ */
+function doPost(e) {
+  return handleApiPost_(e);
+}
+
+function handleApiGet_(e) {
+  try {
+    const action = e.parameter.action;
+    let result = null;
+
+    if (action === 'getData' || action === 'getBootstrap') {
+      result = getDashboardBootstrap();
+    } else if (action === 'refresh') {
+      result = forceRefreshCache();
+    } else if (action === 'getDetail') {
+      result = getProjectDetail(e.parameter.key);
+    } else if (action === 'ping') {
+      result = { status: 'ok', serverTime: new Date().toISOString() };
+    } else {
+      result = { error: 'Action "' + action + '" tidak dikenali.' };
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: err.message || String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function handleApiPost_(e) {
+  try {
+    let payload = {};
+    if (e && e.postData && e.postData.contents) {
+      payload = JSON.parse(e.postData.contents);
+    }
+
+    const action = payload.action || (e.parameter && e.parameter.action);
+
+    if (action === 'submitTracking') {
+      const records = payload.records || [];
+      const res = submitTrackingBatch(records);
+      return ContentService.createTextOutput(JSON.stringify({ success: true, result: res }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ error: 'Aksi POST tidak valid.' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message || String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 function include(filename) {
