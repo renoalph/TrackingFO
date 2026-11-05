@@ -2,314 +2,425 @@
 <html lang="id">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tracking CME — Monitoring &amp; Form Pengajuan Lapangan</title>
-  <meta name="description" content="Aplikasi mobile tracking progres CME dan pengajuan milestone lapangan - Proyek JATIM">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <title>Tracking CME — Monitoring &amp; Form Pengajuan Lapangan (Proyek JATIM)</title>
+  <meta name="description" content="Dashboard Monitoring Milestone & Form Pengajuan Lapangan CME / Fiber Optic Proyek JATIM — Tower Bersama Group">
 
-  <!-- Fonts & Icons -->
+  <!-- Font & Icon Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols-Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS & Chart Libraries -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#eef6ff',
-              100: '#d9ebff',
-              200: '#bcdbff',
-              500: '#2b7fff',
-              600: '#155dfc',
-              700: '#1447e6',
-              800: '#1939b7',
-              900: '#1a338f',
-              950: '#142057',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
 
+  <!-- Custom Styles -->
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="bg-slate-900 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white min-h-screen flex justify-center">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-  <!-- Mobile App Frame Container -->
-  <div class="w-full max-w-md min-h-screen bg-slate-950 flex flex-col relative shadow-2xl border-x border-slate-800/60 pb-20">
-
-    <!-- Top App Bar -->
-    <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/25">
-          <span class="material-symbols-rounded text-[20px]">cell_tower</span>
+  <!-- ============================================================ HEADER ============================================================ -->
+  <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
+          <span class="material-symbols-rounded text-[22px]">router</span>
         </div>
         <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="text-sm font-extrabold tracking-tight text-white">Tracking CME</h1>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">JATIM</span>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base md:text-lg font-bold text-slate-900 leading-tight">Tracking CME</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Proyek JATIM</span>
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>Aktif
+            </span>
           </div>
-          <p class="text-[10px] text-slate-400">Civil, Mechanical &amp; Electrical</p>
+          <p class="text-xs text-slate-500">Monitoring Milestone &middot; Sinkronisasi Approval Lapangan dengan Sistem Master</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5">
-        <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-semibold text-emerald-400">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Live Sync</span>
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <!-- Live Clock WIB -->
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm shrink-0">
+          <span class="material-symbols-rounded text-blue-600 text-[17px]">schedule</span>
+          <span id="headerDateDisplay">Memuat waktu...</span>
         </div>
-        <button id="btnOpenConfig" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition" title="Pengaturan Koneksi">
-          <span class="material-symbols-rounded text-[18px]">settings</span>
+
+        <!-- Tombol Input Progres Lapangan -->
+        <button id="btnOpenGenerator" onclick="openGeneratorModal()"
+          class="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm whitespace-nowrap"
+          title="Input atau ajukan milestone progres lapangan">
+          <span class="material-symbols-rounded text-[18px]">post_add</span>
+          Input Progres Lapangan
         </button>
-      </div>
-    </header>
 
-    <!-- Main Dynamic Content Views -->
-    <main class="flex-1 p-4 space-y-4">
-
-      <!-- ============================================================
-           VIEW 1: TRACKER (CEK STATUS "UDAH SAMPAI MANA")
-      ============================================================ -->
-      <section id="viewTracker" class="space-y-4">
-        
-        <!-- Search & Quick Filter Box -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-sm space-y-2.5">
-          <div class="relative">
-            <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-            <input type="text" id="trackerSearchInput" placeholder="Ketik SO Number / Nama Site..."
-              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-9 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition">
-            <button id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
-              <span class="material-symbols-rounded text-[16px]">close</span>
-            </button>
-          </div>
-
-          <!-- Quick Chips -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] no-scrollbar">
-            <button class="chip-filter active" data-filter="all">Semua</button>
-            <button class="chip-filter" data-filter="onprogress">Sedang Dikerjakan</button>
-            <button class="chip-filter" data-filter="rfs">Sudah RFS</button>
-            <button class="chip-filter" data-filter="pending">Review PM</button>
-          </div>
-        </div>
-
-        <!-- Project Overview Card -->
-        <div id="projectDetailContainer" class="space-y-3.5">
-          <!-- Rendered dynamically by app.js -->
-        </div>
-
-      </section>
-
-      <!-- ============================================================
-           VIEW 2: FORM PENGAJUAN LAPANGAN
-      ============================================================ -->
-      <section id="viewForm" class="hidden space-y-4">
-        
-        <!-- Form Header Card -->
-        <div class="bg-gradient-to-r from-brand-900/40 via-indigo-950/40 to-slate-900 border border-brand-500/20 rounded-2xl p-4">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
-              <span class="material-symbols-rounded text-[18px]">assignment_add</span>
-            </div>
-            <div>
-              <h2 class="text-xs font-bold text-white">Form Pengajuan Progres CME</h2>
-              <p class="text-[10px] text-slate-400">Submit pembaruan pekerjaan fisik lapangan langsung ke PM</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Submission Form -->
-        <form id="submissionForm" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3.5 text-xs">
-          
-          <!-- SO Number Picker -->
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1 flex items-center justify-between">
-              <span>SO Number <span class="text-rose-400">*</span></span>
-              <span class="text-[10px] text-brand-400 cursor-pointer hover:underline" id="btnAutoSelectSO">Pilih dari Daftar</span>
-            </label>
-            <div class="relative">
-              <input type="text" id="formSoNumber" required placeholder="Contoh: 0040372120041"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-brand-500">
-            </div>
-          </div>
-
-          <!-- Site Name & ID -->
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="block font-semibold text-slate-300 mb-1">Site ID / Operator</label>
-              <input type="text" id="formSiteId" placeholder="ISAT / 16GSK0308"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-300 mb-1">Nama Site</label>
-              <input type="text" id="formSiteName" placeholder="TBG-SBY-Phase4a..."
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
-            </div>
-          </div>
-
-          <!-- Mitra Pelaksana -->
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Mitra Pelaksana CME <span class="text-rose-400">*</span></label>
-            <select id="formMitra" required
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-500">
-              <option value="">Pilih Mitra...</option>
-              <option value="PT. FAJAR MITRA KRIDA ABADI">PT. FAJAR MITRA KRIDA ABADI</option>
-              <option value="PT. TELAGA PASIR KUTA">PT. TELAGA PASIR KUTA</option>
-              <option value="PT. MITRA KARYA TELEKOM">PT. MITRA KARYA TELEKOM</option>
-              <option value="PT. SINERGI FIBER UTAMA">PT. SINERGI FIBER UTAMA</option>
-              <option value="Mitra Mandiri Lainnya">Mitra Mandiri Lainnya</option>
-            </select>
-          </div>
-
-          <!-- Tahapan Milestone yang Diajukan -->
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Tahapan Milestone Lapangan <span class="text-rose-400">*</span></label>
-            <select id="formTahapan" required
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-medium focus:outline-none focus:border-brand-500">
-              <option value="Survey & APD">1. Survey &amp; APD Lapangan</option>
-              <option value="Material Delivery">2. Material Delivery (Pengiriman)</option>
-              <option value="Material Onsite">3. Material Onsite (Tiba di Lokasi)</option>
-              <option value="CME & Civil Works" selected>4. CME &amp; Civil Works (Galian, Tiang, Tray)</option>
-              <option value="OTDR & Testing">5. OTDR Testing &amp; Pengukuran</option>
-              <option value="RFS (Ready For Service)">6. RFS (Ready For Service / Siap Aktif)</option>
-            </select>
-          </div>
-
-          <!-- Persentase Progres Slider/Buttons -->
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="font-semibold text-slate-300">Persentase Progres Pekerjaan</label>
-              <span id="progressPercentDisplay" class="font-mono font-bold text-brand-400 text-xs">75%</span>
-            </div>
-            <div class="grid grid-cols-4 gap-1.5">
-              <button type="button" class="btn-progress" data-pct="25">25%</button>
-              <button type="button" class="btn-progress" data-pct="50">50%</button>
-              <button type="button" class="btn-progress active" data-pct="75">75%</button>
-              <button type="button" class="btn-progress" data-pct="100">100%</button>
-            </div>
-            <input type="hidden" id="formProgressPercent" value="75">
-          </div>
-
-          <!-- Tanggal Pekerjaan -->
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Tanggal Pengajuan Lapangan</label>
-            <input type="date" id="formDate" required
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
-          </div>
-
-          <!-- Foto Dokumentasi Lapangan -->
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Foto Bukti Lapangan / Berita Acara</label>
-            <div id="dropzonePhoto" class="border-2 border-dashed border-slate-700 hover:border-brand-500/60 rounded-xl p-4 text-center cursor-pointer transition bg-slate-950/60">
-              <input type="file" id="filePhoto" accept="image/*" class="hidden" capture="environment">
-              <div id="photoPlaceholder" class="space-y-1">
-                <span class="material-symbols-rounded text-slate-400 text-[26px]">add_a_photo</span>
-                <p class="text-[11px] text-slate-300 font-medium">Ambil Foto atau Pilih Gambar</p>
-                <p class="text-[9px] text-slate-500">Mendukung format JPG, PNG (maks. 5MB)</p>
-              </div>
-              <div id="photoPreviewContainer" class="hidden relative">
-                <img id="photoPreviewImg" src="" alt="Bukti Foto" class="max-h-36 mx-auto rounded-lg object-cover shadow-md border border-slate-700">
-                <button type="button" id="btnRemovePhoto" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg">
-                  <span class="material-symbols-rounded text-[14px]">close</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Catatan / Remarks -->
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Catatan Tambahan / Kendala Lapangan</label>
-            <textarea id="formRemarks" rows="2.5" placeholder="Contoh: Pekerjaan tray & tiang sudah selesai, tinggal penarikan kabel drop FO..."
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"></textarea>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="pt-2">
-            <button type="submit" id="btnSubmitForm"
-              class="w-full py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition active:scale-[0.99]">
-              <span id="submitIcon" class="material-symbols-rounded text-[18px]">send</span>
-              <span id="submitText">Kirim Pengajuan Progres</span>
-            </button>
-          </div>
-
-        </form>
-
-      </section>
-
-      <!-- ============================================================
-           VIEW 3: RIWAYAT PENGAJUAN
-      ============================================================ -->
-      <section id="viewHistory" class="hidden space-y-3.5">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xs font-bold text-white">Riwayat Pengajuan Lapangan</h2>
-            <p class="text-[10px] text-slate-400">Daftar pengajuan terkini oleh mitra</p>
-          </div>
-          <button id="btnRefreshHistory" class="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">
-            <span class="material-symbols-rounded text-[16px]">sync</span>
-          </button>
-        </div>
-
-        <div id="historyListContainer" class="space-y-2.5">
-          <!-- Rendered dynamically -->
-        </div>
-      </section>
-
-    </main>
-
-    <!-- Bottom Navigation Bar (App Tabs) -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-950/90 backdrop-blur-lg border-t border-slate-800 px-6 py-2.5 flex items-center justify-around z-40">
-      
-      <button class="nav-tab active" data-tab="tracker">
-        <span class="material-symbols-rounded text-[22px] nav-icon">explore</span>
-        <span class="text-[10px] font-semibold">Cek Status</span>
-      </button>
-
-      <button class="nav-tab" data-tab="form">
-        <div class="relative">
-          <div class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 -mt-4 active:scale-95 transition">
-            <span class="material-symbols-rounded text-[22px]">add</span>
-          </div>
-        </div>
-        <span class="text-[10px] font-semibold mt-1">Ajukan</span>
-      </button>
-
-      <button class="nav-tab" data-tab="history">
-        <span class="material-symbols-rounded text-[22px] nav-icon">history</span>
-        <span class="text-[10px] font-semibold">Riwayat</span>
-      </button>
-
-    </nav>
-
-    <!-- Success Feedback Modal -->
-    <div id="modalSuccess" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeSuccessModal()"></div>
-      <div class="relative bg-slate-900 border border-slate-700/80 rounded-2xl max-w-xs w-full p-5 text-center space-y-3.5 shadow-2xl animate-scaleUp">
-        <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30">
-          <span class="material-symbols-rounded text-[26px]">task_alt</span>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-white">Pengajuan Berhasil Dikirim!</h3>
-          <p class="text-xs text-slate-400 mt-1">Status pengajuan otomatis diset <b>Pending Review PM</b> untuk verifikasi approval.</p>
-        </div>
-        <button onclick="closeSuccessModal()" class="w-full py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl transition shadow-md">
-          Lihat di Riwayat
+        <!-- Tombol Refresh -->
+        <button id="btnRefresh" onclick="refreshAll()"
+          class="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition shadow-sm whitespace-nowrap"
+          title="Segarkan data terbaru">
+          <span id="refreshIcon" class="material-symbols-rounded text-[18px]">sync</span>
+          Segarkan
         </button>
       </div>
     </div>
+  </header>
 
+  <!-- ============================================================ MAIN CONTENT ============================================================ -->
+  <main class="max-w-[1440px] w-full mx-auto px-4 md:px-6 py-5 space-y-5 flex-1">
+
+    <!-- KPI CARDS GRID -->
+    <section id="kpiGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <!-- Generated dynamically by app.js -->
+    </section>
+
+    <!-- CHARTS SECTION -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card">
+        <div class="card-head">
+          <span class="material-symbols-rounded text-blue-600">filter_alt</span>
+          Funnel Tahapan Milestone (Aktual Lapangan)
+        </div>
+        <div id="chartFunnel" class="h-72 w-full"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="material-symbols-rounded text-indigo-600">compare_arrows</span>
+          Distribusi Status Akhir — Aktual vs Sistem
+        </div>
+        <div class="chart-box">
+          <canvas id="chartComparison"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- FILTER BAR -->
+    <section class="card">
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Live Search -->
+        <div class="relative flex-1 min-w-[220px]">
+          <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <input id="searchInput" type="text" placeholder="Cari SO Number / Site / Mitra..."
+            class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        </div>
+
+        <!-- Periode Proyek -->
+        <div id="msYearPeriod" class="relative">
+          <select id="selectYearPeriod" onchange="onYearPeriodChange(this.value)"
+            class="flex items-center gap-1.5 pl-3 pr-8 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer shadow-sm">
+            <option value="2026" selected>Proyek CIP (2025–2026 Aktif)</option>
+            <option value="Semua Tahun">Semua Portofolio (27k)</option>
+          </select>
+          <span class="material-symbols-rounded absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
+        </div>
+
+        <!-- Dropdowns Multi-select -->
+        <div id="msOperator"></div>
+        <div id="msKabupaten"></div>
+        <div id="msMitra"></div>
+        <div id="msTahapan"></div>
+        <div id="msStatus"></div>
+
+        <!-- Toggle Chips -->
+        <button data-toggle="onlyGap" class="chip-toggle" onclick="toggleChip(this)">
+          <span class="material-symbols-rounded text-[16px]">compare_arrows</span> Hanya Gap
+        </button>
+        <button data-toggle="onlyApprovedToday" class="chip-toggle" onclick="toggleChip(this)">
+          <span class="material-symbols-rounded text-[16px]">task_alt</span> Approved Hari Ini
+        </button>
+        <button data-toggle="onlyPending" class="chip-toggle" onclick="toggleChip(this)">
+          <span class="material-symbols-rounded text-[16px]">pending_actions</span> Menunggu Approval
+        </button>
+
+        <!-- Reset Button -->
+        <button onclick="resetFilters()"
+          class="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
+          <span class="material-symbols-rounded text-[16px]">restart_alt</span> Reset
+        </button>
+      </div>
+    </section>
+
+    <!-- DATA TABLE SECTION -->
+    <section id="tableSection" class="card overflow-hidden">
+      <div class="card-head justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-rounded text-blue-600">history_edu</span>
+          <span>Log Tracking Harian Lapangan</span>
+          <span id="tableCount" class="text-xs font-normal text-slate-400"></span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <label class="text-slate-400">Baris/hal:</label>
+          <select id="pageSizeSelect" onchange="onPageSizeChange()"
+            class="border border-slate-300 rounded-md text-xs px-2 py-1 bg-white">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Scroll Wrapper -->
+      <div class="overflow-x-auto max-h-[600px] relative border border-slate-100 rounded-lg">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-slate-100 text-slate-600 uppercase font-bold z-10 text-[11px]">
+            <tr id="tableHeadRow"></tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="10" class="p-8 text-center text-slate-400">
+                <span class="material-symbols-rounded spin text-blue-600 text-[24px] mb-2">sync</span>
+                <p>Memuat data proyek...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-3 px-1 pt-4 text-xs">
+        <div id="pageInfo" class="text-slate-500 font-medium"></div>
+        <div class="flex items-center gap-1">
+          <button onclick="gotoPage(1)" class="pg-btn" title="Halaman Pertama">
+            <span class="material-symbols-rounded text-[16px]">first_page</span>
+          </button>
+          <button onclick="gotoPage(state.page-1)" class="pg-btn" title="Halaman Sebelumnya">
+            <span class="material-symbols-rounded text-[16px]">chevron_left</span>
+          </button>
+          <span id="pageNumDisplay" class="px-3 font-bold text-slate-700 text-xs">1</span>
+          <button onclick="gotoPage(state.page+1)" class="pg-btn" title="Halaman Selanjutnya">
+            <span class="material-symbols-rounded text-[16px]">chevron_right</span>
+          </button>
+          <button onclick="gotoPage(state.totalPages)" class="pg-btn" title="Halaman Terakhir">
+            <span class="material-symbols-rounded text-[16px]">last_page</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================ FOOTER ============================================================ -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+    <div class="max-w-[1440px] mx-auto px-4 text-center text-xs text-slate-400">
+      Tracking CME &middot; Proyek JATIM &middot; Tower Bersama Group &middot; Standalone Mirror Edition
+    </div>
+  </footer>
+
+  <!-- ============================================================ MODAL DETAIL PROYEK ============================================================ -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onclick="closeDetail()"></div>
+    <div class="absolute right-0 top-0 h-full w-full sm:w-[500px] bg-white shadow-2xl overflow-y-auto flex flex-col z-10 animate-fadeIn">
+      <div class="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between z-10">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <span class="material-symbols-rounded text-[20px]">info</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Detail Proyek</h3>
+            <p id="detailSubtitle" class="text-[11px] text-slate-400">Informasi spesifikasi &amp; status milestone</p>
+          </div>
+        </div>
+        <button onclick="closeDetail()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+      <div id="detailContent" class="p-5 space-y-4 flex-1"></div>
+    </div>
   </div>
 
+  <!-- ============================================================ MODAL FORM PENGAJUAN PROGRES LAPANGAN ============================================================ -->
+  <div id="generatorModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeGeneratorModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-6 space-y-5 border border-slate-100 z-10 animate-fadeIn">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+            <span class="material-symbols-rounded text-[22px]">post_add</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Form Pengajuan Progres Lapangan</h3>
+            <p class="text-xs text-slate-400">Input langsung pengajuan milestone atau konversi teks SO ke sistem tracking</p>
+          </div>
+        </div>
+        <button onclick="closeGeneratorModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Tab Input Mode: Form Cepat vs Paste Teks Mentah -->
+      <div class="flex items-center gap-2 border-b border-slate-200 pb-2 text-xs">
+        <button id="btnTabSingle" onclick="switchFormTab('single')" class="px-3 py-1.5 font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+          Form Input Mandiri
+        </button>
+        <button id="btnTabBulk" onclick="switchFormTab('bulk')" class="px-3 py-1.5 font-semibold rounded-lg text-slate-600 hover:bg-slate-100">
+          Tempel Teks Massal (Tab/Spasi)
+        </button>
+      </div>
+
+      <!-- Mode 1: Form Single Project -->
+      <div id="paneSingle" class="space-y-4 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">SO Number <span class="text-red-500">*</span></label>
+            <input id="singleSoNumber" type="text" placeholder="Contoh: 0040372120041"
+              class="w-full border border-slate-300 rounded-lg p-2.5 font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nama Site <span class="text-red-500">*</span></label>
+            <input id="singleSiteName" type="text" placeholder="Contoh: TBG-SBY-Phase4a-DF022"
+              class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Operator</label>
+            <select id="singleOperator" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="ISAT">ISAT</option>
+              <option value="TSEL">TSEL</option>
+              <option value="XL">XL</option>
+              <option value="SMARTFREN">SMARTFREN</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Kabupaten/Kota</label>
+            <input id="singleKabupaten" type="text" value="SURABAYA" placeholder="Kabupaten / Kota"
+              class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nama Mitra Pelaksana</label>
+            <input id="singleMitra" type="text" value="PT. FAJAR MITRA KRIDA ABADI" placeholder="Nama PT Vendor"
+              class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Tahapan Milestone Lapangan</label>
+            <select id="singleTahapan" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="FO & Civil Works">FO &amp; Civil Works</option>
+              <option value="OTDR">OTDR</option>
+              <option value="RFS">RFS</option>
+              <option value="Material Delivery">Material Delivery</option>
+              <option value="Material Onsite">Material Onsite</option>
+              <option value="APD">APD</option>
+              <option value="SSR/TSSR/ESR">SSR/TSSR/ESR</option>
+              <option value="Project Manager Assignment">Project Manager Assignment</option>
+              <option value="STIP">STIP</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Jenis Pekerjaan</label>
+            <input id="singleJenis" type="text" value="FO Intersite CME" placeholder="Contoh: FO / CME"
+              class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Tanggal Pengajuan</label>
+            <input id="singleTanggalPengajuan" type="date"
+              class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Catatan / Remarks</label>
+          <input id="singleRemarks" type="text" placeholder="Contoh: Penarikan kabel FO & galian tiang selesai 100%"
+            class="w-full border border-slate-300 rounded-lg p-2.5 font-medium text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Mode 2: Bulk Raw Paste -->
+      <div id="paneBulk" class="space-y-4 text-xs hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Tahapan Milestone Massal</label>
+            <select id="genTahapan" class="w-full border border-slate-300 rounded-lg p-2 font-medium focus:ring-2 focus:ring-blue-500">
+              <option value="FO & Civil Works">FO &amp; Civil Works</option>
+              <option value="OTDR">OTDR</option>
+              <option value="RFS">RFS</option>
+              <option value="Material Delivery">Material Delivery</option>
+              <option value="Material Onsite">Material Onsite</option>
+              <option value="APD">APD</option>
+              <option value="STIP">STIP</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Mitra Pelaksana Massal</label>
+            <input id="genMitra" type="text" value="Mitra Jatim" class="w-full border border-slate-300 rounded-lg p-2 font-medium">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+            <span>Tempelkan Baris SO &amp; Site (Pisahkan dengan Tab atau Spasi)</span>
+          </label>
+          <textarea id="genRawInput" rows="5" placeholder="Contoh tempelan:
+280460400281	JAW-JI-KPN-0058;JAW-JI-KPN-3460
+20260302401	IBS JARIT
+20260302361	IBS TANGGUL WETAN"
+            class="w-full border border-slate-300 rounded-lg p-2.5 font-mono text-[11px] focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+      </div>
+
+      <!-- Submission Footer -->
+      <div class="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 flex-wrap">
+        <div class="text-[11px] text-slate-500 max-w-sm">
+          <span class="font-semibold text-blue-600">Catatan:</span> Status awal akan diset <b>Pending Approval</b> untuk diverifikasi oleh Project Manager TBG.
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="closeGeneratorModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
+            Batal
+          </button>
+          <button id="btnSubmitForm" onclick="submitFormPengajuan()"
+            class="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm transition">
+            <span class="material-symbols-rounded text-[18px]">send</span>
+            Kirim Pengajuan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ MODAL KPI LIST ============================================================ -->
+  <div id="kpiListModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="closeKpiListModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-100 z-10 animate-fadeIn">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div id="kpiListIconWrap" class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm">
+            <span id="kpiListIcon" class="material-symbols-rounded text-[22px]">task_alt</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="kpiListTitle" class="font-bold text-slate-900 text-sm sm:text-base">Daftar Proyek</h3>
+              <span id="kpiListBadge" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">0</span>
+            </div>
+            <p id="kpiListSubtitle" class="text-xs text-slate-500">Memuat data...</p>
+          </div>
+        </div>
+        <button onclick="closeKpiListModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div class="p-3.5 border-b border-slate-100 bg-white">
+        <div class="relative">
+          <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <input id="kpiListSearch" type="text" oninput="onKpiListSearch(this.value)" placeholder="Cari SO Number, Site, atau Mitra..."
+            class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/60 focus:bg-white transition">
+        </div>
+      </div>
+
+      <div id="kpiListBody" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Core App Logic -->
   <script src="app.js"></script>
 </body>
 
