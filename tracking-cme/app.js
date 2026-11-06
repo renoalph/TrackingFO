@@ -248,75 +248,13 @@ function getUniqueValues(items, key) {
 }
 
 // -------------------------------------------------------------------------
-// MODAL PENGATURAN KONEKSI GOOGLE SHEET (LIVE SYNC)
+// KONFIGURASI SINKRONISASI DI BALIK LAYAR
 // -------------------------------------------------------------------------
-function openConfigModal() {
-  const modal = document.getElementById('configModal');
-  const input = document.getElementById('cfgGasUrl');
-  const statusBox = document.getElementById('cfgTestStatus');
-  if (input) input.value = getStoredGasUrl();
-  if (statusBox) statusBox.classList.add('hidden');
-  if (modal) modal.classList.remove('hidden');
-}
+// URL Google Apps Script diset secara otomatis & aman di balik layar
 
-function closeConfigModal() {
-  const modal = document.getElementById('configModal');
-  if (modal) modal.classList.add('hidden');
-}
-
-async function saveAndTestGasConfig() {
-  const input = document.getElementById('cfgGasUrl');
-  const btn = document.getElementById('btnSaveConfig');
-  const statusBox = document.getElementById('cfgTestStatus');
-  const rawUrl = input ? input.value.trim() : '';
-
-  if (!rawUrl) {
-    alert('Mohon masukkan URL Web App Google Apps Script.');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="material-symbols-rounded spin text-[18px]">sync</span> Menguji Koneksi...';
-  statusBox.className = 'p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs';
-  statusBox.innerText = 'Menguji ping ke server Google Apps Script...';
-  statusBox.classList.remove('hidden');
-
-  try {
-    const pingUrl = `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}action=ping`;
-    const res = await fetch(pingUrl);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (data.status === 'ok' || data.summary || data.table || data.items) {
-      localStorage.setItem('tracking_cme_gas_url', rawUrl);
-      statusBox.className = 'p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold text-xs';
-      statusBox.innerText = '✅ Berhasil terhubung! Sinkronisasi Google Sheet aktif.';
-      setTimeout(() => {
-        closeConfigModal();
-        loadData();
-      }, 1000);
-      return;
-    }
-    throw new Error('Respons dari server Apps Script tidak valid.');
-  } catch (err) {
-    statusBox.className = 'p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs';
-    statusBox.innerHTML = `❌ Gagal menghubungi Google Apps Script: ${escapeHtml(err.message)}<br><span class="text-[11px] text-red-500 font-normal">Pastikan opsi 'Who has access' di Google Apps Script diset ke 'Anyone'.</span>`;
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<span class="material-symbols-rounded text-[18px]">save</span> Simpan &amp; Hubungkan';
-  }
-}
-
-function clearGasConfig() {
-  if (confirm('Gunakan mode Cache Data Lokal dan putuskan tautan Google Apps Script?')) {
-    localStorage.removeItem('tracking_cme_gas_url');
-    closeConfigModal();
-    loadData();
-  }
-}
 
 // -------------------------------------------------------------------------
-// KPI CARDS
+// KPI CARDS (MINIMALIST MONOCHROME)
 // -------------------------------------------------------------------------
 function renderKPI(summary, extraPending = 0) {
   if (!summary) return;
@@ -324,13 +262,13 @@ function renderKPI(summary, extraPending = 0) {
   const currentTotal = (summary.total || 0) + extraPending;
 
   const defs = [
-    { key: 'totalMaster', label: 'Total Portofolio', value: summary.totalMaster, icon: 'inventory_2', color: '#1e293b', bg: '#f1f5f9', sub: 'Seluruh Data Master' },
-    { key: 'total', label: 'Total Proyek Aktif', value: currentTotal, icon: 'folder_open', color: '#2563eb', bg: '#eff6ff', sub: 'Proyek CIP (2025–2026)' },
-    { key: 'rfs', label: 'Sudah RFS', value: summary.rfs, icon: 'check_circle', color: '#059669', bg: '#ecfdf5', sub: `${summary.persenRfs}% (Proyek CIP)` },
-    { key: 'onProgress', label: 'On-Progress', value: summary.onProgress, icon: 'autorenew', color: '#d97706', bg: '#fffbeb', sub: 'Proyek CIP' },
-    { key: 'gap', label: 'Gap Sistem vs Aktual', value: summary.gap, icon: 'compare_arrows', color: '#b91c1c', bg: '#fef2f2', sub: 'Perlu Update Master PI' },
-    { key: 'pending', label: 'Menunggu Approval', value: currentPending, icon: 'pending_actions', color: '#ca8a04', bg: '#fef9c3', sub: 'Pending Review PM' },
-    { key: 'approvedToday', label: 'Approved Hari Ini', value: summary.approvedToday, icon: 'task_alt', color: '#0284c7', bg: '#f0f9ff', sub: 'Persetujuan Hari Ini' }
+    { key: 'totalMaster', label: 'Total Portofolio', value: summary.totalMaster, icon: 'inventory_2', sub: 'Seluruh Data Master' },
+    { key: 'total', label: 'Proyek Aktif', value: currentTotal, icon: 'folder_open', sub: 'Proyek CIP (2025–2026)' },
+    { key: 'rfs', label: 'Sudah RFS', value: summary.rfs, icon: 'check_circle', sub: `${summary.persenRfs}% (Proyek CIP)` },
+    { key: 'onProgress', label: 'On-Progress', value: summary.onProgress, icon: 'autorenew', sub: 'Proyek CIP' },
+    { key: 'gap', label: 'Gap Sistem vs Aktual', value: summary.gap, icon: 'compare_arrows', sub: 'Perlu Update Master' },
+    { key: 'pending', label: 'Menunggu Approval', value: currentPending, icon: 'pending_actions', sub: 'Review PM TBG' },
+    { key: 'approvedToday', label: 'Approved Hari Ini', value: summary.approvedToday, icon: 'task_alt', sub: 'Persetujuan Hari Ini' }
   ];
 
   const grid = document.getElementById('kpiGrid');
@@ -340,14 +278,14 @@ function renderKPI(summary, extraPending = 0) {
     const valStr = typeof d.value === 'number' ? d.value.toLocaleString('id-ID') : (d.value || '0');
     return `
       <div class="kpi-card cursor-pointer" onclick="handleCardClick('${d.key}')" title="Klik untuk filter daftar proyek ${d.label}">
-        <div class="kpi-icon" style="background:${d.bg}; color:${d.color}">
-          <span class="material-symbols-rounded">${d.icon}</span>
+        <div class="flex items-center justify-between">
+          <div class="kpi-icon">
+            <span class="material-symbols-rounded">${d.icon}</span>
+          </div>
+          <span class="material-symbols-rounded text-zinc-400 text-[14px]">arrow_outward</span>
         </div>
-        <div class="kpi-value" style="color:${d.color}">${valStr}</div>
-        <div class="kpi-label flex items-center justify-between">
-          <span>${d.label}</span>
-          <span class="material-symbols-rounded text-slate-300 text-[14px]">open_in_new</span>
-        </div>
+        <div class="kpi-value mt-1">${valStr}</div>
+        <div class="kpi-label">${d.label}</div>
         ${d.sub ? `<div class="kpi-sub">${d.sub}</div>` : ''}
       </div>
     `;
@@ -387,7 +325,7 @@ function handleCardClick(key) {
 }
 
 // -------------------------------------------------------------------------
-// CHARTS (FUNNEL & COMPARISON)
+// CHARTS (FUNNEL & COMPARISON) — MINIMALIST THEME
 // -------------------------------------------------------------------------
 let comparisonChartInstance = null;
 
@@ -403,10 +341,10 @@ function renderCharts(chartsData) {
       const options = {
         legend: { position: 'none' },
         chartArea: { left: 160, top: 15, right: 30, bottom: 25 },
-        colors: ['#2563eb'],
-        hAxis: { minValue: 0, textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#64748b' } },
-        vAxis: { textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#1e293b' } },
-        bar: { groupWidth: '65%' },
+        colors: ['#18181b'],
+        hAxis: { minValue: 0, textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#71717a' }, gridlines: { color: '#f4f4f5' } },
+        vAxis: { textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#27272a' } },
+        bar: { groupWidth: '60%' },
         fontName: 'Plus Jakarta Sans',
         backgroundColor: 'transparent'
       };
@@ -431,19 +369,37 @@ function renderCharts(chartsData) {
       data: {
         labels: chartsData.statusComparison.categories,
         datasets: [
-          { label: 'Aktual (Tracking Lapangan)', data: chartsData.statusComparison.aktual, backgroundColor: '#2563eb', borderRadius: 4 },
-          { label: 'Sistem (Master PI)', data: chartsData.statusComparison.sistem, backgroundColor: '#94a3b8', borderRadius: 4 }
+          { label: 'Aktual (Tracking Lapangan)', data: chartsData.statusComparison.aktual, backgroundColor: '#18181b', borderRadius: 6 },
+          { label: 'Sistem (Master PI)', data: chartsData.statusComparison.sistem, backgroundColor: '#e4e4e7', borderColor: '#d4d4d8', borderWidth: 1, borderRadius: 6 }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom', labels: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } } }
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              boxHeight: 12,
+              usePointStyle: true,
+              pointStyle: 'rectRounded',
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+              color: '#3f3f46'
+            }
+          }
         },
         scales: {
-          y: { beginAtZero: true, ticks: { precision: 0, font: { family: 'Plus Jakarta Sans', size: 11 } }, grid: { color: '#f1f5f9' } },
-          x: { ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }, grid: { display: false } }
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0, font: { family: 'Plus Jakarta Sans', size: 10 }, color: '#71717a' },
+            grid: { color: '#f4f4f5' },
+            border: { dash: [3, 3], color: '#e4e4e7' }
+          },
+          x: {
+            ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#27272a' },
+            grid: { display: false }
+          }
         }
       }
     });
@@ -807,16 +763,16 @@ function openDetail(key) {
   ];
 
   let html = `
-    <div class="flex flex-wrap items-center gap-2 pb-2">
+    <div class="flex flex-wrap items-center gap-2 pb-1">
       <span class="badge ${badgeClass(item.statusBadge)}">${escapeHtml(labelBadge(item.statusBadge))}</span>
       ${item.approvedToday ? '<span class="badge badge-match">Approved Hari Ini</span>' : ''}
     </div>
 
-    <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs bg-slate-50/70 p-3.5 rounded-xl border border-slate-100">
+    <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs bg-zinc-50 p-3.5 rounded-lg border border-zinc-200">
       ${rows.map(r => `
         <div>
-          <div class="text-slate-400 font-medium text-[10px] uppercase">${escapeHtml(r[0])}</div>
-          <div class="font-bold text-slate-800 text-xs mt-0.5 break-words">${escapeHtml(String(r[1]))}</div>
+          <div class="text-zinc-400 font-medium text-[10px] uppercase tracking-wider">${escapeHtml(r[0])}</div>
+          <div class="font-semibold text-zinc-900 text-xs mt-0.5 break-words">${escapeHtml(String(r[1]))}</div>
         </div>
       `).join('')}
     </div>
@@ -824,40 +780,41 @@ function openDetail(key) {
 
   if (item.remarks) {
     html += `
-      <div class="text-xs bg-blue-50/60 border border-blue-100 rounded-xl p-3 text-slate-700">
-        <span class="font-bold text-blue-900 block mb-0.5">Catatan / Remarks:</span>
+      <div class="text-xs bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-zinc-700">
+        <span class="font-bold text-zinc-900 block mb-0.5">Catatan / Remarks:</span>
         ${escapeHtml(item.remarks)}
       </div>
     `;
   }
 
-  // Milestone Stepper Preview
+  // Milestone Stepper Preview (Clean Minimalist Monoline)
+  const isMatch = item.statusBadge === 'MATCH';
   html += `
     <div class="pt-2">
-      <h4 class="font-bold text-xs text-slate-800 mb-3 flex items-center gap-1.5">
-        <span class="material-symbols-rounded text-blue-600 text-[18px]">timeline</span>
+      <h4 class="font-bold text-xs text-zinc-900 mb-3 flex items-center gap-1.5">
+        <span class="material-symbols-rounded text-zinc-500 text-[18px]">timeline</span>
         Tracking Garis Progres Lapangan
       </h4>
-      <div class="space-y-3 pl-2 border-l-2 border-blue-200 ml-2">
+      <div class="space-y-3.5 pl-2 border-l border-zinc-300 ml-2">
         <div class="relative pl-4">
-          <div class="absolute -left-[13px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-xs"></div>
-          <div class="font-bold text-xs text-slate-900">1. STIP &amp; Assignment</div>
-          <div class="text-[11px] text-slate-400">Penugasan vendor dan administrasi master</div>
+          <div class="absolute -left-[11px] top-0.5 w-3 h-3 rounded-full bg-zinc-900 border-2 border-white shadow-xs"></div>
+          <div class="font-bold text-xs text-zinc-900">1. STIP &amp; Assignment</div>
+          <div class="text-[11px] text-zinc-500">Penugasan vendor dan administrasi master</div>
         </div>
         <div class="relative pl-4">
-          <div class="absolute -left-[13px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-xs"></div>
-          <div class="font-bold text-xs text-slate-900">2. APD &amp; Material Onsite</div>
-          <div class="text-[11px] text-slate-400">Pengiriman material kabel, tiang, &amp; closure</div>
+          <div class="absolute -left-[11px] top-0.5 w-3 h-3 rounded-full bg-zinc-900 border-2 border-white shadow-xs"></div>
+          <div class="font-bold text-xs text-zinc-900">2. APD &amp; Material Onsite</div>
+          <div class="text-[11px] text-zinc-500">Pengiriman material kabel, tiang, &amp; closure</div>
         </div>
         <div class="relative pl-4">
-          <div class="absolute -left-[13px] top-0 w-4 h-4 rounded-full ${item.statusBadge === 'MATCH' ? 'bg-emerald-500' : 'bg-blue-600 animate-pulse'} border-2 border-white shadow-xs"></div>
-          <div class="font-bold text-xs ${item.statusBadge === 'MATCH' ? 'text-slate-900' : 'text-blue-700'}">3. FO &amp; Civil Works (Instalasi Fisik)</div>
-          <div class="text-[11px] text-slate-400">Penarikan kabel FO, galian trenching, penyambungan splicing</div>
+          <div class="absolute -left-[11px] top-0.5 w-3 h-3 rounded-full ${isMatch ? 'bg-zinc-900' : 'bg-zinc-700 ring-4 ring-zinc-100'} border-2 border-white shadow-xs"></div>
+          <div class="font-bold text-xs text-zinc-900">3. FO &amp; Civil Works (Instalasi Fisik)</div>
+          <div class="text-[11px] text-zinc-500">Penarikan kabel FO, galian trenching, penyambungan splicing</div>
         </div>
         <div class="relative pl-4">
-          <div class="absolute -left-[13px] top-0 w-4 h-4 rounded-full ${item.statusBadge === 'MATCH' ? 'bg-emerald-500' : 'bg-slate-300'} border-2 border-white shadow-xs"></div>
-          <div class="font-bold text-xs ${item.statusBadge === 'MATCH' ? 'text-emerald-700' : 'text-slate-400'}">4. OTDR Testing &amp; RFS</div>
-          <div class="text-[11px] text-slate-400">Pengukuran redaman loss &amp; serah terima Ready For Service</div>
+          <div class="absolute -left-[11px] top-0.5 w-3 h-3 rounded-full ${isMatch ? 'bg-zinc-900' : 'bg-zinc-300'} border-2 border-white shadow-xs"></div>
+          <div class="font-bold text-xs ${isMatch ? 'text-zinc-900' : 'text-zinc-400'}">4. OTDR Testing &amp; RFS</div>
+          <div class="text-[11px] text-zinc-500">Pengukuran redaman loss &amp; serah terima Ready For Service</div>
         </div>
       </div>
     </div>
