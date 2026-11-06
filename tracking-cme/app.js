@@ -254,7 +254,7 @@ function getUniqueValues(items, key) {
 
 
 // -------------------------------------------------------------------------
-// KPI CARDS (MINIMALIST MONOCHROME)
+// KPI CARDS (HARMONIOUS SOFT PALETTE: #121212, #FFFFFF, #1D3D8F, #2798D5)
 // -------------------------------------------------------------------------
 function renderKPI(summary, extraPending = 0) {
   if (!summary) return;
@@ -262,13 +262,13 @@ function renderKPI(summary, extraPending = 0) {
   const currentTotal = (summary.total || 0) + extraPending;
 
   const defs = [
-    { key: 'totalMaster', label: 'Total Portofolio', value: summary.totalMaster, icon: 'inventory_2', sub: 'Seluruh Data Master' },
-    { key: 'total', label: 'Proyek Aktif', value: currentTotal, icon: 'folder_open', sub: 'Proyek CIP (2025–2026)' },
-    { key: 'rfs', label: 'Sudah RFS', value: summary.rfs, icon: 'check_circle', sub: `${summary.persenRfs}% (Proyek CIP)` },
-    { key: 'onProgress', label: 'On-Progress', value: summary.onProgress, icon: 'autorenew', sub: 'Proyek CIP' },
-    { key: 'gap', label: 'Gap Sistem vs Aktual', value: summary.gap, icon: 'compare_arrows', sub: 'Perlu Update Master' },
-    { key: 'pending', label: 'Menunggu Approval', value: currentPending, icon: 'pending_actions', sub: 'Review PM TBG' },
-    { key: 'approvedToday', label: 'Approved Hari Ini', value: summary.approvedToday, icon: 'task_alt', sub: 'Persetujuan Hari Ini' }
+    { key: 'totalMaster', label: 'Total Portofolio', value: summary.totalMaster, icon: 'inventory_2', iconColor: '#1D3D8F', iconBg: '#f0f7fc', iconBorder: '#d0e7f7', sub: 'Seluruh Data Master' },
+    { key: 'total', label: 'Proyek Aktif', value: currentTotal, icon: 'folder_open', iconColor: '#2798D5', iconBg: '#f0f9ff', iconBorder: '#bae6fd', sub: 'Proyek CIP (2025–2026)' },
+    { key: 'rfs', label: 'Sudah RFS', value: summary.rfs, icon: 'check_circle', iconColor: '#059669', iconBg: '#ecfdf5', iconBorder: '#a7f3d0', sub: `${summary.persenRfs}% (Proyek CIP)` },
+    { key: 'onProgress', label: 'On-Progress', value: summary.onProgress, icon: 'autorenew', iconColor: '#2798D5', iconBg: '#f0f7fc', iconBorder: '#d0e7f7', sub: 'Proyek CIP' },
+    { key: 'gap', label: 'Gap Sistem vs Aktual', value: summary.gap, icon: 'compare_arrows', iconColor: '#e11d48', iconBg: '#fff1f2', iconBorder: '#fecdd3', sub: 'Perlu Update Master' },
+    { key: 'pending', label: 'Menunggu Approval', value: currentPending, icon: 'pending_actions', iconColor: '#d97706', iconBg: '#fffbeb', iconBorder: '#fde68a', sub: 'Review PM TBG' },
+    { key: 'approvedToday', label: 'Approved Hari Ini', value: summary.approvedToday, icon: 'task_alt', iconColor: '#1D3D8F', iconBg: '#f0f7fc', iconBorder: '#d0e7f7', sub: 'Persetujuan Hari Ini' }
   ];
 
   const grid = document.getElementById('kpiGrid');
@@ -277,14 +277,14 @@ function renderKPI(summary, extraPending = 0) {
   grid.innerHTML = defs.map(d => {
     const valStr = typeof d.value === 'number' ? d.value.toLocaleString('id-ID') : (d.value || '0');
     return `
-      <div class="kpi-card cursor-pointer" onclick="handleCardClick('${d.key}')" title="Klik untuk filter daftar proyek ${d.label}">
+      <div class="kpi-card cursor-pointer group" onclick="handleCardClick('${d.key}')" title="Klik untuk filter daftar proyek ${d.label}">
         <div class="flex items-center justify-between">
-          <div class="kpi-icon">
+          <div class="kpi-icon" style="background:${d.iconBg}; color:${d.iconColor}; border-color:${d.iconBorder};">
             <span class="material-symbols-rounded">${d.icon}</span>
           </div>
-          <span class="material-symbols-rounded text-zinc-400 text-[14px]">arrow_outward</span>
+          <span class="material-symbols-rounded text-slate-300 group-hover:text-[#2798D5] text-[15px] transition-colors">arrow_outward</span>
         </div>
-        <div class="kpi-value mt-1">${valStr}</div>
+        <div class="kpi-value mt-1.5" style="color: #121212;">${valStr}</div>
         <div class="kpi-label">${d.label}</div>
         ${d.sub ? `<div class="kpi-sub">${d.sub}</div>` : ''}
       </div>
@@ -325,7 +325,7 @@ function handleCardClick(key) {
 }
 
 // -------------------------------------------------------------------------
-// CHARTS (FUNNEL & COMPARISON) — MINIMALIST THEME
+// CHARTS (FUNNEL & COMPARISON) — SOFT PALETTE (#1D3D8F & #2798D5)
 // -------------------------------------------------------------------------
 let comparisonChartInstance = null;
 
@@ -341,9 +341,9 @@ function renderCharts(chartsData) {
       const options = {
         legend: { position: 'none' },
         chartArea: { left: 160, top: 15, right: 30, bottom: 25 },
-        colors: ['#18181b'],
-        hAxis: { minValue: 0, textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#71717a' }, gridlines: { color: '#f4f4f5' } },
-        vAxis: { textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#27272a' } },
+        colors: ['#1D3D8F'],
+        hAxis: { minValue: 0, textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#64748b' }, gridlines: { color: '#f1f5f9' } },
+        vAxis: { textStyle: { fontSize: 11, fontName: 'Plus Jakarta Sans', color: '#121212' } },
         bar: { groupWidth: '60%' },
         fontName: 'Plus Jakarta Sans',
         backgroundColor: 'transparent'
@@ -356,7 +356,7 @@ function renderCharts(chartsData) {
     });
   }
 
-  // 2. Chart.js Status Comparison
+  // 2. Chart.js Status Comparison — Fixed Y-Axis Clipping & Brand Palette
   if (chartsData.statusComparison && window.Chart) {
     const ctx = document.getElementById('chartComparison');
     if (!ctx) return;
@@ -369,13 +369,33 @@ function renderCharts(chartsData) {
       data: {
         labels: chartsData.statusComparison.categories,
         datasets: [
-          { label: 'Aktual (Tracking Lapangan)', data: chartsData.statusComparison.aktual, backgroundColor: '#18181b', borderRadius: 6 },
-          { label: 'Sistem (Master PI)', data: chartsData.statusComparison.sistem, backgroundColor: '#e4e4e7', borderColor: '#d4d4d8', borderWidth: 1, borderRadius: 6 }
+          {
+            label: 'Aktual (Tracking Lapangan)',
+            data: chartsData.statusComparison.aktual,
+            backgroundColor: '#1D3D8F',
+            borderRadius: 6,
+            borderSkipped: false
+          },
+          {
+            label: 'Sistem (Master PI)',
+            data: chartsData.statusComparison.sistem,
+            backgroundColor: '#2798D5',
+            borderRadius: 6,
+            borderSkipped: false
+          }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: {
+            left: 20, // Ruang ekstra di sisi kiri agar angka sumbu Y (ribuan/puluhan ribu) tidak terpotong
+            right: 15,
+            top: 15,
+            bottom: 6
+          }
+        },
         plugins: {
           legend: {
             position: 'bottom',
@@ -385,19 +405,42 @@ function renderCharts(chartsData) {
               usePointStyle: true,
               pointStyle: 'rectRounded',
               font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-              color: '#3f3f46'
+              color: '#334155',
+              padding: 16
+            }
+          },
+          tooltip: {
+            backgroundColor: '#121212',
+            titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+            bodyFont: { family: 'Plus Jakarta Sans', size: 11 },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const val = context.parsed.y !== null ? context.parsed.y.toLocaleString('id-ID') : 0;
+                return ` ${label}: ${val} proyek`;
+              }
             }
           }
         },
         scales: {
           y: {
             beginAtZero: true,
-            ticks: { precision: 0, font: { family: 'Plus Jakarta Sans', size: 10 }, color: '#71717a' },
-            grid: { color: '#f4f4f5' },
-            border: { dash: [3, 3], color: '#e4e4e7' }
+            ticks: {
+              precision: 0,
+              padding: 10, // Jarak lega antara teks angka dan garis Y
+              font: { family: 'Plus Jakarta Sans', size: 10.5, weight: '600' },
+              color: '#64748b',
+              callback: function(val) {
+                return Number(val).toLocaleString('id-ID');
+              }
+            },
+            grid: { color: '#f1f5f9' },
+            border: { dash: [3, 3], color: '#e2e8f0' }
           },
           x: {
-            ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#27272a' },
+            ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#121212' },
             grid: { display: false }
           }
         }
@@ -852,13 +895,13 @@ function switchFormTab(tab) {
   const paneBulk = document.getElementById('paneBulk');
 
   if (tab === 'single') {
-    btnSingle.className = 'px-3 py-1.5 font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 cursor-pointer';
-    btnBulk.className = 'px-3 py-1.5 font-semibold rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer';
+    btnSingle.className = 'px-3 py-1.5 font-bold rounded-lg bg-[#1D3D8F] text-white cursor-pointer';
+    btnBulk.className = 'px-3 py-1.5 font-medium rounded-lg text-zinc-600 hover:bg-[#f0f7fc] hover:text-[#1D3D8F] cursor-pointer';
     paneSingle.classList.remove('hidden');
     paneBulk.classList.add('hidden');
   } else {
-    btnBulk.className = 'px-3 py-1.5 font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 cursor-pointer';
-    btnSingle.className = 'px-3 py-1.5 font-semibold rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer';
+    btnBulk.className = 'px-3 py-1.5 font-bold rounded-lg bg-[#1D3D8F] text-white cursor-pointer';
+    btnSingle.className = 'px-3 py-1.5 font-medium rounded-lg text-zinc-600 hover:bg-[#f0f7fc] hover:text-[#1D3D8F] cursor-pointer';
     paneBulk.classList.remove('hidden');
     paneSingle.classList.add('hidden');
   }
