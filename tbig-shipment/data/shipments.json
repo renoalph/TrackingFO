@@ -85,7 +85,7 @@
           "location": "Site WAINGAPU KOTA",
           "date": "31 Okt 2026 · 16.00 WITA (ETA Site)",
           "status": "PENDING",
-          "desc": "Serah terima material tower di site dengan waspang/PM TBIG."
+          "desc": "Serah terima material tower di site dengan waspang/PM lapangan."
         }
       ],
       "marineRadarUrl": "https://www.marinetraffic.com/en/ais/details/ships/shipid:689953/mmsi:525015792/imo:9301140/vessel:PRAKASA_PACIFIC",
@@ -102,7 +102,7 @@
       "address": "Jl. Raya Uluwatu, Pecatu, Kuta Selatan, Badung",
       "materialType": "Monopole Section & Grounding",
       "containerNo": "TRUCK-L300-8812",
-      "originPort": "Gudang Logistik TBIG Surabaya",
+      "originPort": "Gudang Logistik Surabaya",
       "destPort": "Pelabuhan Gilimanuk (Lintas Darat)",
       "originCoords": [-7.2575, 112.7521],
       "destCoords": [-8.1633, 114.4397],
@@ -169,7 +169,7 @@
           "location": "Site KUTA SELATAN PECATU",
           "date": "09 Nov 2026 · 13.45 WITA",
           "status": "DONE",
-          "desc": "Material diterima lengkap oleh waspang TBIG. Surat Jalan tervalidasi."
+          "desc": "Material diterima lengkap oleh tim waspang. Surat Jalan tervalidasi."
         }
       ],
       "marineRadarUrl": "https://www.marinetraffic.com/",

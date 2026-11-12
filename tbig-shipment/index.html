@@ -4,9 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-  <title>TBIG Logistics — Tracking Delivery &amp; Vessel Monitoring</title>
-  <meta name="description"
-    content="Dashboard Monitoring Jadwal Kapal, Ekspedisi, dan Milestone Perjalanan Material Tower — Tower Bersama Group">
+  <title>Shipment Tracker — Delivery &amp; Vessel Monitoring</title>
+  <meta name="description" content="Dashboard Monitoring Jadwal Kapal, Ekspedisi, dan Milestone Perjalanan Material Tower">
 
   <!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,7 +34,7 @@
     // Inisialisasi tema sebelum render agar tidak flickering
     (function () {
       try {
-        const saved = localStorage.getItem('tbig_theme');
+        const saved = localStorage.getItem('tracker_theme') || localStorage.getItem('tbig_theme');
         if (saved === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
@@ -67,7 +66,7 @@
       <div class="flex lg:flex-col items-center gap-5">
         <div
           class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1D3D8F] to-[#2798D5] flex items-center justify-center text-white shadow-md shadow-blue-950/40 cursor-pointer"
-          title="TBIG Logistics — Public Portal">
+          title="Shipment Tracker — Delivery Portal">
           <span class="material-symbols-rounded text-[22px]">directions_boat</span>
         </div>
 
@@ -327,7 +326,7 @@
             <div id="tabContent_details" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl text-xs">
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div>
-                  <span class="text-[10px] text-slate-400 uppercase font-bold">Nomor SO TBIG</span>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold">Nomor Sales Order (SO)</span>
                   <p id="detailSonumb" class="font-mono font-bold text-slate-900 mt-1">0010388360011</p>
                 </div>
                 <div>
@@ -372,10 +371,10 @@
                 <div class="p-3 bg-white rounded-lg shadow-2xs flex items-center gap-3">
                   <div
                     class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm">
-                    TBG
+                    WSP
                   </div>
                   <div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase">Pengawas Lapangan (Waspang TBIG)</div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase">Pengawas Lapangan (Waspang)</div>
                     <div class="font-bold text-slate-900 text-xs">Angen Cahya Asmara</div>
                     <div class="text-[11px] text-slate-500">Project Manager CME Jatim &amp; Nusra</div>
                   </div>
@@ -487,7 +486,7 @@
               <option value="Terminal Nilam (Tanjung Perak, Surabaya)">Terminal Nilam (Tj Perak, Surabaya)</option>
               <option value="Terminal Berlian (Tanjung Perak, Surabaya)">Terminal Berlian (Tj Perak, Surabaya)</option>
               <option value="Tanjung Priok (Jakarta)">Tanjung Priok (Jakarta)</option>
-              <option value="Gudang Logistik TBIG Surabaya">Gudang Logistik TBIG Surabaya (Darat Bali)</option>
+              <option value="Gudang Logistik Surabaya">Gudang Logistik Transit Surabaya (Darat Bali)</option>
             </select>
           </div>
           <div>

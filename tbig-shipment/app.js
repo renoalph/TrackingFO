@@ -1,5 +1,5 @@
 /**
- * app.js — TBIG Logistics & Delivery Tracking Engine (Master-Detail Dribbble UI)
+ * app.js — Delivery & Vessel Tracking Engine (Master-Detail UI)
  */
 
 const state = {
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // -------------------------------------------------------------------------
 async function loadData() {
   try {
-    const saved = localStorage.getItem('tbig_shipments_data');
+    const saved = localStorage.getItem('shipments_tracker_data') || localStorage.getItem('tbig_shipments_data');
     if (saved) {
       const parsed = JSON.parse(saved);
       state.shipments = parsed.shipments || [];
@@ -34,7 +34,7 @@ async function loadData() {
       const res = await fetch('data/shipments.json');
       const data = await res.json();
       state.shipments = data.shipments || [];
-      localStorage.setItem('tbig_shipments_data', JSON.stringify(data));
+      localStorage.setItem('shipments_tracker_data', JSON.stringify(data));
     }
 
     if (state.shipments.length > 0 && !state.activeId) {
@@ -48,7 +48,7 @@ async function loadData() {
 }
 
 function saveShipmentsToLocal() {
-  localStorage.setItem('tbig_shipments_data', JSON.stringify({ shipments: state.shipments }));
+  localStorage.setItem('shipments_tracker_data', JSON.stringify({ shipments: state.shipments }));
 }
 
 // -------------------------------------------------------------------------
@@ -669,10 +669,10 @@ function submitNewShipment(e) {
       { step: 3, title: 'Pelayaran Laut Jalur Tol Laut', location: 'Perairan Indonesia', date: etd + ' - ' + etaPort, status: 'ACTIVE', desc: 'Kapal sedang berlayar menuju pelabuhan tujuan.' },
       { step: 4, title: 'Tiba di Pelabuhan Tujuan', location: destPort, date: etaPort, status: 'PENDING', desc: 'Antrean proses bongkar muat kontainer.' },
       { step: 5, title: 'Trucking Mover Darat ke Site', location: residence, date: etaPort, status: 'PENDING', desc: 'Pengiriman darat menuju titik koordinat site.' },
-      { step: 6, title: 'Tiba Lengkap di Lokasi Site', location: siteName, date: etaSite, status: 'PENDING', desc: 'Serah terima material dengan waspang/PM TBIG.' }
+      { step: 6, title: 'Tiba Lengkap di Lokasi Site', location: siteName, date: etaSite, status: 'PENDING', desc: 'Serah terima material dengan waspang/tim penerima di site.' }
     ],
     marineRadarUrl: `https://www.marinetraffic.com/en/ais/details/ships/vessel:${vesselName.replace(/\s+/g, '_').toUpperCase()}`,
-    evidenceNote: 'Input baru dari TBIG Logistics Delivery Portal.'
+    evidenceNote: 'Input baru dari Delivery Tracking Portal.'
   };
 
   state.shipments.unshift(newEntry);
@@ -756,7 +756,7 @@ function copyWhatsAppFormat(id) {
   const item = state.shipments.find(s => s.id === id);
   if (!item) return;
 
-  const text = `🚢 *[UPDATE MONITORING LOGISTIK TBIG]*\n` +
+  const text = `🚢 *[UPDATE MONITORING PENGIRIMAN & KAPAL]*\n` +
     `• *No. SO*: #${item.sonumb}\n` +
     `• *Site*: ${item.siteName} (${item.siteId})\n` +
     `• *Wilayah*: ${item.residence}, ${item.province}\n` +
@@ -765,7 +765,7 @@ function copyWhatsAppFormat(id) {
     `• *Status*: ${item.statusLabel}\n` +
     `• *ETA Site*: ${item.etaSite || '-'}\n` +
     `• *Rute*: ${item.originPort} ➔ ${item.destPort}\n\n` +
-    `_Monitoring Pergerakan Material Tower Bersama Group_`;
+    `_Monitoring Pengiriman Material & Ekspedisi Kapal_`;
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
@@ -979,7 +979,7 @@ function applyTheme(theme) {
   document.body.classList.toggle('dark', isDark);
 
   try {
-    localStorage.setItem('tbig_theme', theme);
+    localStorage.setItem('tracker_theme', theme);
   } catch (e) { }
 
   // Update theme toggle icon
@@ -1005,7 +1005,7 @@ function toggleDarkMode() {
 function initTheme() {
   let saved = null;
   try {
-    saved = localStorage.getItem('tbig_theme');
+    saved = localStorage.getItem('tracker_theme') || localStorage.getItem('tbig_theme');
   } catch (e) { }
 
   if (saved) {
