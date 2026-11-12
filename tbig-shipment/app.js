@@ -270,15 +270,11 @@ function renderInspector() {
   const specRoute = document.getElementById('specRoute');
   const containerTag = document.getElementById('vehicleContainerTag');
   const vehicleImg = document.getElementById('vehicleImageTag');
-  const loadBadge = document.getElementById('vehicleLoadBadge');
 
   const isSea = !item.shippingLine.includes('TRUCKING');
   if (vehicleImg) {
     vehicleImg.src = isSea ? 'asset/image/ship-color.png' : 'asset/image/cargo.png';
     vehicleImg.alt = item.vesselName;
-  }
-  if (loadBadge) {
-    loadBadge.innerText = item.towerHeight.includes('72') ? '92% TOWER LOAD' : '85% TOWER LOAD';
   }
 
   if (specVesselName) specVesselName.innerText = item.vesselName;
