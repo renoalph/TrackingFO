@@ -26,15 +26,27 @@ document.addEventListener('DOMContentLoaded', () => {
 // -------------------------------------------------------------------------
 async function loadData() {
   try {
-    const saved = localStorage.getItem('tbig_shipments_data');
+    const saved = localStorage.getItem('shipments_tracker_data') || localStorage.getItem('tbig_shipments_data');
     if (saved) {
       const parsed = JSON.parse(saved);
       state.shipments = parsed.shipments || [];
+
+      // Enrich cached items with realistic nautical waypoints if missing
+      state.shipments.forEach(item => {
+        if (!item.seaWaypoints || item.seaWaypoints.length < 2) {
+          const cKey = resolveCorridorKey(item.originPort, item.destPort);
+          if (cKey && CORRIDOR_PRESETS[cKey]) {
+            item.seaWaypoints = CORRIDOR_PRESETS[cKey].sea;
+            item.landWaypoints = CORRIDOR_PRESETS[cKey].land;
+          }
+        }
+      });
+      saveShipmentsToLocal();
     } else {
       const res = await fetch('data/shipments.json');
       const data = await res.json();
       state.shipments = data.shipments || [];
-      localStorage.setItem('tbig_shipments_data', JSON.stringify(data));
+      saveShipmentsToLocal();
     }
 
     if (state.shipments.length > 0 && !state.activeId) {
@@ -48,7 +60,7 @@ async function loadData() {
 }
 
 function saveShipmentsToLocal() {
-  localStorage.setItem('tbig_shipments_data', JSON.stringify({ shipments: state.shipments }));
+  localStorage.setItem('shipments_tracker_data', JSON.stringify({ shipments: state.shipments }));
 }
 
 // -------------------------------------------------------------------------
@@ -428,6 +440,251 @@ function initMap() {
   });
 }
 
+// -------------------------------------------------------------------------
+// NAUTICAL CORRIDORS & SPLINE ROUTING ENGINE
+// Real Indonesian Maritime Lanes & Terrestrial Logistics Routes
+// -------------------------------------------------------------------------
+
+const CORRIDOR_PRESETS = {
+  'SURABAYA_WAINGAPU': {
+    sea: [
+      [-7.1983, 112.7335],
+      [-7.0120, 112.6710],
+      [-6.8000, 112.9200],
+      [-6.7200, 113.6500],
+      [-6.8200, 114.5000],
+      [-7.4500, 115.4500],
+      [-7.9500, 116.5000],
+      [-8.0500, 117.8000],
+      [-8.2500, 118.9000],
+      [-8.5500, 119.3200],
+      [-8.8500, 119.3800],
+      [-9.2500, 119.7500],
+      [-9.5500, 120.1500],
+      [-9.6481, 120.2608]
+    ],
+    land: [
+      [-9.6481, 120.2608],
+      [-9.6460, 120.2650],
+      [-9.6500, 120.2685],
+      [-9.6535, 120.2705],
+      [-9.6550, 120.2720]
+    ]
+  },
+  'SURABAYA_GILIMANUK': {
+    sea: [
+      [-7.2575, 112.7521],
+      [-7.3650, 112.7300],
+      [-7.4600, 112.7150],
+      [-7.5450, 112.6950],
+      [-7.6450, 112.9050],
+      [-7.7550, 113.2150],
+      [-7.7050, 113.5150],
+      [-7.7300, 113.7000],
+      [-7.7050, 114.0050],
+      [-7.8350, 114.3750],
+      [-8.1300, 114.3900],
+      [-8.1500, 114.3980],
+      [-8.1550, 114.4150],
+      [-8.1633, 114.4397]
+    ],
+    land: [
+      [-8.1633, 114.4397],
+      [-8.2450, 114.5050],
+      [-8.3600, 114.6250],
+      [-8.4150, 114.8150],
+      [-8.5000, 115.0200],
+      [-8.5380, 115.1220],
+      [-8.5800, 115.1700],
+      [-8.6850, 115.1850],
+      [-8.7800, 115.1650],
+      [-8.8167, 115.1167]
+    ]
+  },
+  'SURABAYA_LEMBAR': {
+    sea: [
+      [-7.2050, 112.7290],
+      [-7.0120, 112.6710],
+      [-6.8000, 112.9200],
+      [-6.7200, 113.7000],
+      [-6.9000, 114.6500],
+      [-7.5500, 115.4500],
+      [-8.1000, 115.7000],
+      [-8.3500, 115.8200],
+      [-8.5800, 115.9200],
+      [-8.7100, 116.0300],
+      [-8.7297, 116.0719]
+    ],
+    land: [
+      [-8.7297, 116.0719],
+      [-8.7400, 116.0500],
+      [-8.7500, 116.0100],
+      [-8.7650, 115.9700],
+      [-8.7612, 115.9320]
+    ]
+  },
+  'SURABAYA_TENAU': {
+    sea: [
+      [-7.2020, 112.7310],
+      [-7.0120, 112.6710],
+      [-6.8000, 112.9500],
+      [-6.7200, 113.8000],
+      [-6.8500, 114.6000],
+      [-7.3000, 115.5000],
+      [-7.8000, 116.8000],
+      [-8.0000, 118.2000],
+      [-8.1000, 119.5000],
+      [-8.1500, 121.0000],
+      [-8.1000, 122.5000],
+      [-8.3200, 123.1000],
+      [-8.6800, 123.3200],
+      [-9.3500, 123.4000],
+      [-9.9500, 123.4500],
+      [-10.1500, 123.5100],
+      [-10.1889, 123.5414]
+    ],
+    land: [
+      [-10.1889, 123.5414],
+      [-10.1980, 123.5350],
+      [-10.2100, 123.5220],
+      [-10.2200, 123.5100]
+    ]
+  },
+  'JAKARTA_PONTIANAK': {
+    sea: [
+      [-6.1038, 106.8833],
+      [-5.9200, 106.9100],
+      [-5.5000, 107.1500],
+      [-4.5000, 107.7000],
+      [-3.3000, 108.3000],
+      [-2.1000, 108.7500],
+      [-1.2000, 109.0000],
+      [-0.4500, 109.1200],
+      [-0.0750, 109.1800],
+      [-0.0450, 109.2500],
+      [-0.0320, 109.3000],
+      [-0.0263, 109.3425]
+    ],
+    land: [
+      [-0.0263, 109.3425],
+      [-0.0350, 109.3550],
+      [-0.0500, 109.4600],
+      [-0.1200, 109.7200],
+      [-0.1800, 109.9500],
+      [-0.2400, 110.1200],
+      [-0.0500, 110.3500],
+      [0.1200, 110.5500],
+      [0.0800, 110.7500],
+      [0.0385, 110.9511]
+    ]
+  }
+};
+
+/**
+ * Catmull-Rom Spline Interpolation for realistic, smooth geographic curves.
+ * Eliminates sharp joints and stiff straight lines.
+ */
+function catmullRomSpline(points, numInterpolationPoints = 8) {
+  if (!points || points.length < 2) return points || [];
+  if (points.length === 2) {
+    const p0 = points[0];
+    const p1 = points[1];
+    const midLat = (p0[0] + p1[0]) / 2;
+    const midLng = (p0[1] + p1[1]) / 2;
+    const dLat = p1[0] - p0[0];
+    const dLng = p1[1] - p0[1];
+    const offsetLat = midLat - dLng * 0.08;
+    const offsetLng = midLng + dLat * 0.08;
+    return catmullRomSpline([p0, [offsetLat, offsetLng], p1], numInterpolationPoints);
+  }
+
+  const result = [];
+  const pts = [points[0], ...points, points[points.length - 1]];
+
+  for (let i = 1; i < pts.length - 2; i++) {
+    const p0 = pts[i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2];
+
+    for (let t = 0; t < numInterpolationPoints; t++) {
+      const u = t / numInterpolationPoints;
+      const u2 = u * u;
+      const u3 = u2 * u;
+
+      const lat = 0.5 * (
+        (2 * p1[0]) +
+        (-p0[0] + p2[0]) * u +
+        (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 +
+        (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3
+      );
+
+      const lng = 0.5 * (
+        (2 * p1[1]) +
+        (-p0[1] + p2[1]) * u +
+        (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 +
+        (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3
+      );
+
+      result.push([lat, lng]);
+    }
+  }
+  result.push(points[points.length - 1]);
+  return result;
+}
+
+function resolveCorridorKey(originPort, destPort) {
+  const o = (originPort || '').toLowerCase();
+  const d = (destPort || '').toLowerCase();
+
+  if (o.includes('jakarta') && d.includes('pontianak')) return 'JAKARTA_PONTIANAK';
+  if (o.includes('surabaya') || o.includes('jamrud') || o.includes('nilam') || o.includes('berlian')) {
+    if (d.includes('waingapu')) return 'SURABAYA_WAINGAPU';
+    if (d.includes('gilimanuk')) return 'SURABAYA_GILIMANUK';
+    if (d.includes('lembar')) return 'SURABAYA_LEMBAR';
+    if (d.includes('tenau') || d.includes('kupang')) return 'SURABAYA_TENAU';
+  }
+  return null;
+}
+
+function getSeaRouteCoordinates(item) {
+  if (item.seaWaypoints && Array.isArray(item.seaWaypoints) && item.seaWaypoints.length >= 2) {
+    return catmullRomSpline(item.seaWaypoints, 8);
+  }
+
+  const corridorKey = resolveCorridorKey(item.originPort, item.destPort);
+  if (corridorKey && CORRIDOR_PRESETS[corridorKey]) {
+    return catmullRomSpline(CORRIDOR_PRESETS[corridorKey].sea, 8);
+  }
+
+  // Fallback: Organic natural curve between origin and dest
+  const p0 = item.originCoords;
+  const p1 = item.destCoords;
+  const midLat = (p0[0] + p1[0]) / 2 + (p1[1] - p0[1]) * 0.12;
+  const midLng = (p0[1] + p1[1]) / 2 - (p1[0] - p0[0]) * 0.12;
+  return catmullRomSpline([p0, [midLat, midLng], p1], 10);
+}
+
+function getLandRouteCoordinates(item) {
+  if (!item.siteCoords) return [];
+
+  if (item.landWaypoints && Array.isArray(item.landWaypoints) && item.landWaypoints.length >= 2) {
+    return catmullRomSpline(item.landWaypoints, 6);
+  }
+
+  const corridorKey = resolveCorridorKey(item.originPort, item.destPort);
+  if (corridorKey && CORRIDOR_PRESETS[corridorKey] && CORRIDOR_PRESETS[corridorKey].land) {
+    return catmullRomSpline(CORRIDOR_PRESETS[corridorKey].land, 6);
+  }
+
+  // Slight natural road curve
+  const p0 = item.destCoords;
+  const p1 = item.siteCoords;
+  const midLat = (p0[0] + p1[0]) / 2 + (p1[1] - p0[1]) * 0.05;
+  const midLng = (p0[1] + p1[1]) / 2 - (p1[0] - p0[0]) * 0.05;
+  return catmullRomSpline([p0, [midLat, midLng], p1], 6);
+}
+
 function updateMapRoute(item) {
   if (!state.map || !state.mapRouteLayer || !item.originCoords || !item.destCoords) return;
 
@@ -439,25 +696,41 @@ function updateMapRoute(item) {
   if (item.status === 'COMPLETED') routeColor = '#10b981';
   if (item.status === 'RISK_DELAY') routeColor = '#e11d48';
 
-  // 1. Maritime Route (Curved / Sea Polyline)
-  const seaRoute = L.polyline([item.originCoords, item.destCoords], {
+  const seaCoords = getSeaRouteCoordinates(item);
+  const landCoords = getLandRouteCoordinates(item);
+
+  // 1. Maritime Route Glow (Soft Ambient Glow underneath)
+  L.polyline(seaCoords, {
     color: routeColor,
-    weight: 4,
-    opacity: 0.9,
-    dashArray: item.status === 'IN_TRANSIT' ? '6, 8' : null
+    weight: 9,
+    opacity: 0.22,
+    lineCap: 'round',
+    lineJoin: 'round'
   }).addTo(state.mapRouteLayer);
 
-  // 2. Land Route to Site
-  if (item.siteCoords) {
-    L.polyline([item.destCoords, item.siteCoords], {
-      color: '#64748b',
-      weight: 2.5,
-      opacity: 0.75,
-      dashArray: '3, 6'
+  // 2. Main Maritime Nautical Polyline (Curved real nautical track)
+  L.polyline(seaCoords, {
+    color: routeColor,
+    weight: 3.5,
+    opacity: 0.95,
+    dashArray: item.status === 'IN_TRANSIT' ? '7, 9' : null,
+    lineCap: 'round',
+    lineJoin: 'round'
+  }).addTo(state.mapRouteLayer);
+
+  // 3. Land Route (Trucking Mover from Port to Site)
+  if (landCoords.length > 0) {
+    L.polyline(landCoords, {
+      color: '#f59e0b',
+      weight: 3,
+      opacity: 0.85,
+      dashArray: '4, 6',
+      lineCap: 'round',
+      lineJoin: 'round'
     }).addTo(state.mapRouteLayer);
   }
 
-  // 3. Origin Port Marker
+  // 4. Origin Port Marker
   L.circleMarker(item.originCoords, {
     radius: 7,
     fillColor: '#1D3D8F',
@@ -466,7 +739,7 @@ function updateMapRoute(item) {
     fillOpacity: 1
   }).addTo(state.mapRouteLayer).bindTooltip(`<b>Pelabuhan Muat</b><br>${item.originPort}`);
 
-  // 4. Dest Port Marker
+  // 5. Dest Port Marker
   L.circleMarker(item.destCoords, {
     radius: 7,
     fillColor: '#2798D5',
@@ -475,7 +748,72 @@ function updateMapRoute(item) {
     fillOpacity: 1
   }).addTo(state.mapRouteLayer).bindTooltip(`<b>Pelabuhan Tujuan</b><br>${item.destPort}`);
 
-  // 5. Site Destination Marker
+  // 6. Live / Estimated Vessel Marker
+  if (seaCoords.length > 0) {
+    let vesselPos = null;
+    let vesselTooltipText = '';
+
+    if (item.status === 'IN_TRANSIT') {
+      const progressIdx = Math.floor(seaCoords.length * 0.56);
+      vesselPos = seaCoords[progressIdx];
+      vesselTooltipText = `
+        <div class="font-sans text-xs">
+          <div class="font-bold text-[#1D3D8F] flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+            ${item.vesselName}
+          </div>
+          <div class="text-[11px] text-slate-500">${item.shippingLine} · ${item.voyage}</div>
+          <div class="text-[11px] font-semibold text-sky-700 mt-0.5">Sedang Berlayar di Alur Laut</div>
+        </div>
+      `;
+    } else if (item.status === 'RISK_DELAY') {
+      const progressIdx = Math.floor(seaCoords.length * 0.35);
+      vesselPos = seaCoords[progressIdx];
+      vesselTooltipText = `
+        <div class="font-sans text-xs">
+          <div class="font-bold text-rose-600 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+            ${item.vesselName} (Delay Alert)
+          </div>
+          <div class="text-[11px] text-slate-500">${item.shippingLine} · ${item.voyage}</div>
+          <div class="text-[11px] font-semibold text-rose-700 mt-0.5">Kecepatan Disesuaikan / Cuaca Buruk</div>
+        </div>
+      `;
+    } else if (item.status === 'PORT_ARRIVED') {
+      vesselPos = item.destCoords;
+      vesselTooltipText = `
+        <div class="font-sans text-xs">
+          <div class="font-bold text-emerald-700 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            ${item.vesselName} (Sandar di Dermaga)
+          </div>
+          <div class="text-[11px] text-slate-500">Bongkar Muat di ${item.destPort}</div>
+        </div>
+      `;
+    }
+
+    if (vesselPos) {
+      const vesselIcon = L.divIcon({
+        className: 'vessel-marker-wrapper',
+        html: `
+          <div class="vessel-marker-container">
+            <div class="vessel-pulse-ring"></div>
+            <div class="vessel-icon-circle">
+              <span class="material-symbols-rounded">directions_boat</span>
+            </div>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+
+      L.marker(vesselPos, { icon: vesselIcon })
+        .addTo(state.mapRouteLayer)
+        .bindTooltip(vesselTooltipText, { permanent: false, direction: 'top', offset: [0, -14] });
+    }
+  }
+
+  // 7. Site Destination Marker
   if (item.siteCoords) {
     const siteMarker = L.circleMarker(item.siteCoords, {
       radius: 8,
@@ -496,9 +834,10 @@ function updateMapRoute(item) {
   }
 
   // Smooth Bounds Fit
-  const bounds = L.latLngBounds([item.originCoords, item.destCoords]);
-  if (item.siteCoords) bounds.extend(item.siteCoords);
-  state.map.fitBounds(bounds, { padding: [40, 40] });
+  const allCoords = seaCoords.concat(landCoords);
+  if (allCoords.length > 0) {
+    state.map.fitBounds(L.latLngBounds(allCoords), { padding: [40, 40] });
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -632,6 +971,9 @@ function submitNewShipment(e) {
     }
   }
 
+  const corridorKey = resolveCorridorKey(originPort, destPort);
+  const corridor = corridorKey ? CORRIDOR_PRESETS[corridorKey] : null;
+
   // CREATE PENGIRIMAN BARU
   const newEntry = {
     id: 'SHP-' + Date.now(),
@@ -649,6 +991,8 @@ function submitNewShipment(e) {
     originCoords: originCoords,
     destCoords: destCoords,
     siteCoords: [destCoords[0] + (Math.random() - 0.5) * 0.1, destCoords[1] + (Math.random() - 0.5) * 0.1],
+    seaWaypoints: corridor ? corridor.sea : null,
+    landWaypoints: corridor ? corridor.land : null,
     shippingLine: shippingLine,
     vesselName: vesselName,
     voyage: 'Voy. 101/N',
