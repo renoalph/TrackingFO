@@ -22,100 +22,93 @@
   <link rel="stylesheet" href="styles.css?v=2.0">
 </head>
 
-<body class="bg-[#f1f5f9] text-slate-800 font-sans min-h-screen p-2 sm:p-5 flex flex-col justify-center antialiased">
+<body class="bg-white text-slate-800 font-sans h-screen w-screen overflow-hidden m-0 p-0 antialiased flex flex-col selection:bg-[#1D3D8F] selection:text-white">
 
-  <!-- MAIN APP CONTAINER WRAPPER (Rounded 3XL Card) -->
-  <div class="max-w-[1560px] w-full mx-auto bg-white rounded-3xl shadow-2xl shadow-slate-200/60 border border-slate-200/90 overflow-hidden flex flex-col lg:flex-row min-h-[90vh]">
+  <!-- MAIN APP CONTAINER WRAPPER (Full Viewport - No Outer Padding) -->
+  <div class="w-full h-full bg-white flex flex-col lg:flex-row overflow-hidden">
 
     <!-- ============================================================ 
-         1. LEFT SLIM ICON SIDEBAR 
+         1. LEFT SLIM ICON SIDEBAR (PUBLIC & OPEN PORTAL)
          ============================================================ -->
-    <aside class="w-full lg:w-[76px] bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 p-3.5 flex lg:flex-col items-center justify-between shrink-0">
+    <aside class="w-full lg:w-[72px] bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 p-3 flex lg:flex-col items-center justify-between shrink-0 z-20">
       <!-- Top Brand Logo -->
-      <div class="flex lg:flex-col items-center gap-6">
-        <div class="w-11 h-11 rounded-2xl bg-[#1D3D8F] flex items-center justify-center text-white shadow-md shadow-[#1D3D8F]/25 cursor-pointer" title="TBIG Logistics">
-          <span class="material-symbols-rounded text-[24px]">directions_boat</span>
+      <div class="flex lg:flex-col items-center gap-5">
+        <div class="w-10 h-10 rounded-xl bg-[#1D3D8F] flex items-center justify-center text-white shadow-xs cursor-pointer" title="TBIG Logistics — Public Portal">
+          <span class="material-symbols-rounded text-[22px]">directions_boat</span>
         </div>
 
         <!-- Navigation Buttons -->
-        <nav class="flex lg:flex-col items-center gap-2">
+        <nav class="flex lg:flex-col items-center gap-1.5">
           <button class="sidebar-nav-btn active" title="Tracking Delivery">
             <span class="material-symbols-rounded">local_shipping</span>
           </button>
           <button class="sidebar-nav-btn" onclick="openNewShipmentModal()" title="Input Pengiriman Baru">
             <span class="material-symbols-rounded">add_circle</span>
           </button>
-          <button class="sidebar-nav-btn" title="Armada Kapal &amp; Pelayaran">
+          <button class="sidebar-nav-btn" onclick="filterByStatus('IN_TRANSIT')" title="Kapal Sedang Berlayar">
             <span class="material-symbols-rounded">anchor</span>
           </button>
-          <button class="sidebar-nav-btn" title="Statistik &amp; Laporan">
-            <span class="material-symbols-rounded">analytics</span>
-          </button>
-          <button class="sidebar-nav-btn" title="Notifikasi &amp; Alert">
-            <span class="material-symbols-rounded">notifications</span>
+          <button class="sidebar-nav-btn" onclick="loadData()" title="Segarkan Data">
+            <span class="material-symbols-rounded">sync</span>
           </button>
         </nav>
       </div>
 
-      <!-- Bottom User Profile Avatar -->
-      <div class="flex lg:flex-col items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1D3D8F] to-[#2798D5] flex items-center justify-center text-white text-xs font-bold border-2 border-white shadow-xs" title="Nabela - TBIG PM">
-          NB
-        </div>
-        <button class="sidebar-nav-btn hidden lg:flex" title="Keluar / Pengaturan">
-          <span class="material-symbols-rounded text-slate-400">logout</span>
-        </button>
+      <!-- Bottom Public Live Indicator (Tanpa Login / Logout) -->
+      <div class="flex lg:flex-col items-center gap-1.5">
+        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse my-1" title="Sistem Aktif & Terbuka"></div>
+        <span class="text-[9px] font-bold text-slate-400 hidden lg:block tracking-widest uppercase">LIVE</span>
       </div>
     </aside>
 
     <!-- ============================================================ 
          2. MIDDLE COLUMN: SHIPMENT LIST & SEARCH (MASTER)
          ============================================================ -->
-    <section class="w-full lg:w-[440px] xl:w-[480px] border-b lg:border-b-0 lg:border-r border-slate-200/80 p-5 sm:p-6 flex flex-col shrink-0 bg-[#fafafa]/50">
+    <section class="w-full lg:w-[420px] xl:w-[460px] border-b lg:border-b-0 lg:border-r border-slate-200/80 p-4 sm:p-5 flex flex-col shrink-0 bg-[#fafafa]/50 h-full overflow-hidden">
       
       <!-- Column Header -->
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-3.5">
         <div>
-          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Tracking Delivery</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Monitoring pergerakan material tower &amp; kapal</p>
+          <h2 class="text-lg font-bold text-slate-900 tracking-tight">Tracking Delivery</h2>
+          <p class="text-xs text-slate-400">Monitoring pergerakan material tower &amp; kapal</p>
         </div>
-        <button onclick="openNewShipmentModal()" class="w-9 h-9 rounded-xl bg-[#1D3D8F] hover:bg-[#152e6d] text-white flex items-center justify-center shadow-xs transition" title="Tambah Pengiriman">
-          <span class="material-symbols-rounded text-[20px]">add</span>
+        <button onclick="openNewShipmentModal()" class="w-8 h-8 rounded-lg bg-[#1D3D8F] hover:bg-[#152e6d] text-white flex items-center justify-center shadow-xs transition" title="Tambah Pengiriman">
+          <span class="material-symbols-rounded text-[18px]">add</span>
         </button>
       </div>
 
       <!-- Search Bar -->
-      <div class="relative mb-3.5">
-        <span class="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[19px]">search</span>
+      <div class="relative mb-3">
+        <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
         <input id="shipmentSearchInput" type="text" placeholder="Search SO Number, Site, Kapal..."
-          class="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#1D3D8F] focus:ring-1 focus:ring-[#1D3D8F] shadow-xs transition">
-        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-          <span class="material-symbols-rounded text-[18px]">tune</span>
+          class="w-full pl-9 pr-9 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#1D3D8F] focus:ring-1 focus:ring-[#1D3D8F] shadow-xs transition">
+        <button class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-rounded text-[17px]">tune</span>
         </button>
       </div>
 
       <!-- Quick Filter Pills -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 mb-4 custom-scrollbar text-xs">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 mb-3 custom-scrollbar text-xs">
         <button onclick="filterByStatus('ALL')" id="filterBtn_ALL"
-          class="px-3.5 py-1.5 rounded-full font-bold bg-[#1D3D8F] text-white whitespace-nowrap shadow-xs transition">
+          class="px-3 py-1 rounded-full font-bold bg-[#1D3D8F] text-white whitespace-nowrap shadow-xs transition">
           Semua (<span id="count_ALL">0</span>)
         </button>
         <button onclick="filterByStatus('IN_TRANSIT')" id="filterBtn_IN_TRANSIT"
-          class="px-3.5 py-1.5 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          class="px-3 py-1 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
           In Transit
         </button>
         <button onclick="filterByStatus('PORT_ARRIVED')" id="filterBtn_PORT_ARRIVED"
-          class="px-3.5 py-1.5 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          class="px-3 py-1 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
           Port Arrived
         </button>
         <button onclick="filterByStatus('COMPLETED')" id="filterBtn_COMPLETED"
-          class="px-3.5 py-1.5 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          class="px-3 py-1 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
           Delivered
         </button>
       </div>
 
       <!-- Scrollable Cards List -->
-      <div id="shipmentCardsContainer" class="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar max-h-[70vh] lg:max-h-[calc(90vh-175px)]">
+      <div id="shipmentCardsContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
         <!-- Rendered by app.js -->
       </div>
     </section>
@@ -123,7 +116,7 @@
     <!-- ============================================================ 
          3. RIGHT COLUMN: MAP & DETAILED INSPECTOR (DETAIL)
          ============================================================ -->
-    <section class="flex-1 p-5 sm:p-7 flex flex-col overflow-y-auto custom-scrollbar">
+    <section class="flex-1 p-4 sm:p-6 flex flex-col h-full overflow-y-auto custom-scrollbar bg-white">
       
       <!-- Top Inspector Header Bar -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">

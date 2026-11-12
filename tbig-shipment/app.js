@@ -357,11 +357,16 @@ function initMap() {
   }).addTo(state.map);
 
   state.mapRouteLayer = L.layerGroup().addTo(state.map);
+
+  window.addEventListener('resize', () => {
+    if (state.map) state.map.invalidateSize();
+  });
 }
 
 function updateMapRoute(item) {
   if (!state.map || !state.mapRouteLayer || !item.originCoords || !item.destCoords) return;
 
+  state.map.invalidateSize();
   state.mapRouteLayer.clearLayers();
 
   let routeColor = '#1D3D8F';
