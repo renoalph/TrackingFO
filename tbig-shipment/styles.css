@@ -198,11 +198,11 @@ body {
 }
 
 .floating-map-metrics {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 14px;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 9999px;
+  box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.12), 0 1px 4px rgba(15, 23, 42, 0.05);
 }
 
 /* =========================================================================

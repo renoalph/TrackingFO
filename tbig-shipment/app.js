@@ -250,16 +250,27 @@ function renderInspector() {
     radarLink.href = item.marineRadarUrl || 'https://www.marinetraffic.com/';
   }
 
-  // Floating Metrics
+  // Floating Map Status Pill (Data Riil & Esensial)
   const metricLocation = document.getElementById('metricLocation');
-  const metricSpeed = document.getElementById('metricSpeed');
   const metricEta = document.getElementById('metricEta');
-  const metricLastUpdate = document.getElementById('metricLastUpdate');
 
-  if (metricLocation) metricLocation.innerText = item.province.includes('Timur') ? 'Laut Sawu, NTT' : (item.province.includes('Bali') ? 'Selat Bali' : 'Laut Jawa');
-  if (metricSpeed) metricSpeed.innerText = item.status === 'COMPLETED' ? '0.0 knots · Sandar' : '11.8 knots · Berlayar';
-  if (metricEta) metricEta.innerText = `${item.etaSite ? item.etaSite.split(' ')[0] : '31 Okt'} (${item.status === 'COMPLETED' ? 'Done' : '1.5 Hari'})`;
-  if (metricLastUpdate) metricLastUpdate.innerText = item.status === 'COMPLETED' ? 'Complete Verified' : '2 Jam lalu (AIS)';
+  if (metricLocation) {
+    if (item.status === 'COMPLETED') {
+      metricLocation.innerText = `Site ${item.siteName}`;
+    } else if (item.status === 'PORT_ARRIVED') {
+      metricLocation.innerText = item.destPort ? item.destPort.split('(')[0].trim() : 'Pelabuhan Tujuan';
+    } else {
+      metricLocation.innerText = item.province.includes('Timur') ? 'Laut Sawu, NTT' : (item.province.includes('Bali') ? 'Selat Bali' : 'Laut Jawa');
+    }
+  }
+
+  if (metricEta) {
+    if (item.status === 'COMPLETED') {
+      metricEta.innerText = 'Selesai (Tiba di Site)';
+    } else {
+      metricEta.innerText = item.etaSite ? item.etaSite.split(' ')[0] : (item.etaPort ? item.etaPort.split(' ')[0] : '-');
+    }
+  }
 
   // Vehicle Tab Specs
   const specVesselName = document.getElementById('specVesselName');

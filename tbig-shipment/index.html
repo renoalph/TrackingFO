@@ -163,52 +163,20 @@
       <div class="relative mb-5">
         <div id="mainInspectorMap"></div>
 
-        <!-- Floating Metrics Bar (Sesuai gambar referensi) -->
-        <div class="floating-map-metrics absolute bottom-3 left-3 right-3 p-3 flex flex-wrap items-center justify-around gap-2 text-xs z-10">
-          <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-[#f0f7fc] text-[#1D3D8F] flex items-center justify-center">
-              <span class="material-symbols-rounded text-[16px]">pin_drop</span>
-            </div>
-            <div>
-              <div class="text-[10px] text-slate-400 font-semibold uppercase">Current Location</div>
-              <div id="metricLocation" class="font-bold text-slate-900 text-xs">Laut Sawu, NTT</div>
-            </div>
+        <!-- Floating Status Pill (Compact, Ramping & Hanya Data Riil) -->
+        <div class="floating-map-metrics absolute bottom-3 left-3 px-3.5 py-1.5 flex items-center gap-3 text-xs z-10">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-rounded text-[#1D3D8F] text-[15px]">location_on</span>
+            <span class="text-[10.5px] text-slate-500 font-medium">Posisi:</span>
+            <span id="metricLocation" class="font-bold text-slate-900 text-[11px]">Laut Sawu, NTT</span>
           </div>
 
-          <div class="w-px h-6 bg-slate-200 hidden sm:block"></div>
+          <div class="w-px h-3.5 bg-slate-200"></div>
 
-          <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <span class="material-symbols-rounded text-[16px]">speed</span>
-            </div>
-            <div>
-              <div class="text-[10px] text-slate-400 font-semibold uppercase">Vessel Speed</div>
-              <div id="metricSpeed" class="font-bold text-slate-900 text-xs">11.8 knots · Berlayar</div>
-            </div>
-          </div>
-
-          <div class="w-px h-6 bg-slate-200 hidden sm:block"></div>
-
-          <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-[#eff6ff] text-[#2563eb] flex items-center justify-center">
-              <span class="material-symbols-rounded text-[16px]">timelapse</span>
-            </div>
-            <div>
-              <div class="text-[10px] text-slate-400 font-semibold uppercase">Estimasi Tiba Site</div>
-              <div id="metricEta" class="font-bold text-slate-900 text-xs">31 Okt 2026 (1.5 Hari)</div>
-            </div>
-          </div>
-
-          <div class="w-px h-6 bg-slate-200 hidden md:block"></div>
-
-          <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-              <span class="material-symbols-rounded text-[16px]">update</span>
-            </div>
-            <div>
-              <div class="text-[10px] text-slate-400 font-semibold uppercase">Last AIS Update</div>
-              <div id="metricLastUpdate" class="font-bold text-slate-900 text-xs">2 Jam yang lalu</div>
-            </div>
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-rounded text-[#2798D5] text-[15px]">event_upcoming</span>
+            <span class="text-[10.5px] text-slate-500 font-medium">ETA Site:</span>
+            <span id="metricEta" class="font-bold text-slate-900 text-[11px]">31 Okt 2026</span>
           </div>
         </div>
       </div>
