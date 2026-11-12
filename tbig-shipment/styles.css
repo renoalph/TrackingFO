@@ -87,31 +87,32 @@ body {
 }
 
 /* =========================================================================
-   SHIPMENT LIST CARDS (MASTER COLUMN)
+   SHIPMENT LIST CARDS (MASTER COLUMN) - BORDERLESS WITH SOFT SHADOW
    ========================================================================= */
 .shipment-card {
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 16px;
-  border: 1px solid #e2e8f0;
+  border: none !important;
   background: #ffffff;
+  box-shadow: 0 3px 12px -2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
 }
 
 .shipment-card:hover:not(.active) {
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  border: none !important;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.09);
 }
 
 /* Active Highlight Card (Sesuai gambar referensi: Blue Gradient Card) */
 .shipment-card.active {
   background: linear-gradient(135deg, #1D3D8F 0%, #2053b8 60%, #2798D5 100%);
-  border-color: transparent;
+  border: none !important;
   color: #ffffff;
-  box-shadow: 0 10px 25px -5px rgba(29, 61, 143, 0.35);
+  box-shadow: 0 12px 28px -5px rgba(29, 61, 143, 0.38);
   transform: translateY(-1px);
 }
 
@@ -227,30 +228,35 @@ body {
   border-color: #1D3D8F;
 }
 
-/* Truck / Vessel Graphic Frame */
+/* Vehicle Card Frame */
 .vehicle-card-frame {
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: none;
   border-radius: 16px;
   padding: 20px;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+/* Hide scrollbars completely while keeping smooth scroll functionality */
+.custom-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+#shipmentCardsContainer::-webkit-scrollbar,
+#shipmentList::-webkit-scrollbar,
+#inspectorFlowStages::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.custom-scrollbar,
+.no-scrollbar,
+#shipmentCardsContainer,
+#shipmentList,
+#inspectorFlowStages,
+html,
+body {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;     /* Firefox */
 }
 
 /* Status Badges */
@@ -293,7 +299,9 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: 18px;
+  border: none !important;
   min-height: 155px;
+  box-shadow: 0 4px 14px -3px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

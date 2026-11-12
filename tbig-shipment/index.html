@@ -118,8 +118,8 @@
         </button>
       </div>
 
-      <!-- Scrollable Cards List -->
-      <div id="shipmentCardsContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+      <!-- Scrollable Cards List (No scrollbar visible, smooth scroll) -->
+      <div id="shipmentCardsContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 no-scrollbar">
         <!-- Rendered by app.js -->
       </div>
     </section>
@@ -242,14 +242,14 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
               
               <!-- Vehicle Illustration Placeholder Box -->
-              <div class="md:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-slate-200/80 shadow-xs">
+              <div class="md:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-xs">
                 <div class="w-full flex items-center justify-between px-2 text-[10px] text-slate-400 font-bold uppercase mb-2">
                   <span>Armada Pengangkut</span>
                   <span class="text-emerald-600 flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified</span>
                 </div>
                 
                 <!-- Real Illustration Image Box -->
-                <div class="w-full h-32 flex items-center justify-center relative my-1 p-2 bg-gradient-to-b from-slate-50/60 to-white rounded-xl border border-slate-100">
+                <div class="w-full h-32 flex items-center justify-center relative my-1 p-2 bg-gradient-to-b from-slate-50/60 to-white rounded-xl shadow-2xs">
                   <img id="vehicleImageTag" src="asset/image/ship-color.png" alt="Armada Pengangkut" class="max-h-28 w-auto object-contain drop-shadow-md transition-all duration-300">
                   <div id="vehicleLoadBadge" class="absolute bottom-2 right-2 px-2.5 py-0.5 rounded-lg bg-[#1D3D8F] text-white text-[10px] font-bold shadow-xs">
                     85% TOWER LOAD
@@ -308,7 +308,7 @@
 
           <!-- TAB 2: JOURNEY FLOW (6 TAHAPAN OPERASIONAL HORIZONTAL) -->
           <div id="tabContent_flow" class="hidden animate-fadeIn space-y-3">
-            <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/90 text-xs flex items-center justify-between">
+            <div class="p-3 bg-slate-50/80 rounded-xl text-xs flex items-center justify-between">
               <span class="font-bold text-slate-800 flex items-center gap-1.5">
                 <span class="material-symbols-rounded text-[#1D3D8F] text-[18px]">alt_route</span>
                 Alur Tahapan Perjalanan Material Tower (6 Tahap)
@@ -320,13 +320,13 @@
             </div>
 
             <!-- Horizontal Scrollable Flow Cards -->
-            <div id="inspectorFlowStages" class="flex items-stretch gap-3.5 overflow-x-auto custom-scrollbar pb-2.5 pt-1 px-0.5">
+            <div id="inspectorFlowStages" class="flex items-stretch gap-3.5 overflow-x-auto no-scrollbar pb-2.5 pt-1 px-0.5">
               <!-- Rendered by app.js -->
             </div>
           </div>
 
           <!-- TAB 3: ORDER DETAILS -->
-          <div id="tabContent_details" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+          <div id="tabContent_details" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl text-xs">
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
                 <span class="text-[10px] text-slate-400 uppercase font-bold">Nomor SO TBIG</span>
@@ -356,9 +356,9 @@
           </div>
 
           <!-- TAB 4: DRIVER & VENDOR INFORMATION -->
-          <div id="tabContent_driver" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+          <div id="tabContent_driver" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl text-xs">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <div class="p-3 bg-white rounded-lg border border-slate-200 flex items-center gap-3">
+              <div class="p-3 bg-white rounded-lg shadow-2xs flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-[#f0f7fc] text-[#1D3D8F] flex items-center justify-center font-bold text-sm">
                   PGN
                 </div>
@@ -369,7 +369,7 @@
                 </div>
               </div>
 
-              <div class="p-3 bg-white rounded-lg border border-slate-200 flex items-center gap-3">
+              <div class="p-3 bg-white rounded-lg shadow-2xs flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm">
                   TBG
                 </div>

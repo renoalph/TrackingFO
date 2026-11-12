@@ -334,16 +334,16 @@ function renderFlowStages(item) {
     const isActive = stage.status === 'ACTIVE';
     const illustration = stageImages[idx] || 'asset/image/cargo-j.png';
 
-    // Card background styling
-    let cardStyle = 'bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs';
+    // Card background styling (borderless with clean shadow)
+    let cardStyle = 'bg-white shadow-xs hover:shadow-md';
     if (isActive) {
-      cardStyle = 'bg-gradient-to-br from-[#f8fbfe] via-[#f0f7fc] to-[#e4f2fb] border-[#2798D5] shadow-md shadow-[#2798D5]/15 ring-2 ring-[#2798D5]/20';
+      cardStyle = 'bg-gradient-to-br from-[#f8fbfe] via-[#f0f7fc] to-[#e4f2fb] shadow-md shadow-[#2798D5]/15 ring-2 ring-[#2798D5]/20';
     } else if (!isDone) {
-      cardStyle = 'bg-slate-50/70 border-slate-200/70 opacity-85';
+      cardStyle = 'bg-slate-50/80 opacity-85';
     }
 
     return `
-      <div class="flow-card-horizontal shrink-0 w-[295px] sm:w-[325px] p-4 border flex flex-col justify-between ${cardStyle}">
+      <div class="flow-card-horizontal shrink-0 w-[295px] sm:w-[325px] p-4 flex flex-col justify-between ${cardStyle}">
         
         <!-- Top Section: Header & Metadata -->
         <div class="relative z-10">
