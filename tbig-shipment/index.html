@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-  <title>TBIG Logistics — Monitoring Pengiriman Material Tower &amp; Kapal</title>
+  <title>TBIG Logistics — Tracking Delivery &amp; Vessel Monitoring</title>
   <meta name="description" content="Dashboard Monitoring Jadwal Kapal, Ekspedisi, dan Milestone Perjalanan Material Tower — Tower Bersama Group">
 
   <!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
@@ -19,173 +19,398 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=1.0">
+  <link rel="stylesheet" href="styles.css?v=2.0">
 </head>
 
-<body class="bg-white text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-[#1D3D8F] selection:text-white">
+<body class="bg-[#f1f5f9] text-slate-800 font-sans min-h-screen p-2 sm:p-5 flex flex-col justify-center antialiased">
 
-  <!-- ============================================================ HEADER ============================================================ -->
-  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
-    <div class="max-w-[1440px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-[#1D3D8F] flex items-center justify-center text-white shrink-0 shadow-xs">
-          <span class="material-symbols-rounded text-[21px] text-white">directions_boat</span>
+  <!-- MAIN APP CONTAINER WRAPPER (Rounded 3XL Card) -->
+  <div class="max-w-[1560px] w-full mx-auto bg-white rounded-3xl shadow-2xl shadow-slate-200/60 border border-slate-200/90 overflow-hidden flex flex-col lg:flex-row min-h-[90vh]">
+
+    <!-- ============================================================ 
+         1. LEFT SLIM ICON SIDEBAR 
+         ============================================================ -->
+    <aside class="w-full lg:w-[76px] bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 p-3.5 flex lg:flex-col items-center justify-between shrink-0">
+      <!-- Top Brand Logo -->
+      <div class="flex lg:flex-col items-center gap-6">
+        <div class="w-11 h-11 rounded-2xl bg-[#1D3D8F] flex items-center justify-center text-white shadow-md shadow-[#1D3D8F]/25 cursor-pointer" title="TBIG Logistics">
+          <span class="material-symbols-rounded text-[24px]">directions_boat</span>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base md:text-lg font-bold text-[#121212] tracking-tight leading-tight">TBIG Shipment Monitoring</h1>
-            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f0f7fc] text-[#1D3D8F] border border-[#d0e7f7]">LOGISTIK</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Live Radar
-            </span>
-          </div>
-          <p class="text-xs text-slate-500 hidden sm:block">Monitoring Jadwal Kapal, Kontainer &amp; Milestone Perjalanan Material Tower (Surabaya &rarr; Bali, Nusra, Kalimantan)</p>
-        </div>
+
+        <!-- Navigation Buttons -->
+        <nav class="flex lg:flex-col items-center gap-2">
+          <button class="sidebar-nav-btn active" title="Tracking Delivery">
+            <span class="material-symbols-rounded">local_shipping</span>
+          </button>
+          <button class="sidebar-nav-btn" onclick="openNewShipmentModal()" title="Input Pengiriman Baru">
+            <span class="material-symbols-rounded">add_circle</span>
+          </button>
+          <button class="sidebar-nav-btn" title="Armada Kapal &amp; Pelayaran">
+            <span class="material-symbols-rounded">anchor</span>
+          </button>
+          <button class="sidebar-nav-btn" title="Statistik &amp; Laporan">
+            <span class="material-symbols-rounded">analytics</span>
+          </button>
+          <button class="sidebar-nav-btn" title="Notifikasi &amp; Alert">
+            <span class="material-symbols-rounded">notifications</span>
+          </button>
+        </nav>
       </div>
 
-      <div class="flex items-center gap-2.5 flex-wrap">
-        <!-- Live Clock WIB -->
-        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-medium border border-slate-200 shadow-xs shrink-0">
-          <span class="material-symbols-rounded text-slate-400 text-[16px]">schedule</span>
-          <span id="headerDateDisplay">Memuat waktu...</span>
+      <!-- Bottom User Profile Avatar -->
+      <div class="flex lg:flex-col items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1D3D8F] to-[#2798D5] flex items-center justify-center text-white text-xs font-bold border-2 border-white shadow-xs" title="Nabela - TBIG PM">
+          NB
         </div>
-
-        <!-- Tombol Input Pengiriman Baru -->
-        <button onclick="openNewShipmentModal()"
-          class="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1D3D8F] hover:bg-[#152e6d] text-white text-xs font-semibold rounded-lg transition shadow-xs whitespace-nowrap cursor-pointer"
-          title="Input pengiriman kontainer / kapal baru">
-          <span class="material-symbols-rounded text-[18px]">add_circle</span>
-          Input Pengiriman Baru
+        <button class="sidebar-nav-btn hidden lg:flex" title="Keluar / Pengaturan">
+          <span class="material-symbols-rounded text-slate-400">logout</span>
         </button>
       </div>
-    </div>
-  </header>
+    </aside>
 
-  <!-- ============================================================ MAIN CONTENT ============================================================ -->
-  <main class="max-w-[1440px] w-full mx-auto px-4 md:px-6 py-5 space-y-5 flex-1">
-
-    <!-- KPI CARDS GRID -->
-    <section id="kpiGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      <!-- Generated by app.js -->
-    </section>
-
-    <!-- INTERACTIVE MARITIME MAP & ROUTE PLANNER -->
-    <section class="card overflow-hidden">
-      <div class="card-head justify-between flex-wrap gap-2">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-rounded">map</span>
-          <span>Peta Jalur Pelayaran &amp; Distribusi Material Tower</span>
+    <!-- ============================================================ 
+         2. MIDDLE COLUMN: SHIPMENT LIST & SEARCH (MASTER)
+         ============================================================ -->
+    <section class="w-full lg:w-[440px] xl:w-[480px] border-b lg:border-b-0 lg:border-r border-slate-200/80 p-5 sm:p-6 flex flex-col shrink-0 bg-[#fafafa]/50">
+      
+      <!-- Column Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Tracking Delivery</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Monitoring pergerakan material tower &amp; kapal</p>
         </div>
-        <div class="flex items-center gap-3 text-xs text-slate-500">
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#1D3D8F]"></span> Pelabuhan Asal</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#2798D5]"></span> Pelabuhan Tujuan</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Site Tujuan</span>
-        </div>
+        <button onclick="openNewShipmentModal()" class="w-9 h-9 rounded-xl bg-[#1D3D8F] hover:bg-[#152e6d] text-white flex items-center justify-center shadow-xs transition" title="Tambah Pengiriman">
+          <span class="material-symbols-rounded text-[20px]">add</span>
+        </button>
       </div>
-      <div id="shipmentMap"></div>
+
+      <!-- Search Bar -->
+      <div class="relative mb-3.5">
+        <span class="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[19px]">search</span>
+        <input id="shipmentSearchInput" type="text" placeholder="Search SO Number, Site, Kapal..."
+          class="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#1D3D8F] focus:ring-1 focus:ring-[#1D3D8F] shadow-xs transition">
+        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-rounded text-[18px]">tune</span>
+        </button>
+      </div>
+
+      <!-- Quick Filter Pills -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 mb-4 custom-scrollbar text-xs">
+        <button onclick="filterByStatus('ALL')" id="filterBtn_ALL"
+          class="px-3.5 py-1.5 rounded-full font-bold bg-[#1D3D8F] text-white whitespace-nowrap shadow-xs transition">
+          Semua (<span id="count_ALL">0</span>)
+        </button>
+        <button onclick="filterByStatus('IN_TRANSIT')" id="filterBtn_IN_TRANSIT"
+          class="px-3.5 py-1.5 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          In Transit
+        </button>
+        <button onclick="filterByStatus('PORT_ARRIVED')" id="filterBtn_PORT_ARRIVED"
+          class="px-3.5 py-1.5 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          Port Arrived
+        </button>
+        <button onclick="filterByStatus('COMPLETED')" id="filterBtn_COMPLETED"
+          class="px-3.5 py-1.5 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          Delivered
+        </button>
+      </div>
+
+      <!-- Scrollable Cards List -->
+      <div id="shipmentCardsContainer" class="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar max-h-[70vh] lg:max-h-[calc(90vh-175px)]">
+        <!-- Rendered by app.js -->
+      </div>
     </section>
 
-    <!-- SHIPMENT DATA TABLE SECTION -->
-    <section class="card overflow-hidden">
-      <!-- Filter Bar -->
+    <!-- ============================================================ 
+         3. RIGHT COLUMN: MAP & DETAILED INSPECTOR (DETAIL)
+         ============================================================ -->
+    <section class="flex-1 p-5 sm:p-7 flex flex-col overflow-y-auto custom-scrollbar">
+      
+      <!-- Top Inspector Header Bar -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div class="relative flex-1 min-w-[240px]">
-          <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-          <input id="shipmentSearch" type="text" placeholder="Cari SO Number, Site ID, No. Kontainer (MSPU), atau Nama Kapal..."
-            class="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#1D3D8F] focus:ring-1 focus:ring-[#1D3D8F] bg-white transition">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order ID:</span>
+            <span id="inspectorOrderHeader" class="text-base font-bold font-mono text-slate-900">#0010388360011</span>
+            <span id="inspectorStatusBadge" class="badge-status badge-in-transit">In Transit</span>
+          </div>
+          <p id="inspectorSiteSub" class="text-xs text-slate-500 mt-0.5">Site WAINGAPU KOTA · Sumba Timur, Nusa Tenggara Timur</p>
         </div>
 
+        <!-- Action Buttons -->
         <div class="flex items-center gap-2">
-          <span id="shipmentCount" class="text-xs font-semibold text-slate-500"></span>
-          <button onclick="setFilter('ALL')" class="px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
-            Tampilkan Semua
+          <a id="btnLiveRadar" href="#" target="_blank"
+            class="px-3 py-1.5 rounded-xl bg-[#f0f7fc] hover:bg-[#e0f0fa] text-[#1D3D8F] border border-[#bae6fd] text-xs font-semibold flex items-center gap-1.5 transition shadow-xs">
+            <span class="material-symbols-rounded text-[17px]">radar</span>
+            <span>Live AIS Radar</span>
+            <span class="material-symbols-rounded text-[14px]">open_in_new</span>
+          </a>
+          <button onclick="openEvidenceModal()"
+            class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs">
+            <span class="material-symbols-rounded text-[17px]">assignment</span>
+            <span>Documentation</span>
           </button>
         </div>
       </div>
 
-      <!-- Table Scroll Wrapper -->
-      <div class="overflow-x-auto border border-slate-100 rounded-lg">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead class="sticky top-0 bg-slate-50 text-slate-600 uppercase font-semibold text-[10.5px] tracking-wider border-b border-slate-200">
-            <tr>
-              <th class="p-3">SO Number</th>
-              <th class="p-3">Site / Wilayah</th>
-              <th class="p-3">Kontainer / Muatan</th>
-              <th class="p-3">Kapal &amp; Pelayaran</th>
-              <th class="p-3">Rute Pelabuhan</th>
-              <th class="p-3">Jadwal Laut</th>
-              <th class="p-3">Estimasi Site (ETA)</th>
-              <th class="p-3">Status</th>
-              <th class="p-3 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="shipmentTableBody" class="divide-y divide-slate-100">
-            <tr>
-              <td colspan="9" class="p-8 text-center text-slate-400">
-                <span class="material-symbols-rounded spin text-slate-500 text-[22px] mb-2">sync</span>
-                <p>Memuat daftar pengiriman...</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+      <!-- MAP SECTION WITH FLOATING METRICS -->
+      <div class="relative mb-5">
+        <div id="mainInspectorMap"></div>
 
-  </main>
-
-  <!-- ============================================================ FOOTER ============================================================ -->
-  <footer class="bg-white border-t border-slate-200 py-3.5 mt-auto">
-    <div class="max-w-[1440px] mx-auto px-4 text-center text-xs text-slate-400">
-      TBIG Shipment &amp; Logistics Monitoring &middot; Tower Bersama Group
-    </div>
-  </footer>
-
-  <!-- ============================================================ MODAL DETAIL WITH MILESTONE JOURNEY FLOW ============================================================ -->
-  <div id="detailModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4">
-    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onclick="closeDetailModal()"></div>
-    <div class="relative bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-5 border border-slate-200 z-10 animate-fadeIn">
-      
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-[#1D3D8F] text-white flex items-center justify-center">
-            <span class="material-symbols-rounded text-[20px]">alt_route</span>
+        <!-- Floating Metrics Bar (Sesuai gambar referensi) -->
+        <div class="floating-map-metrics absolute bottom-3 left-3 right-3 p-3 flex flex-wrap items-center justify-around gap-2 text-xs z-10">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-[#f0f7fc] text-[#1D3D8F] flex items-center justify-center">
+              <span class="material-symbols-rounded text-[16px]">pin_drop</span>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">Current Location</div>
+              <div id="metricLocation" class="font-bold text-slate-900 text-xs">Laut Sawu, NTT</div>
+            </div>
           </div>
-          <div>
-            <h3 id="modalDetailTitle" class="font-bold text-slate-900 text-sm sm:text-base">Flow Perjalanan Material</h3>
-            <p class="text-xs text-slate-400">Visualisasi milestone lengkap dari depo asal hingga tiba di lokasi tower</p>
+
+          <div class="w-px h-6 bg-slate-200 hidden sm:block"></div>
+
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <span class="material-symbols-rounded text-[16px]">speed</span>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">Vessel Speed</div>
+              <div id="metricSpeed" class="font-bold text-slate-900 text-xs">11.8 knots · Berlayar</div>
+            </div>
+          </div>
+
+          <div class="w-px h-6 bg-slate-200 hidden sm:block"></div>
+
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-[#eff6ff] text-[#2563eb] flex items-center justify-center">
+              <span class="material-symbols-rounded text-[16px]">timelapse</span>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">Estimasi Tiba Site</div>
+              <div id="metricEta" class="font-bold text-slate-900 text-xs">31 Okt 2026 (1.5 Hari)</div>
+            </div>
+          </div>
+
+          <div class="w-px h-6 bg-slate-200 hidden md:block"></div>
+
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <span class="material-symbols-rounded text-[16px]">update</span>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">Last AIS Update</div>
+              <div id="metricLastUpdate" class="font-bold text-slate-900 text-xs">2 Jam yang lalu</div>
+            </div>
           </div>
         </div>
-        <button onclick="closeDetailModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">
-          <span class="material-symbols-rounded text-[20px]">close</span>
-        </button>
       </div>
 
-      <!-- Modal Body (Filled dynamically by app.js) -->
-      <div id="modalDetailContent" class="space-y-4"></div>
+      <!-- ============================================================ 
+           MAIN INFO PANEL (Tabs & Content)
+           ============================================================ -->
+      <div class="flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-slate-900">Main info</h3>
+          
+          <!-- Tab Navigation (Vehicle | Order details | Driver | Journey Flow) -->
+          <div class="flex items-center border-b border-slate-200/80 overflow-x-auto custom-scrollbar">
+            <button onclick="switchTab('vehicle')" id="tabBtn_vehicle" class="inspector-tab-btn active">
+              Vehicle &amp; Vessel
+            </button>
+            <button onclick="switchTab('flow')" id="tabBtn_flow" class="inspector-tab-btn">
+              Journey Flow (6 Tahap)
+            </button>
+            <button onclick="switchTab('details')" id="tabBtn_details" class="inspector-tab-btn">
+              Order Details
+            </button>
+            <button onclick="switchTab('driver')" id="tabBtn_driver" class="inspector-tab-btn">
+              Driver &amp; Vendor
+            </button>
+          </div>
+        </div>
 
-      <!-- Modal Footer -->
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-        <button onclick="closeDetailModal()" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer">
-          Tutup
-        </button>
+        <!-- TAB CONTENT CONTAINER -->
+        <div class="flex-1 pt-3">
+          
+          <!-- TAB 1: VEHICLE & VESSEL (Sesuai gambar referensi dengan ilustrasi truk/kapal) -->
+          <div id="tabContent_vehicle" class="vehicle-card-frame animate-fadeIn">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+              
+              <!-- Vehicle Illustration Placeholder Box -->
+              <div class="md:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-slate-200/80 shadow-xs">
+                <div class="w-full flex items-center justify-between px-2 text-[10px] text-slate-400 font-bold uppercase mb-2">
+                  <span>Armada Pengangkut</span>
+                  <span class="text-emerald-600 flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified</span>
+                </div>
+                
+                <!-- Modern SVG Container Illustration Placeholder (Siap diganti gambar) -->
+                <div id="vehicleGraphicPlaceholder" class="w-full h-28 flex items-center justify-center relative my-1">
+                  <!-- Container Truck Vector Graphic -->
+                  <svg class="w-full h-full max-h-24 text-slate-700" viewBox="0 0 240 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Cabin -->
+                    <rect x="18" y="32" width="38" height="42" rx="6" fill="#cbd5e1" />
+                    <rect x="22" y="36" width="22" height="18" rx="3" fill="#0f172a" />
+                    <!-- Chassis -->
+                    <rect x="15" y="70" width="205" height="7" rx="2" fill="#334155" />
+                    <!-- Blue Cargo Container Box with % Tower -->
+                    <rect x="60" y="16" width="160" height="56" rx="4" fill="#1D3D8F" />
+                    <rect x="64" y="20" width="152" height="48" rx="2" fill="#2563eb" fill-opacity="0.2" stroke="#ffffff" stroke-dasharray="4 4" />
+                    <!-- Wheels -->
+                    <circle cx="42" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
+                    <circle cx="95" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
+                    <circle cx="118" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
+                    <circle cx="180" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
+                    <circle cx="203" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
+                    <text x="140" y="49" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle" font-family="Plus Jakarta Sans">85% TOWER LOAD</text>
+                  </svg>
+                </div>
+                
+                <span class="text-[10px] text-slate-400 font-medium">No. Kontainer: <b id="vehicleContainerTag" class="text-slate-700 font-mono">MSPU 121332-7</b></span>
+              </div>
+
+              <!-- Vehicle & Vessel Specs Table -->
+              <div class="md:col-span-7 space-y-3.5">
+                <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-rounded text-[#1D3D8F]">directions_boat</span>
+                    <div>
+                      <div id="specVesselName" class="font-bold text-slate-900 text-sm">KM. Prakasa Pacific</div>
+                      <div id="specShippingLine" class="text-[11px] text-slate-500">Meratus Line · General Cargo</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                    <span class="material-symbols-rounded text-[14px]">star</span>
+                    <span>4.9</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Voyage No</span>
+                    <p id="specVoyage" class="font-mono font-bold text-slate-800 mt-0.5">Voy. 627 E - 26</p>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">IMO Number</span>
+                    <p id="specImo" class="font-mono font-bold text-slate-800 mt-0.5">9301140</p>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Tower Section</span>
+                    <p id="specTowerHeight" class="font-bold text-slate-800 mt-0.5">SST 52 M</p>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Total Berat</span>
+                    <p class="font-bold text-slate-800 mt-0.5">18.450 Kg</p>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Muatan Volume</span>
+                    <p class="font-bold text-slate-800 mt-0.5">62,8 m&sup3;</p>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Rute Jalur</span>
+                    <p id="specRoute" class="font-bold text-[#1D3D8F] mt-0.5">SBY &rarr; Waingapu</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB 2: JOURNEY FLOW (6 TAHAP OPERASIONAL LENGKAP) -->
+          <div id="tabContent_flow" class="hidden animate-fadeIn space-y-3">
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
+              <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                <span class="material-symbols-rounded text-[#1D3D8F] text-[18px]">timeline</span>
+                Alur Tahapan Perjalanan Material Tower
+              </span>
+              <span class="text-[11px] text-slate-400">Pabrik &rarr; Jamrud &rarr; Pelayaran Laut &rarr; Waingapu &rarr; Site</span>
+            </div>
+
+            <!-- Flow Stepper List -->
+            <div id="inspectorFlowStages" class="journey-stepper pt-2">
+              <!-- Rendered by app.js -->
+            </div>
+          </div>
+
+          <!-- TAB 3: ORDER DETAILS -->
+          <div id="tabContent_details" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold">Nomor SO TBIG</span>
+                <p id="detailSonumb" class="font-mono font-bold text-slate-900 mt-1">0010388360011</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold">Site ID &amp; Nama Site</span>
+                <p id="detailSiteFullName" class="font-bold text-slate-900 mt-1">WAINGAPU KOTA (NTT-WGP-042)</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold">Alamat Lokasi</span>
+                <p id="detailAddress" class="text-slate-700 mt-1">Prailiu, Kambera, Waingapu</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold">Tipe Material</span>
+                <p id="detailMaterial" class="font-semibold text-slate-800 mt-1">Tower Section &amp; Accessories</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold">Pelabuhan Muat Asal</span>
+                <p id="detailOriginPort" class="font-semibold text-slate-800 mt-1">Dermaga Jamrud Selatan (Tj Perak, Surabaya)</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold">Pelabuhan Tujuan</span>
+                <p id="detailDestPort" class="font-semibold text-slate-800 mt-1">Pelabuhan Nusantara Waingapu</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: DRIVER & VENDOR INFORMATION -->
+          <div id="tabContent_driver" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+              <div class="p-3 bg-white rounded-lg border border-slate-200 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#f0f7fc] text-[#1D3D8F] flex items-center justify-center font-bold text-sm">
+                  PGN
+                </div>
+                <div>
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">Mitra Ekspedisi / Mover</div>
+                  <div id="driverVendorName" class="font-bold text-slate-900 text-xs">PT. PGN Logistik Nusantara</div>
+                  <div class="text-[11px] text-slate-500">PIC: Bpk. Bambang Supriyadi (0812-9841-XXXX)</div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-white rounded-lg border border-slate-200 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                  TBG
+                </div>
+                <div>
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">Pengawas Lapangan (Waspang TBIG)</div>
+                  <div class="font-bold text-slate-900 text-xs">Angen Cahya Asmara</div>
+                  <div class="text-[11px] text-slate-500">Project Manager CME Jatim &amp; Nusra</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
+
+    </section>
+
   </div>
 
-  <!-- ============================================================ MODAL FORM INPUT PENGIRIMAN BARU ============================================================ -->
+  <!-- ============================================================ 
+       MODAL FORM INPUT PENGIRIMAN BARU 
+       ============================================================ -->
   <div id="newShipmentModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4">
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onclick="closeNewShipmentModal()"></div>
-    <div class="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-4 border border-slate-200 z-10 animate-fadeIn">
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-4 border border-slate-200 z-10 animate-fadeIn">
       
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-[#1D3D8F] text-white flex items-center justify-center">
-            <span class="material-symbols-rounded text-[20px]">add_circle</span>
+          <div class="w-9 h-9 rounded-xl bg-[#1D3D8F] text-white flex items-center justify-center">
+            <span class="material-symbols-rounded text-[20px]">add_box</span>
           </div>
           <div>
             <h3 class="font-bold text-slate-900 text-sm sm:text-base">Input Pengiriman Material Tower Baru</h3>
-            <p class="text-xs text-slate-400">Masukkan jadwal kapal &amp; estimasi rute ke site</p>
+            <p class="text-xs text-slate-400">Masukkan nomor SO, jadwal kapal, dan estimasi tiba di site</p>
           </div>
         </div>
         <button onclick="closeNewShipmentModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">
@@ -197,17 +422,17 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block font-medium text-slate-700 mb-1">Nomor SO <span class="text-rose-500">*</span></label>
-            <input id="newSoNumber" type="text" placeholder="Contoh: 0010388360016" required
+            <input id="newSoNumber" type="text" placeholder="Contoh: 0010388360018" required
               class="w-full border border-slate-200 rounded-lg p-2 font-mono text-xs focus:border-[#1D3D8F] focus:outline-none">
           </div>
           <div>
             <label class="block font-medium text-slate-700 mb-1">Site ID</label>
-            <input id="newSiteId" type="text" placeholder="Contoh: NTT-WGP-043"
+            <input id="newSiteId" type="text" placeholder="Contoh: NTT-WGP-045"
               class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
           </div>
           <div>
             <label class="block font-medium text-slate-700 mb-1">Nama Site <span class="text-rose-500">*</span></label>
-            <input id="newSiteName" type="text" placeholder="Contoh: WAINGAPU TIMUR" required
+            <input id="newSiteName" type="text" placeholder="Contoh: WAINGAPU BARAT" required
               class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
           </div>
         </div>
@@ -306,8 +531,27 @@
     </div>
   </div>
 
+  <!-- MODAL EVIDENCE DOCUMENTATION -->
+  <div id="evidenceModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onclick="closeEvidenceModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4 border border-slate-200 z-10 animate-fadeIn text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <h3 class="font-bold text-slate-900 text-sm">Dokumentasi &amp; Evidence Lapangan</h3>
+        <button onclick="closeEvidenceModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <div id="evidenceContent" class="space-y-3">
+        <!-- Rendered by app.js -->
+      </div>
+      <div class="flex justify-end pt-2 border-t border-slate-100">
+        <button onclick="closeEvidenceModal()" class="px-3 py-1 bg-slate-100 rounded text-slate-700 font-semibold">Tutup</button>
+      </div>
+    </div>
+  </div>
+
   <!-- App Core Engine -->
-  <script src="app.js?v=1.0"></script>
+  <script src="app.js?v=2.0"></script>
 </body>
 
 </html>

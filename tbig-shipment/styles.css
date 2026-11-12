@@ -1,20 +1,18 @@
-/* styles.css — TBIG Logistics & Expedition Shipment Monitoring */
+/* styles.css — Modern Master-Detail Logistics UI (Inspired by Dribbble Reference) */
 
 :root {
-  --bg-page: #ffffff;
-  --card-bg: #ffffff;
+  --bg-page: #f1f5f9;
+  --panel-bg: #ffffff;
   --card-border: #e2e8f0;
   --card-border-hover: #cbd5e1;
-  --text-main: #121212;
+  --brand-navy: #1D3D8F;
+  --brand-navy-dark: #142a63;
+  --brand-blue: #2798D5;
+  --brand-blue-hover: #1f82b8;
+  --text-main: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-subtle: #94a3b8;
-  --brand-navy: #1D3D8F;
-  --brand-navy-hover: #152e6d;
-  --brand-blue: #2798D5;
-  --brand-blue-hover: #1f82b8;
-  --brand-soft-bg: #f0f7fc;
-  --brand-soft-border: #d0e7f7;
 }
 
 body {
@@ -25,7 +23,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Material Symbols Rounded Setup */
+/* Material Symbols Rounded */
 .material-symbols-rounded {
   font-family: 'Material Symbols Rounded' !important;
   font-weight: normal;
@@ -44,271 +42,242 @@ body {
   vertical-align: middle;
 }
 
-/* Card */
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 0.75rem;
-  padding: 1.15rem;
-  box-shadow: 0 1px 3px 0 rgba(18, 18, 18, 0.02);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.card:hover {
-  border-color: var(--card-border-hover);
-}
-
-.card-head {
+/* =========================================================================
+   SIDEBAR NAV (ICON ONLY)
+   ========================================================================= */
+.sidebar-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--text-main);
-  letter-spacing: -0.01em;
-  margin-bottom: 0.85rem;
-}
-
-.card-head .material-symbols-rounded {
-  font-size: 20px;
-  color: var(--brand-navy);
-}
-
-/* KPI Card */
-.kpi-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.15s ease;
   position: relative;
-  overflow: hidden;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 1px 2px 0 rgba(18, 18, 18, 0.02);
 }
 
-.kpi-card:hover {
-  border-color: var(--brand-blue);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px -4px rgba(29, 61, 143, 0.08);
-}
-
-.kpi-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-}
-
-.kpi-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--text-main);
-  letter-spacing: -0.03em;
-}
-
-.kpi-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-}
-
-.kpi-sub {
-  font-size: 0.7rem;
-  color: var(--text-subtle);
-  font-weight: 500;
-}
-
-/* Badges */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2.5px 8px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: 0.01em;
-}
-
-.badge-transit {
-  background: #f0f7fc;
+.sidebar-nav-btn:hover {
+  background: #f1f5f9;
   color: #1D3D8F;
-  border: 1px solid #bae6fd;
 }
 
-.badge-port {
-  background: #f5f3ff;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
+.sidebar-nav-btn.active {
+  background: #eff6ff;
+  color: #1D3D8F;
 }
 
-.badge-complete {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-.badge-delay {
-  background: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
-}
-
-/* Leaflet Map Container */
-#shipmentMap {
-  width: 100%;
-  height: 340px;
-  border-radius: 0.65rem;
-  z-index: 1;
-}
-
-/* Leaflet Custom Marker & Popups */
-.custom-map-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  border: 2px solid #ffffff;
-}
-
-.leaflet-popup-content-wrapper {
-  border-radius: 0.75rem !important;
-  padding: 4px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
-}
-
-.leaflet-popup-content {
-  margin: 10px 12px !important;
-  font-size: 12px !important;
-  line-height: 1.4 !important;
-}
-
-/* Table */
-th.sortable {
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.12s;
-}
-
-th.sortable:hover {
-  color: var(--brand-navy);
-}
-
-tr.row-clickable {
-  transition: background-color 0.1s ease;
-  cursor: pointer;
-}
-
-tr.row-clickable:hover {
-  background-color: #f8fafc;
+.sidebar-nav-btn.active::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 10px;
+  bottom: 10px;
+  width: 3.5px;
+  border-radius: 0 4px 4px 0;
+  background: #1D3D8F;
 }
 
 /* =========================================================================
-   MILESTONE JOURNEY FLOW STEPPER (DETAIL MODAL)
+   SHIPMENT LIST CARDS (MASTER COLUMN)
    ========================================================================= */
-.journey-stepper {
+.shipment-card {
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  padding-left: 2rem;
+  overflow: hidden;
 }
 
-.journey-stepper::before {
-  content: '';
+.shipment-card:hover:not(.active) {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+/* Active Highlight Card (Sesuai gambar referensi: Blue Gradient Card) */
+.shipment-card.active {
+  background: linear-gradient(135deg, #1D3D8F 0%, #2053b8 60%, #2798D5 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 10px 25px -5px rgba(29, 61, 143, 0.35);
+  transform: translateY(-1px);
+}
+
+.shipment-card.active .card-muted-text {
+  color: #cbd5e1 !important;
+}
+
+.shipment-card.active .card-sub-text {
+  color: #e2e8f0 !important;
+}
+
+.shipment-card.active .stepper-line {
+  background: rgba(255, 255, 255, 0.35) !important;
+}
+
+.shipment-card.active .stepper-dot {
+  border-color: #ffffff !important;
+  background: #ffffff !important;
+}
+
+.shipment-card.active .stepper-dot.active-pulse {
+  background: #38bdf8 !important;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4) !important;
+}
+
+/* =========================================================================
+   MINI STEPPER INSIDE CARDS
+   ========================================================================= */
+.mini-stepper-wrap {
+  position: relative;
+  padding-left: 20px;
+}
+
+.mini-stepper-line {
   position: absolute;
-  top: 12px;
-  bottom: 24px;
-  left: 15px;
+  left: 6px;
+  top: 6px;
+  bottom: 8px;
   width: 2px;
   background: #e2e8f0;
 }
 
-.journey-step-item {
+.mini-stepper-item {
   position: relative;
-  padding-bottom: 1.5rem;
+  margin-bottom: 8px;
 }
 
-.journey-step-item:last-child {
-  padding-bottom: 0;
+.mini-stepper-item:last-child {
+  margin-bottom: 0;
 }
 
-.journey-step-dot {
+.mini-stepper-dot {
   position: absolute;
-  left: -2rem;
-  top: 2px;
-  width: 28px;
-  height: 28px;
+  left: -20px;
+  top: 3px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #ffffff;
-  border: 2px solid #cbd5e1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: #64748b;
-  z-index: 2;
-  transition: all 0.2s ease;
+  border: 2px solid #94a3b8;
+  z-index: 1;
 }
 
-.journey-step-item.is-done .journey-step-dot {
+.mini-stepper-dot.done {
   background: #1D3D8F;
   border-color: #1D3D8F;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(29, 61, 143, 0.25);
 }
 
-.journey-step-item.is-active .journey-step-dot {
+.mini-stepper-dot.current {
   background: #2798D5;
   border-color: #2798D5;
-  color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(39, 152, 213, 0.2);
-  animation: pulseRadar 1.8s infinite;
+  box-shadow: 0 0 0 3px rgba(39, 152, 213, 0.25);
 }
 
-@keyframes pulseRadar {
-  0% { box-shadow: 0 0 0 0 rgba(39, 152, 213, 0.5); }
-  70% { box-shadow: 0 0 0 8px rgba(39, 152, 213, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(39, 152, 213, 0); }
+/* =========================================================================
+   LEAFLET MAP CONTAINER
+   ========================================================================= */
+#mainInspectorMap {
+  width: 100%;
+  height: 320px;
+  border-radius: 20px;
+  z-index: 1;
 }
 
-.journey-step-card {
-  background: #ffffff;
+.floating-map-metrics {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 14px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+}
+
+/* =========================================================================
+   MAIN INFO TABS (INSPECTOR)
+   ========================================================================= */
+.inspector-tab-btn {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inspector-tab-btn:hover {
+  color: #1D3D8F;
+}
+
+.inspector-tab-btn.active {
+  color: #1D3D8F;
+  border-color: #1D3D8F;
+}
+
+/* Truck / Vessel Graphic Frame */
+.vehicle-card-frame {
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 0.65rem;
-  padding: 0.85rem 1rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 16px;
+  padding: 20px;
 }
 
-.journey-step-item.is-active .journey-step-card {
-  border-color: #bae6fd;
-  background: #fbfdff;
-  box-shadow: 0 2px 8px rgba(39, 152, 213, 0.06);
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-.journey-step-item.is-done .journey-step-card {
-  border-color: #e2e8f0;
+/* Status Badges */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.badge-in-transit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-checking {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge-delivered {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-risk {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 /* Animations */
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeIn {
@@ -316,38 +285,8 @@ tr.row-clickable:hover {
   to { opacity: 1; transform: scale(1); }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.12s ease-out forwards;
-}
-
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 640px) {
-  #shipmentMap {
+@media (max-width: 1024px) {
+  #mainInspectorMap {
     height: 250px;
-  }
-  .journey-stepper {
-    padding-left: 1.8rem;
-  }
-  .journey-step-dot {
-    left: -1.8rem;
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
   }
 }
