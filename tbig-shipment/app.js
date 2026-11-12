@@ -163,10 +163,9 @@ function initMap() {
     scrollWheelZoom: false
   }).setView([-8.0, 116.0], 6);
 
-  // Clean CartoDB Positron TileLayer
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains: 'abcd',
+  // Clean Esri Maritime & Street Map (100% Free, Tanpa API Key, Tajam untuk Rute Pelayaran)
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Peta Maritim &copy; Esri &mdash; Jalur Pelayaran TBIG Logistics',
     maxZoom: 18
   }).addTo(state.map);
 
@@ -566,3 +565,4 @@ function formatSimpleDate(val) {
   const parts = val.split(' ');
   return parts[0];
 }
+
