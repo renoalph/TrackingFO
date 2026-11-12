@@ -10,10 +10,12 @@ const state = {
   searchQuery: '',
   activeTab: 'vehicle',
   map: null,
-  mapRouteLayer: null
+  mapRouteLayer: null,
+  tileLayer: null
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   initMap();
   loadData();
   bindEvents();
@@ -411,8 +413,13 @@ function initMap() {
     scrollWheelZoom: false
   }).setView([-8.0, 116.0], 6);
 
-  // Esri World Street Map (100% Free, No API Key Required)
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+  const isDark = document.documentElement.classList.contains('dark');
+  const tileUrl = isDark
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+
+  // Esri Map Layer (World Street Map / World Dark Gray Base)
+  state.tileLayer = L.tileLayer(tileUrl, {
     attribution: 'Tiles &copy; Esri &mdash; Maritime Track',
     maxZoom: 18
   }).addTo(state.map);
@@ -646,3 +653,54 @@ function bindEvents() {
     form.addEventListener('submit', submitNewShipment);
   }
 }
+
+// -------------------------------------------------------------------------
+// 9. THEME ENGINE (LIGHT & DARK MODE TOGGLE)
+// -------------------------------------------------------------------------
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.documentElement.classList.toggle('dark', isDark);
+  document.body.classList.toggle('dark', isDark);
+
+  try {
+    localStorage.setItem('tbig_theme', theme);
+  } catch (e) { }
+
+  // Update theme toggle icon
+  const icon = document.getElementById('themeToggleIcon');
+  if (icon) {
+    icon.innerText = isDark ? 'light_mode' : 'dark_mode';
+  }
+
+  // Update Leaflet Map Tile Layer to match theme
+  if (state.tileLayer) {
+    const tileUrl = isDark
+      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+      : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+    state.tileLayer.setUrl(tileUrl);
+  }
+}
+
+function toggleDarkMode() {
+  const isCurrentlyDark = document.documentElement.classList.contains('dark');
+  applyTheme(isCurrentlyDark ? 'light' : 'dark');
+}
+
+function initTheme() {
+  let saved = null;
+  try {
+    saved = localStorage.getItem('tbig_theme');
+  } catch (e) { }
+
+  if (saved) {
+    applyTheme(saved);
+  } else {
+    // Default to dark mode if user's device prefers dark
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+  }
+}
+
+// Expose functions globally to window for HTML inline events
+window.toggleDarkMode = toggleDarkMode;
+window.applyTheme = applyTheme;

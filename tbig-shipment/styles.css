@@ -51,28 +51,28 @@ body {
 }
 
 /* =========================================================================
-   SIDEBAR NAV (ICON ONLY)
+   SIDEBAR NAV (DARK SLIM BAR)
    ========================================================================= */
 .sidebar-nav-btn {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
-  transition: all 0.15s ease;
+  color: #94a3b8;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
 .sidebar-nav-btn:hover {
-  background: #f1f5f9;
-  color: #1D3D8F;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .sidebar-nav-btn.active {
-  background: #eff6ff;
-  color: #1D3D8F;
+  background: rgba(39, 152, 213, 0.16);
+  color: #38bdf8;
 }
 
 .sidebar-nav-btn.active::before {
@@ -83,7 +83,8 @@ body {
   bottom: 10px;
   width: 3.5px;
   border-radius: 0 4px 4px 0;
-  background: #1D3D8F;
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
 }
 
 /* =========================================================================
@@ -345,4 +346,157 @@ body {
   #mainInspectorMap {
     height: 250px;
   }
+}
+
+/* =========================================================================
+   DARK THEME PALETTE & COMPONENT OVERRIDES
+   ========================================================================= */
+.dark body {
+  background-color: #0b0f17;
+  color: #f1f5f9;
+}
+
+.dark #shipmentMasterPanel,
+.dark #rightPanelWrapper {
+  background-color: #0b0f17 !important;
+}
+
+.dark #rightCardSection {
+  background-color: #111723 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark Search Bar */
+.dark #shipmentSearchInput {
+  background-color: #151c28 !important;
+  border-color: #243043 !important;
+  color: #f8fafc !important;
+}
+
+.dark #shipmentSearchInput::placeholder {
+  color: #64748b !important;
+}
+
+/* Dark Status Filter Pills */
+.dark [id^="filterBtn_"]:not([class*="bg-[#1D3D8F]"]) {
+  background-color: #151c28 !important;
+  border-color: #243043 !important;
+  color: #94a3b8 !important;
+}
+
+.dark [id^="filterBtn_"]:not([class*="bg-[#1D3D8F]"]):hover {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* Dark Shipment List Cards */
+.dark .shipment-card {
+  background: #151c28 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 4px 14px -3px rgba(0, 0, 0, 0.45) !important;
+}
+
+.dark .shipment-card:hover:not(.active) {
+  background: #1a2333 !important;
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .shipment-card .font-semibold {
+  color: #f8fafc !important;
+}
+
+.dark .shipment-card .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .mini-stepper-line {
+  background: #243043 !important;
+}
+
+.dark .mini-stepper-dot {
+  background: #151c28 !important;
+  border-color: #475569 !important;
+}
+
+.dark .mini-stepper-dot.active {
+  background: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+}
+
+/* Dark Floating Map Pill */
+.dark .floating-map-metrics {
+  background: rgba(17, 23, 35, 0.94) !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .floating-map-metrics #metricLocation,
+.dark .floating-map-metrics #metricEta {
+  color: #f8fafc !important;
+}
+
+/* Dark Inspector Tabs */
+.dark .inspector-tab-btn {
+  color: #94a3b8 !important;
+}
+
+.dark .inspector-tab-btn:hover {
+  color: #f8fafc !important;
+}
+
+.dark .inspector-tab-btn.active {
+  color: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+}
+
+/* Dark Main Info Cards */
+.dark .vehicle-card-frame {
+  background: #151c28 !important;
+}
+
+.dark #tabContent_details,
+.dark #tabContent_driver {
+  background: #151c28 !important;
+}
+
+.dark #tabContent_flow > div:first-child {
+  background: #151c28 !important;
+  color: #f8fafc !important;
+}
+
+.dark #tabContent_flow > div:first-child span {
+  color: #f8fafc !important;
+}
+
+/* Dark Horizontal Flow Cards */
+.dark .flow-card-horizontal {
+  background: #151c28 !important;
+  box-shadow: 0 4px 14px -3px rgba(0, 0, 0, 0.45) !important;
+}
+
+.dark .flow-card-horizontal h4 {
+  color: #f8fafc !important;
+}
+
+.dark .flow-card-horizontal p {
+  color: #94a3b8 !important;
+}
+
+/* Dark Modal Form */
+.dark #newShipmentModal > div:last-child {
+  background: #111723 !important;
+  color: #f8fafc !important;
+  border-color: #243043 !important;
+}
+
+.dark #newShipmentModal input,
+.dark #newShipmentModal select {
+  background: #151c28 !important;
+  border-color: #243043 !important;
+  color: #f8fafc !important;
+}
+
+.dark #newShipmentModal input:focus,
+.dark #newShipmentModal select:focus {
+  border-color: #2798D5 !important;
 }

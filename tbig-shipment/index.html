@@ -17,6 +17,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -26,6 +27,19 @@
       }
     };
   </script>
+  <script>
+    // Inisialisasi tema sebelum render agar tidak flickering
+    (function () {
+      try {
+        const saved = localStorage.getItem('tbig_theme');
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) { }
+    })();
+  </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -33,18 +47,18 @@
   <link rel="stylesheet" href="styles.css?v=3.0">
 </head>
 
-<body class="bg-white text-slate-800 font-sans h-screen w-screen overflow-hidden m-0 p-0 antialiased flex flex-col selection:bg-[#1D3D8F] selection:text-white">
+<body class="bg-white dark:bg-[#0b0f17] text-slate-800 dark:text-slate-100 font-sans h-screen w-screen overflow-hidden m-0 p-0 antialiased flex flex-col selection:bg-[#1D3D8F] selection:text-white transition-colors duration-200">
 
   <!-- MAIN APP CONTAINER WRAPPER (Full Viewport - No Outer Padding) -->
-  <div class="w-full h-full bg-white flex flex-col lg:flex-row overflow-hidden">
+  <div class="w-full h-full bg-white dark:bg-[#0b0f17] flex flex-col lg:flex-row overflow-hidden transition-colors duration-200">
 
     <!-- ============================================================ 
-         1. LEFT SLIM ICON SIDEBAR (PUBLIC & OPEN PORTAL)
+         1. LEFT SLIM ICON SIDEBAR (HITAM / DARK SLIM BAR)
          ============================================================ -->
-    <aside class="w-full lg:w-[72px] bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 p-3 flex lg:flex-col items-center justify-between shrink-0 z-20">
+    <aside id="mainAppSidebar" class="w-full lg:w-[72px] bg-[#0c1017] border-b lg:border-b-0 lg:border-r border-slate-800/80 p-3 flex lg:flex-col items-center justify-between shrink-0 z-20 transition-colors duration-200">
       <!-- Top Brand Logo -->
       <div class="flex lg:flex-col items-center gap-5">
-        <div class="w-10 h-10 rounded-xl bg-[#1D3D8F] flex items-center justify-center text-white shadow-xs cursor-pointer" title="TBIG Logistics — Public Portal">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1D3D8F] to-[#2798D5] flex items-center justify-center text-white shadow-md shadow-blue-950/40 cursor-pointer" title="TBIG Logistics — Public Portal">
           <span class="material-symbols-rounded text-[22px]">directions_boat</span>
         </div>
 
@@ -65,17 +79,27 @@
         </nav>
       </div>
 
-      <!-- Bottom Public Live Indicator (Tanpa Login / Logout) -->
-      <div class="flex lg:flex-col items-center gap-1.5">
-        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse my-1" title="Sistem Aktif & Terbuka"></div>
-        <span class="text-[9px] font-bold text-slate-400 hidden lg:block tracking-widest uppercase">LIVE</span>
+      <!-- Bottom: Theme Toggle (Dark / Light Mode) & Live Indicator -->
+      <div class="flex lg:flex-col items-center gap-2.5">
+        <!-- Theme Toggle Button -->
+        <button id="themeToggleBtn" onclick="toggleDarkMode()" 
+          class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 flex items-center justify-center transition shadow-xs cursor-pointer" 
+          title="Ganti Mode Gelap / Terang">
+          <span id="themeToggleIcon" class="material-symbols-rounded text-[20px]">dark_mode</span>
+        </button>
+
+        <!-- Live Indicator -->
+        <div class="flex lg:flex-col items-center gap-1 pt-1">
+          <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse my-0.5" title="Sistem Aktif & Terbuka"></div>
+          <span class="text-[9px] font-bold text-slate-500 hidden lg:block tracking-widest uppercase">LIVE</span>
+        </div>
       </div>
     </aside>
 
     <!-- ============================================================ 
          2. MIDDLE COLUMN: SHIPMENT LIST & SEARCH (MASTER)
          ============================================================ -->
-    <section class="w-full lg:w-[420px] xl:w-[460px] border-b lg:border-b-0 p-4 sm:p-5 flex flex-col shrink-0 bg-[#f1f4f9] h-full overflow-hidden">
+    <section id="shipmentMasterPanel" class="w-full lg:w-[420px] xl:w-[460px] border-b lg:border-b-0 p-4 sm:p-5 flex flex-col shrink-0 bg-[#f1f4f9] dark:bg-[#0b0f17] h-full overflow-hidden transition-colors duration-200">
       
       <!-- Column Header -->
       <div class="flex items-center justify-between mb-3.5">
@@ -127,10 +151,10 @@
     <!-- ============================================================ 
          3. RIGHT COLUMN WRAPPER (MATCHES LEFT PANEL BG, PROVIDES TOP PADDING)
          ============================================================ -->
-    <div class="flex-1 h-full bg-[#f1f4f9] pt-3 sm:pt-4 flex flex-col overflow-hidden">
+    <div id="rightPanelWrapper" class="flex-1 h-full bg-[#f1f4f9] dark:bg-[#0b0f17] pt-3 sm:pt-4 flex flex-col overflow-hidden transition-colors duration-200">
       
-      <!-- RIGHT CARD CONTAINER (ROUNDED TOP-LEFT, WHITE CANVAS) -->
-      <section class="flex-1 p-4 sm:p-6 flex flex-col h-full overflow-y-auto no-scrollbar bg-white rounded-tl-[28px] sm:rounded-tl-[34px] shadow-xs">
+      <!-- RIGHT CARD CONTAINER (ROUNDED TOP-LEFT, WHITE / DARK CANVAS) -->
+      <section id="rightCardSection" class="flex-1 p-4 sm:p-6 flex flex-col h-full overflow-y-auto no-scrollbar bg-white dark:bg-[#111723] text-slate-900 dark:text-slate-100 rounded-tl-[28px] sm:rounded-tl-[34px] shadow-xs transition-colors duration-200">
       
       <!-- Top Inspector Header Bar -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
