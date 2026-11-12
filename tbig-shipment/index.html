@@ -15,11 +15,22 @@
 
   <!-- Tailwind CSS & Leaflet.js Map -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['TiShip', 'Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=2.0">
+  <!-- Custom Styles (Including TiShip @font-face) -->
+  <link rel="stylesheet" href="styles.css?v=3.0">
 </head>
 
 <body class="bg-white text-slate-800 font-sans h-screen w-screen overflow-hidden m-0 p-0 antialiased flex flex-col selection:bg-[#1D3D8F] selection:text-white">

@@ -1,5 +1,13 @@
 /* styles.css — Modern Master-Detail Logistics UI (Inspired by Dribbble Reference) */
 
+@font-face {
+  font-family: 'TiShip';
+  src: url('asset/font/tiship.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg-page: #f1f5f9;
   --panel-bg: #ffffff;
@@ -16,7 +24,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'TiShip', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-page);
   color: var(--text-body);
   -webkit-font-smoothing: antialiased;
