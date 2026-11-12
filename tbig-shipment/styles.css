@@ -90,6 +90,7 @@ body {
    SHIPMENT LIST CARDS (MASTER COLUMN) - BORDERLESS WITH SOFT SHADOW
    ========================================================================= */
 .shipment-card {
+  margin-top: 10px;
   border-radius: 18px;
   padding: 16px;
   border: none !important;
@@ -112,7 +113,6 @@ body {
   background: linear-gradient(135deg, #1D3D8F 0%, #2053b8 60%, #2798D5 100%);
   border: none !important;
   color: #ffffff;
-  box-shadow: 0 12px 28px -5px rgba(29, 61, 143, 0.38);
   transform: translateY(-1px);
 }
 
@@ -255,8 +255,10 @@ body {
 #inspectorFlowStages,
 html,
 body {
-  -ms-overflow-style: none !important;  /* IE and Edge */
-  scrollbar-width: none !important;     /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+  scrollbar-width: none !important;
+  /* Firefox */
 }
 
 /* Status Badges */

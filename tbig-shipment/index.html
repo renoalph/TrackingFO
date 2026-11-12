@@ -75,7 +75,7 @@
     <!-- ============================================================ 
          2. MIDDLE COLUMN: SHIPMENT LIST & SEARCH (MASTER)
          ============================================================ -->
-    <section class="w-full lg:w-[420px] xl:w-[460px] border-b lg:border-b-0 lg:border-r border-slate-200/80 p-4 sm:p-5 flex flex-col shrink-0 bg-[#fafafa]/50 h-full overflow-hidden">
+    <section class="w-full lg:w-[420px] xl:w-[460px] border-b lg:border-b-0 p-4 sm:p-5 flex flex-col shrink-0 bg-[#f1f4f9] h-full overflow-hidden">
       
       <!-- Column Header -->
       <div class="flex items-center justify-between mb-3.5">
@@ -125,9 +125,12 @@
     </section>
 
     <!-- ============================================================ 
-         3. RIGHT COLUMN: MAP & DETAILED INSPECTOR (DETAIL)
+         3. RIGHT COLUMN WRAPPER (MATCHES LEFT PANEL BG, PROVIDES TOP PADDING)
          ============================================================ -->
-    <section class="flex-1 p-4 sm:p-6 flex flex-col h-full overflow-y-auto custom-scrollbar bg-white">
+    <div class="flex-1 h-full bg-[#f1f4f9] pt-3 sm:pt-4 flex flex-col overflow-hidden">
+      
+      <!-- RIGHT CARD CONTAINER (ROUNDED TOP-LEFT, WHITE CANVAS) -->
+      <section class="flex-1 p-4 sm:p-6 flex flex-col h-full overflow-y-auto no-scrollbar bg-white rounded-tl-[28px] sm:rounded-tl-[34px] shadow-xs">
       
       <!-- Top Inspector Header Bar -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -386,6 +389,7 @@
       </div>
 
     </section>
+    </div>
 
   </div>
 
