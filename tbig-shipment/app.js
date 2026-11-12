@@ -152,7 +152,7 @@ function renderShipmentCards() {
             <span class="badge-status ${isActive ? 'bg-white/20 text-white border border-white/30 backdrop-blur-xs' : badgeClass}">
               ${item.statusLabel}
             </span>
-            <button class="text-slate-400 hover:text-slate-600 ${isActive ? 'text-white/70 hover:text-white' : ''}" onclick="event.stopPropagation();">
+            <button class="w-6 h-6 rounded-md hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition ${isActive ? 'text-white/80 hover:text-white hover:bg-white/15' : ''}" onclick="toggleCardActionMenu(event, '${item.id}')" title="Menu Opsi Pengiriman">
               <span class="material-symbols-rounded text-[18px]">more_vert</span>
             </button>
           </div>
@@ -516,10 +516,55 @@ function switchTab(tabKey) {
 }
 
 // -------------------------------------------------------------------------
-// 7. MODAL SUBMISSIONS & DOCUMENTATION
+// 7. CRUD OPERATIONS, ACTION MENU & DOCUMENTATION
 // -------------------------------------------------------------------------
 function openNewShipmentModal() {
   const modal = document.getElementById('newShipmentModal');
+  const title = document.getElementById('modalFormTitle');
+  const sub = document.getElementById('modalFormSub');
+  const editIdInput = document.getElementById('editShipmentId');
+
+  if (editIdInput) editIdInput.value = '';
+  if (title) title.innerText = 'Input Pengiriman Material Tower Baru';
+  if (sub) sub.innerText = 'Masukkan nomor SO, jadwal kapal, dan estimasi tiba di site';
+
+  const form = document.getElementById('newShipmentForm');
+  if (form) form.reset();
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function openEditShipmentModal(id) {
+  closeCardActionMenu();
+  const item = state.shipments.find(s => s.id === id);
+  if (!item) return;
+
+  const modal = document.getElementById('newShipmentModal');
+  const title = document.getElementById('modalFormTitle');
+  const sub = document.getElementById('modalFormSub');
+  const editIdInput = document.getElementById('editShipmentId');
+
+  if (editIdInput) editIdInput.value = item.id;
+  if (title) title.innerText = 'Edit Data Pengiriman Material';
+  if (sub) sub.innerText = `Ubah data pengiriman SO #${item.sonumb} (${item.siteName})`;
+
+  // Isi data form dengan data pengiriman yang ada
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  setVal('newSoNumber', item.sonumb);
+  setVal('newSiteId', item.siteId);
+  setVal('newSiteName', item.siteName);
+  setVal('newTowerHeight', item.towerHeight);
+  setVal('newProvince', item.province);
+  setVal('newResidence', item.residence);
+  setVal('newContainerNo', item.containerNo);
+  setVal('newShippingLine', item.shippingLine);
+  setVal('newVesselName', item.vesselName);
+  setVal('newOriginPort', item.originPort);
+  setVal('newDestPort', item.destPort);
+  setVal('newEtd', item.etd);
+  setVal('newEtaPort', item.etaPort);
+  setVal('newEtaSite', item.etaSite);
+
   if (modal) modal.classList.remove('hidden');
 }
 
@@ -531,10 +576,11 @@ function closeNewShipmentModal() {
 function submitNewShipment(e) {
   e.preventDefault();
 
+  const editId = document.getElementById('editShipmentId') ? document.getElementById('editShipmentId').value : '';
   const so = document.getElementById('newSoNumber').value.trim();
   const siteId = document.getElementById('newSiteId').value.trim();
   const siteName = document.getElementById('newSiteName').value.trim();
-  const height = document.getElementById('newTowerHeight').value.trim() || 'SST 72 M';
+  const height = document.getElementById('newTowerHeight').value.trim() || 'SST 52 M';
   const province = document.getElementById('newProvince').value.trim() || 'Nusa Tenggara Timur';
   const residence = document.getElementById('newResidence').value.trim() || 'Waingapu';
   const containerNo = document.getElementById('newContainerNo').value.trim() || 'MSPU ' + Math.floor(100000 + Math.random() * 900000) + '-1';
@@ -555,6 +601,38 @@ function submitNewShipment(e) {
   if (destPort.includes('Dwikora')) destCoords = [-0.0263, 109.3425];
   if (destPort.includes('Gilimanuk')) destCoords = [-8.1633, 114.4397];
 
+  // UPDATE JIKA MODE EDIT
+  if (editId) {
+    const idx = state.shipments.findIndex(s => s.id === editId);
+    if (idx !== -1) {
+      const item = state.shipments[idx];
+      item.sonumb = so;
+      item.siteId = siteId || item.siteId;
+      item.siteName = siteName || item.siteName;
+      item.towerHeight = height;
+      item.province = province;
+      item.residence = residence;
+      item.containerNo = containerNo;
+      item.shippingLine = shippingLine;
+      item.vesselName = vesselName;
+      item.originPort = originPort;
+      item.destPort = destPort;
+      item.originCoords = originCoords;
+      item.destCoords = destCoords;
+      item.etd = etd;
+      item.etaPort = etaPort;
+      item.etaSite = etaSite;
+
+      saveShipmentsToLocal();
+      closeNewShipmentModal();
+      applyFilter();
+      renderDetail();
+      showToast(`Data pengiriman #${so} berhasil diperbarui!`);
+      return;
+    }
+  }
+
+  // CREATE PENGIRIMAN BARU
   const newEntry = {
     id: 'SHP-' + Date.now(),
     sonumb: so,
@@ -602,11 +680,231 @@ function submitNewShipment(e) {
   saveShipmentsToLocal();
   closeNewShipmentModal();
   applyFilter();
-  alert(`✅ Pengiriman baru untuk Site ${siteName} (${so}) berhasil ditambahkan!`);
+  renderDetail();
+  showToast(`Pengiriman baru #${so} berhasil ditambahkan!`);
 }
 
-function openEvidenceModal() {
-  const item = state.shipments.find(s => s.id === state.activeId);
+function deleteShipment(id) {
+  closeCardActionMenu();
+  const item = state.shipments.find(s => s.id === id);
+  if (!item) return;
+
+  if (!confirm(`Hapus pengiriman SO #${item.sonumb} (${item.siteName})?`)) {
+    return;
+  }
+
+  state.shipments = state.shipments.filter(s => s.id !== id);
+  saveShipmentsToLocal();
+
+  if (state.activeId === id) {
+    state.activeId = state.shipments.length > 0 ? state.shipments[0].id : null;
+  }
+
+  applyFilter();
+  if (state.activeId) {
+    renderDetail();
+  }
+  showToast(`Pengiriman SO #${item.sonumb} berhasil dihapus!`);
+}
+
+function updateShipmentStatus(id, newStatus) {
+  closeCardActionMenu();
+  const item = state.shipments.find(s => s.id === id);
+  if (!item) return;
+
+  item.status = newStatus;
+  if (newStatus === 'IN_TRANSIT') {
+    item.statusLabel = 'Sedang Berlayar';
+    item.currentStageIndex = 2;
+    if (item.flowStages && item.flowStages.length >= 3) {
+      item.flowStages[0].status = 'DONE';
+      item.flowStages[1].status = 'DONE';
+      item.flowStages[2].status = 'ACTIVE';
+      item.flowStages[3].status = 'PENDING';
+      item.flowStages[4].status = 'PENDING';
+      item.flowStages[5].status = 'PENDING';
+    }
+  } else if (newStatus === 'PORT_ARRIVED') {
+    item.statusLabel = 'Tiba di Pelabuhan';
+    item.currentStageIndex = 4;
+    if (item.flowStages && item.flowStages.length >= 4) {
+      item.flowStages[0].status = 'DONE';
+      item.flowStages[1].status = 'DONE';
+      item.flowStages[2].status = 'DONE';
+      item.flowStages[3].status = 'ACTIVE';
+      item.flowStages[4].status = 'PENDING';
+      item.flowStages[5].status = 'PENDING';
+    }
+  } else if (newStatus === 'COMPLETED') {
+    item.statusLabel = 'Tiba di Site';
+    item.currentStageIndex = 6;
+    if (item.flowStages) {
+      item.flowStages.forEach(st => st.status = 'DONE');
+    }
+  }
+
+  saveShipmentsToLocal();
+  applyFilter();
+  if (state.activeId === id) {
+    renderDetail();
+  }
+  showToast(`Status #${item.sonumb} diubah menjadi "${item.statusLabel}"!`);
+}
+
+function copyWhatsAppFormat(id) {
+  closeCardActionMenu();
+  const item = state.shipments.find(s => s.id === id);
+  if (!item) return;
+
+  const text = `🚢 *[UPDATE MONITORING LOGISTIK TBIG]*\n` +
+    `• *No. SO*: #${item.sonumb}\n` +
+    `• *Site*: ${item.siteName} (${item.siteId})\n` +
+    `• *Wilayah*: ${item.residence}, ${item.province}\n` +
+    `• *Kapal/Armada*: ${item.vesselName} (${item.voyage})\n` +
+    `• *No. Kontainer*: ${item.containerNo}\n` +
+    `• *Status*: ${item.statusLabel}\n` +
+    `• *ETA Site*: ${item.etaSite || '-'}\n` +
+    `• *Rute*: ${item.originPort} ➔ ${item.destPort}\n\n` +
+    `_Monitoring Pergerakan Material Tower Bersama Group_`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Format laporan WhatsApp berhasil disalin!');
+    }).catch(() => {
+      fallbackCopyText(text);
+    });
+  } else {
+    fallbackCopyText(text);
+  }
+}
+
+function fallbackCopyText(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    showToast('Format laporan WhatsApp berhasil disalin!');
+  } catch (err) {
+    console.error('Fallback copy failed', err);
+  }
+  document.body.removeChild(textarea);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('actionToast');
+  const msgEl = document.getElementById('toastMessage');
+  if (!toast || !msgEl) return;
+
+  msgEl.innerText = msg;
+  toast.classList.remove('hidden');
+  toast.classList.add('flex');
+
+  clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(() => {
+    toast.classList.add('hidden');
+    toast.classList.remove('flex');
+  }, 3000);
+}
+
+// -------------------------------------------------------------------------
+// FLOATING ACTION MENU (TITIK 3 DI CARD)
+// -------------------------------------------------------------------------
+function toggleCardActionMenu(event, itemId) {
+  event.stopPropagation();
+  const dropdown = document.getElementById('cardActionDropdown');
+  if (!dropdown) return;
+
+  if (dropdown.getAttribute('data-active-id') === itemId && !dropdown.classList.contains('hidden')) {
+    closeCardActionMenu();
+    return;
+  }
+
+  const item = state.shipments.find(s => s.id === itemId);
+  if (!item) return;
+
+  dropdown.setAttribute('data-active-id', itemId);
+
+  dropdown.innerHTML = `
+    <!-- Item Header -->
+    <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+      <div class="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 truncate">#${item.sonumb}</div>
+      <div class="text-[10px] text-slate-400 dark:text-slate-500 truncate">${item.siteName} (${item.siteId})</div>
+    </div>
+
+    <!-- Quick Status Change -->
+    <div class="px-3 pt-1 pb-0.5 text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Update Status Cepat</div>
+    <div class="grid grid-cols-3 gap-1 px-2.5 py-1 mb-1">
+      <button onclick="updateShipmentStatus('${item.id}', 'IN_TRANSIT')" class="px-1.5 py-1 rounded-md text-[10px] font-bold text-center transition cursor-pointer ${item.status === 'IN_TRANSIT' ? 'bg-[#1D3D8F] text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}">
+        Berlayar
+      </button>
+      <button onclick="updateShipmentStatus('${item.id}', 'PORT_ARRIVED')" class="px-1.5 py-1 rounded-md text-[10px] font-bold text-center transition cursor-pointer ${item.status === 'PORT_ARRIVED' ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}">
+        Pelabuhan
+      </button>
+      <button onclick="updateShipmentStatus('${item.id}', 'COMPLETED')" class="px-1.5 py-1 rounded-md text-[10px] font-bold text-center transition cursor-pointer ${item.status === 'COMPLETED' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}">
+        Selesai
+      </button>
+    </div>
+
+    <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
+
+    <!-- Actions List -->
+    <button onclick="copyWhatsAppFormat('${item.id}')" class="w-full px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-left transition cursor-pointer">
+      <span class="material-symbols-rounded text-emerald-500 text-[16px]">chat</span>
+      <span class="font-medium">Salin Format Laporan WA</span>
+    </button>
+
+    <button onclick="openEditShipmentModal('${item.id}')" class="w-full px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-left transition cursor-pointer">
+      <span class="material-symbols-rounded text-blue-500 text-[16px]">edit_note</span>
+      <span class="font-medium">Edit Data Pengiriman</span>
+    </button>
+
+    <button onclick="openEvidenceModal('${item.id}')" class="w-full px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-left transition cursor-pointer">
+      <span class="material-symbols-rounded text-indigo-500 text-[16px]">receipt_long</span>
+      <span class="font-medium">Surat Jalan &amp; Evidence</span>
+    </button>
+
+    <a href="${item.marineRadarUrl || '#'}" target="_blank" onclick="closeCardActionMenu()" class="w-full px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-left transition cursor-pointer">
+      <span class="material-symbols-rounded text-[#2798D5] text-[16px]">radar</span>
+      <span class="font-medium">Buka Radar AIS Kapal</span>
+    </a>
+
+    <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
+
+    <button onclick="deleteShipment('${item.id}')" class="w-full px-3 py-2 flex items-center gap-2 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-left transition cursor-pointer">
+      <span class="material-symbols-rounded text-[16px]">delete</span>
+      <span class="font-semibold">Hapus Pengiriman</span>
+    </button>
+  `;
+
+  const btn = event.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  dropdown.classList.remove('hidden');
+
+  let top = rect.bottom + 6;
+  if (top + dropdown.offsetHeight > window.innerHeight) {
+    top = Math.max(10, rect.top - dropdown.offsetHeight - 6);
+  }
+  let left = rect.right - dropdown.offsetWidth;
+  if (left < 10) left = 10;
+
+  dropdown.style.top = `${top}px`;
+  dropdown.style.left = `${left}px`;
+}
+
+function closeCardActionMenu() {
+  const dropdown = document.getElementById('cardActionDropdown');
+  if (dropdown) {
+    dropdown.classList.add('hidden');
+    dropdown.removeAttribute('data-active-id');
+  }
+}
+
+function openEvidenceModal(customId) {
+  closeCardActionMenu();
+  const targetId = customId || state.activeId;
+  const item = state.shipments.find(s => s.id === targetId);
   if (!item) return;
 
   const modal = document.getElementById('evidenceModal');
@@ -614,14 +912,17 @@ function openEvidenceModal() {
   if (!modal || !content) return;
 
   content.innerHTML = `
-    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-      <div class="font-bold text-slate-800 mb-1">Catatan Evidence Lapangan:</div>
-      <p class="text-slate-600">${item.evidenceNote || 'Belum ada catatan evidence khusus.'}</p>
+    <div class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div class="font-bold text-slate-800 dark:text-slate-100 mb-1">Catatan Evidence Lapangan:</div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${item.evidenceNote || 'Belum ada catatan evidence khusus untuk pengiriman ini.'}</p>
     </div>
-    <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900">
-      <div class="font-bold mb-0.5">Surat Jalan &amp; Seal Kontainer:</div>
-      <div>No. Kontainer: <b>${item.containerNo}</b> (${item.shippingLine})</div>
-      <div>Kapal: <b>${item.vesselName}</b> (${item.voyage})</div>
+    <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-blue-900 dark:text-blue-200 space-y-1">
+      <div class="font-bold text-xs">Surat Jalan &amp; Seal Kontainer:</div>
+      <div>No. Kontainer: <b class="font-mono">${item.containerNo}</b> (${item.shippingLine})</div>
+      <div>Armada: <b>${item.vesselName}</b> (${item.voyage})</div>
+      <div class="pt-1.5 border-t border-blue-200/60 dark:border-blue-800/60 text-[11px] text-blue-700 dark:text-blue-300">
+        Tujuan: Site ${item.siteName} (${item.residence}, ${item.province})
+      </div>
     </div>
   `;
 
@@ -649,6 +950,24 @@ function bindEvents() {
   if (form) {
     form.addEventListener('submit', submitNewShipment);
   }
+
+  // Tutup dropdown menu saat klik di luar atau tekan tombol ESC
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('cardActionDropdown');
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+      if (!dropdown.contains(e.target) && !e.target.closest('button[onclick*="toggleCardActionMenu"]')) {
+        closeCardActionMenu();
+      }
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeCardActionMenu();
+      closeNewShipmentModal();
+      closeEvidenceModal();
+    }
+  });
 }
 
 // -------------------------------------------------------------------------
@@ -701,3 +1020,11 @@ function initTheme() {
 // Expose functions globally to window for HTML inline events
 window.toggleDarkMode = toggleDarkMode;
 window.applyTheme = applyTheme;
+window.toggleCardActionMenu = toggleCardActionMenu;
+window.closeCardActionMenu = closeCardActionMenu;
+window.openEditShipmentModal = openEditShipmentModal;
+window.deleteShipment = deleteShipment;
+window.updateShipmentStatus = updateShipmentStatus;
+window.copyWhatsAppFormat = copyWhatsAppFormat;
+window.openEvidenceModal = openEvidenceModal;
+window.closeEvidenceModal = closeEvidenceModal;
