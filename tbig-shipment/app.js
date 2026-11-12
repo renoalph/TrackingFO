@@ -321,18 +321,18 @@ function renderFlowStages(item) {
 
   const isSea = !item.shippingLine.includes('TRUCKING');
   const stageImages = [
-    'asset/image/warehouse.png',
-    'asset/image/craine.png',
-    isSea ? 'asset/image/ship-color.png' : 'asset/image/cargo.png',
-    'asset/image/craine.png',
-    'asset/image/cargo.png',
-    'asset/image/warehouse.png'
+    'asset/image/warehouse-j.png',
+    'asset/image/craine-j.png',
+    isSea ? 'asset/image/ship-color-j.png' : 'asset/image/cargo-j.png',
+    'asset/image/craine-j.png',
+    'asset/image/cargo-j.png',
+    'asset/image/warehouse-j.png'
   ];
 
   container.innerHTML = item.flowStages.map((stage, idx) => {
     const isDone = stage.status === 'DONE';
     const isActive = stage.status === 'ACTIVE';
-    const illustration = stageImages[idx] || 'asset/image/cargo.png';
+    const illustration = stageImages[idx] || 'asset/image/cargo-j.png';
 
     // Card background styling
     let cardStyle = 'bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs';

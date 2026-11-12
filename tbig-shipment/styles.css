@@ -239,13 +239,16 @@ body {
   width: 5px;
   height: 5px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 9999px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
@@ -295,7 +298,6 @@ body {
 }
 
 .flow-card-horizontal:hover {
-  transform: translateY(-2px);
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
 }
 
@@ -303,8 +305,8 @@ body {
   position: absolute;
   right: -32px;
   bottom: -8px;
-  width: 140px;
-  height: 105px;
+  width: 240px;
+  height: 185px;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
@@ -313,13 +315,20 @@ body {
 }
 
 .flow-card-horizontal:hover .flow-card-img-overlap {
-  transform: scale(1.05) translateX(-4px);
+  transform: translateX(-4px);
 }
 
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.99); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 1024px) {
