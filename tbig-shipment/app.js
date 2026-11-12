@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // -------------------------------------------------------------------------
 async function loadData() {
   try {
-    const saved = localStorage.getItem('shipments_tracker_data') || localStorage.getItem('tbig_shipments_data');
+    const saved = localStorage.getItem('tbig_shipments_data');
     if (saved) {
       const parsed = JSON.parse(saved);
       state.shipments = parsed.shipments || [];
@@ -34,7 +34,7 @@ async function loadData() {
       const res = await fetch('data/shipments.json');
       const data = await res.json();
       state.shipments = data.shipments || [];
-      localStorage.setItem('shipments_tracker_data', JSON.stringify(data));
+      localStorage.setItem('tbig_shipments_data', JSON.stringify(data));
     }
 
     if (state.shipments.length > 0 && !state.activeId) {
@@ -48,7 +48,7 @@ async function loadData() {
 }
 
 function saveShipmentsToLocal() {
-  localStorage.setItem('shipments_tracker_data', JSON.stringify({ shipments: state.shipments }));
+  localStorage.setItem('tbig_shipments_data', JSON.stringify({ shipments: state.shipments }));
 }
 
 // -------------------------------------------------------------------------
@@ -358,7 +358,7 @@ function renderFlowStages(item) {
           <div class="flex items-center justify-between gap-2 mb-2">
             <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${isActive ? 'bg-[#1D3D8F] text-white shadow-xs' : (isDone ? 'bg-slate-100 text-slate-700' : 'bg-slate-200 text-slate-500')
       }">
-              TAHAP ${stage.step} DARI 6
+              TAHAP ${stage.step}
             </span>
 
             <span class="badge-status ${isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
@@ -979,7 +979,7 @@ function applyTheme(theme) {
   document.body.classList.toggle('dark', isDark);
 
   try {
-    localStorage.setItem('tracker_theme', theme);
+    localStorage.setItem('tbig_theme', theme);
   } catch (e) { }
 
   // Update theme toggle icon
@@ -1005,7 +1005,7 @@ function toggleDarkMode() {
 function initTheme() {
   let saved = null;
   try {
-    saved = localStorage.getItem('tracker_theme') || localStorage.getItem('tbig_theme');
+    saved = localStorage.getItem('tbig_theme');
   } catch (e) { }
 
   if (saved) {

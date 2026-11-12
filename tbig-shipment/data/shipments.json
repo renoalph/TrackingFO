@@ -20,9 +20,18 @@
       "containerNo": "MSPU 121332-7",
       "originPort": "Dermaga Jamrud Selatan (Tanjung Perak, Surabaya)",
       "destPort": "Pelabuhan Nusantara Waingapu (NTT)",
-      "originCoords": [-7.1983, 112.7335],
-      "destCoords": [-9.6481, 120.2608],
-      "siteCoords": [-9.6550, 120.2720],
+      "originCoords": [
+        -7.1983,
+        112.7335
+      ],
+      "destCoords": [
+        -9.6481,
+        120.2608
+      ],
+      "siteCoords": [
+        -9.6550,
+        120.2720
+      ],
       "shippingLine": "MERATUS",
       "vesselName": "KM. Prakasa Pacific",
       "voyage": "Voy. 627 E - 26",
@@ -104,9 +113,18 @@
       "containerNo": "TRUCK-L300-8812",
       "originPort": "Gudang Logistik Surabaya",
       "destPort": "Pelabuhan Gilimanuk (Lintas Darat)",
-      "originCoords": [-7.2575, 112.7521],
-      "destCoords": [-8.1633, 114.4397],
-      "siteCoords": [-8.8167, 115.1167],
+      "originCoords": [
+        -7.2575,
+        112.7521
+      ],
+      "destCoords": [
+        -8.1633,
+        114.4397
+      ],
+      "siteCoords": [
+        -8.8167,
+        115.1167
+      ],
       "shippingLine": "TRUCKING MOVER",
       "vesselName": "Ferry KMP Portlink VII",
       "voyage": "Penyeberangan Selat Bali",
@@ -188,9 +206,18 @@
       "containerNo": "TEMU 440912-3",
       "originPort": "Terminal Nilam (Tanjung Perak, Surabaya)",
       "destPort": "Pelabuhan Lembar (Lombok Barat)",
-      "originCoords": [-7.2050, 112.7290],
-      "destCoords": [-8.7297, 116.0719],
-      "siteCoords": [-8.7612, 115.9320],
+      "originCoords": [
+        -7.2050,
+        112.7290
+      ],
+      "destCoords": [
+        -8.7297,
+        116.0719
+      ],
+      "siteCoords": [
+        -8.7612,
+        115.9320
+      ],
       "shippingLine": "TEMAS",
       "vesselName": "KM. Kawa Mas",
       "voyage": "Voy. 104/S",
@@ -272,9 +299,18 @@
       "containerNo": "SPIL 890124-1",
       "originPort": "Terminal Berlian (Tanjung Perak, Surabaya)",
       "destPort": "Pelabuhan Tenau Kupang (NTT)",
-      "originCoords": [-7.2020, 112.7310],
-      "destCoords": [-10.1889, 123.5414],
-      "siteCoords": [-10.2200, 123.5100],
+      "originCoords": [
+        -7.2020,
+        112.7310
+      ],
+      "destCoords": [
+        -10.1889,
+        123.5414
+      ],
+      "siteCoords": [
+        -10.2200,
+        123.5100
+      ],
       "shippingLine": "SPIL",
       "vesselName": "KM. Oriental Diamond",
       "voyage": "Voy. 2603",
@@ -356,9 +392,18 @@
       "containerNo": "TANT 772189-0",
       "originPort": "Tanjung Priok (Jakarta)",
       "destPort": "Pelabuhan Dwikora (Pontianak)",
-      "originCoords": [-6.1038, 106.8833],
-      "destCoords": [-0.0263, 109.3425],
-      "siteCoords": [0.0385, 110.9511],
+      "originCoords": [
+        -6.1038,
+        106.8833
+      ],
+      "destCoords": [
+        -0.0263,
+        109.3425
+      ],
+      "siteCoords": [
+        0.0385,
+        110.9511
+      ],
       "shippingLine": "TANTO",
       "vesselName": "KM. Tanto Horas",
       "voyage": "Voy. 441/W",
@@ -429,4 +474,3 @@
     }
   ]
 }
-

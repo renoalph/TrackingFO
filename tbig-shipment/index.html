@@ -34,7 +34,7 @@
     // Inisialisasi tema sebelum render agar tidak flickering
     (function () {
       try {
-        const saved = localStorage.getItem('tracker_theme') || localStorage.getItem('tbig_theme');
+        const saved = localStorage.getItem('tbig_theme');
         if (saved === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
@@ -219,7 +219,7 @@
                 Vehicle &amp; Vessel
               </button>
               <button onclick="switchTab('flow')" id="tabBtn_flow" class="inspector-tab-btn">
-                Journey Flow (6 Tahap)
+                Journey Flow
               </button>
               <button onclick="switchTab('details')" id="tabBtn_details" class="inspector-tab-btn">
                 Order Details
@@ -307,7 +307,7 @@
               <div class="p-3 bg-slate-50/80 rounded-xl text-xs flex items-center justify-between">
                 <span class="font-bold text-slate-800 flex items-center gap-1.5">
                   <span class="material-symbols-rounded text-[#1D3D8F] text-[18px]">alt_route</span>
-                  Alur Tahapan Perjalanan Material Tower (6 Tahap)
+                  Alur Tahapan Perjalanan Material
                 </span>
                 <span class="text-[11px] font-medium text-slate-500 flex items-center gap-1">
                   <span class="material-symbols-rounded text-[15px] text-[#2798D5]">swipe</span>
