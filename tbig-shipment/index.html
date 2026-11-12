@@ -151,28 +151,28 @@
     <!-- ============================================================ 
          3. RIGHT COLUMN WRAPPER (MATCHES LEFT PANEL BG, PROVIDES TOP PADDING)
          ============================================================ -->
-    <div id="rightPanelWrapper" class="flex-1 h-full bg-[#f1f4f9] dark:bg-[#0b0f17] pt-3 sm:pt-4 flex flex-col overflow-hidden transition-colors duration-200">
+    <div id="rightPanelWrapper" class="flex-1 h-full bg-[#f1f4f9] dark:bg-[#0b0f17] flex flex-col overflow-hidden transition-colors duration-200">
       
-      <!-- RIGHT CARD CONTAINER (ROUNDED TOP-LEFT, WHITE / DARK CANVAS) -->
-      <section id="rightCardSection" class="flex-1 p-4 sm:p-6 flex flex-col h-full overflow-y-auto no-scrollbar bg-white dark:bg-[#111723] text-slate-900 dark:text-slate-100 rounded-tl-[28px] sm:rounded-tl-[34px] shadow-xs transition-colors duration-200">
-      
-      <!-- TOP ACTION BAR: POJOK KANAN ATAS LAYAR -->
-      <div class="flex items-center justify-end gap-2 mb-3">
+      <!-- TOP ACTION BAR: DI SELA PADDING ATAS (POJOK KANAN ATAS DI LUAR CARD) -->
+      <div class="px-4 sm:px-6 pt-3 pb-2.5 flex items-center justify-end gap-2 shrink-0">
         <a id="btnLiveRadar" href="#" target="_blank"
-          class="px-3 py-1.5 rounded-xl bg-[#f0f7fc] hover:bg-[#e0f0fa] dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-[#1D3D8F] dark:text-[#38bdf8] border border-[#bae6fd] dark:border-blue-800/60 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs">
+          class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-[#151c28] dark:hover:bg-[#1a2333] text-[#1D3D8F] dark:text-[#38bdf8] border border-slate-200/80 dark:border-slate-800 text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs">
           <span class="material-symbols-rounded text-[16px]">radar</span>
           <span>Live AIS Radar</span>
           <span class="material-symbols-rounded text-[13px]">open_in_new</span>
         </a>
         <button onclick="openEvidenceModal()"
-          class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-[#151c28] dark:hover:bg-[#1e293b] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer">
+          class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-[#151c28] dark:hover:bg-[#1a2333] border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs cursor-pointer">
           <span class="material-symbols-rounded text-[16px]">assignment</span>
           <span>Documentation</span>
         </button>
       </div>
 
-      <!-- MAP SECTION WITH FLOATING METRICS -->
-      <div class="relative mb-4">
+      <!-- RIGHT CARD CONTAINER (ROUNDED TOP-LEFT, WHITE / DARK CANVAS) -->
+      <section id="rightCardSection" class="flex-1 p-4 sm:p-6 flex flex-col h-full overflow-y-auto no-scrollbar bg-white dark:bg-[#111723] text-slate-900 dark:text-slate-100 rounded-tl-[28px] sm:rounded-tl-[34px] shadow-xs transition-colors duration-200">
+      
+      <!-- MAP SECTION WITH FLOATING METRICS (FULL MAP DI PALING ATAS CARD) -->
+      <div class="relative mb-5">
         <div id="mainInspectorMap"></div>
 
         <!-- Floating Status Pill (Compact, Ramping & Hanya Data Riil) -->
