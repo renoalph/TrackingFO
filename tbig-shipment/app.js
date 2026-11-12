@@ -332,39 +332,61 @@ function renderFlowStages(item) {
   container.innerHTML = item.flowStages.map((stage, idx) => {
     const isDone = stage.status === 'DONE';
     const isActive = stage.status === 'ACTIVE';
-    const itemClass = isDone ? 'is-done' : (isActive ? 'is-active' : '');
     const illustration = stageImages[idx] || 'asset/image/cargo.png';
 
+    // Card background styling
+    let cardStyle = 'bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs';
+    if (isActive) {
+      cardStyle = 'bg-gradient-to-br from-[#f8fbfe] via-[#f0f7fc] to-[#e4f2fb] border-[#2798D5] shadow-md shadow-[#2798D5]/15 ring-2 ring-[#2798D5]/20';
+    } else if (!isDone) {
+      cardStyle = 'bg-slate-50/70 border-slate-200/70 opacity-85';
+    }
+
     return `
-      <div class="journey-step-item ${itemClass}">
-        <div class="journey-step-dot">
-          ${isDone ? '<span class="material-symbols-rounded text-[16px]">check</span>' : stage.step}
-        </div>
-        <div class="journey-step-card flex items-start gap-3">
-          <div class="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200/90 p-1 flex items-center justify-center shrink-0 shadow-2xs">
-            <img src="${illustration}" alt="Step Icon" class="max-h-8 max-w-full object-contain">
+      <div class="flow-card-horizontal shrink-0 w-[295px] sm:w-[325px] p-4 border flex flex-col justify-between ${cardStyle}">
+        
+        <!-- Top Section: Header & Metadata -->
+        <div class="relative z-10">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${
+              isActive ? 'bg-[#1D3D8F] text-white shadow-xs' : (isDone ? 'bg-slate-100 text-slate-700' : 'bg-slate-200 text-slate-500')
+            }">
+              TAHAP ${stage.step} DARI 6
+            </span>
+
+            <span class="badge-status ${
+              isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+              isActive ? 'bg-[#dbeafe] text-[#1D3D8F] border border-[#bae6fd] animate-pulse' :
+              'bg-slate-100 text-slate-500 border border-slate-200'
+            } text-[10px]">
+              ${isDone ? '<span class="material-symbols-rounded text-[12px]">check</span> Selesai' : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-[#1D3D8F] animate-pulse"></span> Berjalan' : 'Menunggu')}
+            </span>
           </div>
-          <div class="flex-1">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-xs ${isActive ? 'text-[#1D3D8F]' : 'text-slate-900'}">${stage.title}</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded font-semibold ${
-                  isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                  isActive ? 'bg-[#f0f7fc] text-[#1D3D8F] border border-[#bae6fd]' :
-                  'bg-slate-100 text-slate-500'
-                }">
-                  ${isDone ? 'Selesai' : (isActive ? 'Sedang Berjalan' : 'Menunggu')}
-                </span>
-              </div>
-              <div class="text-[11px] font-semibold text-slate-500">${stage.date}</div>
-            </div>
-            <div class="text-[11px] text-slate-600 mb-1 flex items-center gap-1">
-              <span class="material-symbols-rounded text-slate-400 text-[14px]">location_on</span>
-              ${stage.location}
-            </div>
-            <p class="text-xs text-slate-500 leading-relaxed">${stage.desc}</p>
+
+          <h4 class="font-bold text-xs ${isActive ? 'text-[#1D3D8F]' : 'text-slate-900'} leading-snug line-clamp-2 max-w-[75%]">
+            ${stage.title}
+          </h4>
+
+          <div class="text-[10.5px] font-semibold text-slate-500 mt-1.5 flex items-center gap-1">
+            <span class="material-symbols-rounded text-[13px] text-slate-400">schedule</span>
+            <span>${stage.date}</span>
+          </div>
+
+          <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 max-w-[70%] truncate" title="${stage.location}">
+            <span class="material-symbols-rounded text-[13px] text-[#2798D5]">location_on</span>
+            <span class="truncate">${stage.location}</span>
           </div>
         </div>
+
+        <!-- Bottom Section: Deskripsi -->
+        <div class="relative z-10 pt-3 border-t ${isActive ? 'border-[#bae6fd]/60' : 'border-slate-100'} mt-2">
+          <p class="text-[11px] text-slate-600 leading-relaxed max-w-[68%] line-clamp-2">
+            ${stage.desc}
+          </p>
+        </div>
+
+        <!-- Right Side Overlapping Illustration (30% terpotong di tepi kanan) -->
+        <img src="${illustration}" alt="Ilustrasi Tahap" class="flow-card-img-overlap">
       </div>
     `;
   }).join('');

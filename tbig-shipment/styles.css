@@ -283,10 +283,39 @@ body {
   color: #b91c1c;
 }
 
-/* Animations */
-.animate-fadeIn {
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* =========================================================================
+   HORIZONTAL JOURNEY FLOW CARDS (OVERFLOW IMAGE EFFECT)
+   ========================================================================= */
+.flow-card-horizontal {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  min-height: 155px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+.flow-card-horizontal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+}
+
+.flow-card-img-overlap {
+  position: absolute;
+  right: -32px;
+  bottom: -8px;
+  width: 140px;
+  height: 105px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.08));
+  transition: transform 0.3s ease;
+}
+
+.flow-card-horizontal:hover .flow-card-img-overlap {
+  transform: scale(1.05) translateX(-4px);
+}
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.99); }
