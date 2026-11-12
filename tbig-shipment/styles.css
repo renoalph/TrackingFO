@@ -193,7 +193,7 @@ body {
    ========================================================================= */
 #mainInspectorMap {
   width: 100%;
-  height: 320px;
+  height: 350px;
   border-radius: 20px;
   z-index: 1;
 }
