@@ -123,6 +123,8 @@ function renderShipmentCards() {
   container.innerHTML = state.filtered.map(item => {
     const isActive = item.id === state.activeId;
     const progressPercent = calculateProgressPercent(item.currentStageIndex);
+    const isSea = !item.shippingLine.includes('TRUCKING');
+    const thumbImg = isSea ? 'asset/image/ship-color.png' : 'asset/image/cargo.png';
 
     // Mini 3-point timeline (Checking -> In Transit -> Delivered)
     const isStageChecking = item.currentStageIndex >= 1;
@@ -138,8 +140,11 @@ function renderShipmentCards() {
       <div class="shipment-card ${isActive ? 'active' : ''}" onclick="selectShipment('${item.id}')">
         <!-- Card Header -->
         <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center gap-1.5">
-            <span class="font-mono font-bold text-xs ${isActive ? 'text-white' : 'text-slate-900'}">Order ID: #${item.sonumb}</span>
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg ${isActive ? 'bg-white/20' : 'bg-slate-100'} p-0.5 flex items-center justify-center shrink-0">
+              <img src="${thumbImg}" alt="Vehicle" class="max-h-5 max-w-full object-contain">
+            </div>
+            <span class="font-mono font-bold text-xs ${isActive ? 'text-white' : 'text-slate-900'}">#${item.sonumb}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="badge-status ${isActive ? 'bg-white/20 text-white border border-white/30 backdrop-blur-xs' : badgeClass}">
@@ -264,9 +269,20 @@ function renderInspector() {
   const specTowerHeight = document.getElementById('specTowerHeight');
   const specRoute = document.getElementById('specRoute');
   const containerTag = document.getElementById('vehicleContainerTag');
+  const vehicleImg = document.getElementById('vehicleImageTag');
+  const loadBadge = document.getElementById('vehicleLoadBadge');
+
+  const isSea = !item.shippingLine.includes('TRUCKING');
+  if (vehicleImg) {
+    vehicleImg.src = isSea ? 'asset/image/ship-color.png' : 'asset/image/cargo.png';
+    vehicleImg.alt = item.vesselName;
+  }
+  if (loadBadge) {
+    loadBadge.innerText = item.towerHeight.includes('72') ? '92% TOWER LOAD' : '85% TOWER LOAD';
+  }
 
   if (specVesselName) specVesselName.innerText = item.vesselName;
-  if (specShippingLine) specShippingLine.innerText = `${item.shippingLine} · General Cargo`;
+  if (specShippingLine) specShippingLine.innerText = `${item.shippingLine} · ${isSea ? 'General Cargo Vessel' : 'Armada Truk Ekspedisi'}`;
   if (specVoyage) specVoyage.innerText = item.voyage;
   if (specImo) specImo.innerText = item.imoNumber || '9301140';
   if (specTowerHeight) specTowerHeight.innerText = item.towerHeight;
@@ -303,35 +319,51 @@ function renderFlowStages(item) {
   const container = document.getElementById('inspectorFlowStages');
   if (!container || !item.flowStages) return;
 
-  container.innerHTML = item.flowStages.map(stage => {
+  const isSea = !item.shippingLine.includes('TRUCKING');
+  const stageImages = [
+    'asset/image/warehouse.png',
+    'asset/image/craine.png',
+    isSea ? 'asset/image/ship-color.png' : 'asset/image/cargo.png',
+    'asset/image/craine.png',
+    'asset/image/cargo.png',
+    'asset/image/warehouse.png'
+  ];
+
+  container.innerHTML = item.flowStages.map((stage, idx) => {
     const isDone = stage.status === 'DONE';
     const isActive = stage.status === 'ACTIVE';
     const itemClass = isDone ? 'is-done' : (isActive ? 'is-active' : '');
+    const illustration = stageImages[idx] || 'asset/image/cargo.png';
 
     return `
       <div class="journey-step-item ${itemClass}">
         <div class="journey-step-dot">
           ${isDone ? '<span class="material-symbols-rounded text-[16px]">check</span>' : stage.step}
         </div>
-        <div class="journey-step-card">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-xs ${isActive ? 'text-[#1D3D8F]' : 'text-slate-900'}">${stage.title}</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded font-semibold ${
-                isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                isActive ? 'bg-[#f0f7fc] text-[#1D3D8F] border border-[#bae6fd]' :
-                'bg-slate-100 text-slate-500'
-              }">
-                ${isDone ? 'Selesai' : (isActive ? 'Sedang Berjalan' : 'Menunggu')}
-              </span>
+        <div class="journey-step-card flex items-start gap-3">
+          <div class="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200/90 p-1 flex items-center justify-center shrink-0 shadow-2xs">
+            <img src="${illustration}" alt="Step Icon" class="max-h-8 max-w-full object-contain">
+          </div>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-xs ${isActive ? 'text-[#1D3D8F]' : 'text-slate-900'}">${stage.title}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded font-semibold ${
+                  isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                  isActive ? 'bg-[#f0f7fc] text-[#1D3D8F] border border-[#bae6fd]' :
+                  'bg-slate-100 text-slate-500'
+                }">
+                  ${isDone ? 'Selesai' : (isActive ? 'Sedang Berjalan' : 'Menunggu')}
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-slate-500">${stage.date}</div>
             </div>
-            <div class="text-[11px] font-semibold text-slate-500">${stage.date}</div>
+            <div class="text-[11px] text-slate-600 mb-1 flex items-center gap-1">
+              <span class="material-symbols-rounded text-slate-400 text-[14px]">location_on</span>
+              ${stage.location}
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">${stage.desc}</p>
           </div>
-          <div class="text-[11px] text-slate-600 mb-1 flex items-center gap-1">
-            <span class="material-symbols-rounded text-slate-400 text-[14px]">location_on</span>
-            ${stage.location}
-          </div>
-          <p class="text-xs text-slate-500 leading-relaxed">${stage.desc}</p>
         </div>
       </div>
     `;

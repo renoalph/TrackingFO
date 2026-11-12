@@ -237,26 +237,12 @@
                   <span class="text-emerald-600 flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified</span>
                 </div>
                 
-                <!-- Modern SVG Container Illustration Placeholder (Siap diganti gambar) -->
-                <div id="vehicleGraphicPlaceholder" class="w-full h-28 flex items-center justify-center relative my-1">
-                  <!-- Container Truck Vector Graphic -->
-                  <svg class="w-full h-full max-h-24 text-slate-700" viewBox="0 0 240 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Cabin -->
-                    <rect x="18" y="32" width="38" height="42" rx="6" fill="#cbd5e1" />
-                    <rect x="22" y="36" width="22" height="18" rx="3" fill="#0f172a" />
-                    <!-- Chassis -->
-                    <rect x="15" y="70" width="205" height="7" rx="2" fill="#334155" />
-                    <!-- Blue Cargo Container Box with % Tower -->
-                    <rect x="60" y="16" width="160" height="56" rx="4" fill="#1D3D8F" />
-                    <rect x="64" y="20" width="152" height="48" rx="2" fill="#2563eb" fill-opacity="0.2" stroke="#ffffff" stroke-dasharray="4 4" />
-                    <!-- Wheels -->
-                    <circle cx="42" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
-                    <circle cx="95" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
-                    <circle cx="118" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
-                    <circle cx="180" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
-                    <circle cx="203" cy="74" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
-                    <text x="140" y="49" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle" font-family="Plus Jakarta Sans">85% TOWER LOAD</text>
-                  </svg>
+                <!-- Real Illustration Image Box -->
+                <div class="w-full h-32 flex items-center justify-center relative my-1 p-2 bg-gradient-to-b from-slate-50/60 to-white rounded-xl border border-slate-100">
+                  <img id="vehicleImageTag" src="asset/image/ship-color.png" alt="Armada Pengangkut" class="max-h-28 w-auto object-contain drop-shadow-md transition-all duration-300">
+                  <div id="vehicleLoadBadge" class="absolute bottom-2 right-2 px-2.5 py-0.5 rounded-lg bg-[#1D3D8F] text-white text-[10px] font-bold shadow-xs">
+                    85% TOWER LOAD
+                  </div>
                 </div>
                 
                 <span class="text-[10px] text-slate-400 font-medium">No. Kontainer: <b id="vehicleContainerTag" class="text-slate-700 font-mono">MSPU 121332-7</b></span>
