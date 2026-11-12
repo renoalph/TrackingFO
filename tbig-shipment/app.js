@@ -238,14 +238,13 @@ function renderInspector() {
 
   if (orderHeader) orderHeader.innerText = `#${item.sonumb}`;
   if (siteSub) siteSub.innerText = `Site ${item.siteName} (${item.siteId}) · ${item.residence}, ${item.province}`;
-  
+
   if (statusBadge) {
     statusBadge.innerText = item.statusLabel;
-    statusBadge.className = `badge-status ${
-      item.status === 'COMPLETED' ? 'badge-delivered' :
-      item.status === 'PORT_ARRIVED' ? 'badge-checking' :
-      item.status === 'RISK_DELAY' ? 'badge-risk' : 'badge-in-transit'
-    }`;
+    statusBadge.className = `badge-status ${item.status === 'COMPLETED' ? 'badge-delivered' :
+        item.status === 'PORT_ARRIVED' ? 'badge-checking' :
+          item.status === 'RISK_DELAY' ? 'badge-risk' : 'badge-in-transit'
+      }`;
   }
 
   if (radarLink) {
@@ -357,17 +356,15 @@ function renderFlowStages(item) {
         <!-- Top Section: Header & Metadata -->
         <div class="relative z-10">
           <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${
-              isActive ? 'bg-[#1D3D8F] text-white shadow-xs' : (isDone ? 'bg-slate-100 text-slate-700' : 'bg-slate-200 text-slate-500')
-            }">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${isActive ? 'bg-[#1D3D8F] text-white shadow-xs' : (isDone ? 'bg-slate-100 text-slate-700' : 'bg-slate-200 text-slate-500')
+      }">
               TAHAP ${stage.step} DARI 6
             </span>
 
-            <span class="badge-status ${
-              isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-              isActive ? 'bg-[#dbeafe] text-[#1D3D8F] border border-[#bae6fd] animate-pulse' :
-              'bg-slate-100 text-slate-500 border border-slate-200'
-            } text-[10px]">
+            <span class="badge-status ${isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+        isActive ? 'bg-[#dbeafe] text-[#1D3D8F] border border-[#bae6fd] animate-pulse' :
+          'bg-slate-100 text-slate-500 border border-slate-200'
+      } text-[10px]">
               ${isDone ? '<span class="material-symbols-rounded text-[12px]">check</span> Selesai' : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-[#1D3D8F] animate-pulse"></span> Berjalan' : 'Menunggu')}
             </span>
           </div>
@@ -642,7 +639,7 @@ function closeEvidenceModal() {
 function bindEvents() {
   const searchInput = document.getElementById('shipmentSearchInput');
   if (searchInput) {
-    searchInput.addEventListener('input', function() {
+    searchInput.addEventListener('input', function () {
       state.searchQuery = this.value.trim();
       applyFilter();
     });
