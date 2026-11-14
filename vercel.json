@@ -3,6 +3,18 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/tbig-shipment/index.html"
+    },
+    {
+      "source": "/cme",
+      "destination": "/tracking-cme/index.html"
+    },
+    {
+      "source": "/cme/(.*)",
+      "destination": "/tracking-cme/$1"
+    },
+    {
       "source": "/shipment",
       "destination": "/tbig-shipment/index.html"
     },
@@ -20,7 +32,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/tracking-cme/$1"
+      "destination": "/tbig-shipment/$1"
     }
   ]
 }
