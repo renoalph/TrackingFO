@@ -1,0 +1,598 @@
+{
+  "summary": {
+    "totalShipments": 6,
+    "inTransit": 2,
+    "portArrived": 2,
+    "completed": 1,
+    "riskDelay": 1
+  },
+  "shipments": [
+    {
+      "id": "SHP-2026-001",
+      "sonumb": "0010388360011",
+      "siteId": "NTT-WGP-042",
+      "siteName": "WAINGAPU KOTA",
+      "towerHeight": "SST 52 M",
+      "province": "Nusa Tenggara Timur",
+      "residence": "Sumba Timur",
+      "address": "Jl. Ahmad Yani, Prailiu, Kambera, Waingapu",
+      "materialType": "Tower Section & Accessories",
+      "containerNo": "MSPU 121332-7",
+      "originPort": "Dermaga Jamrud Selatan (Tanjung Perak, Surabaya)",
+      "destPort": "Pelabuhan Nusantara Waingapu (NTT)",
+      "originCoords": [
+        -7.1983,
+        112.7335
+      ],
+      "destCoords": [
+        -9.6481,
+        120.2608
+      ],
+      "siteCoords": [
+        -9.6550,
+        120.2720
+      ],
+      "seaWaypoints": [
+        [-7.1983, 112.7335],
+        [-7.0120, 112.6710],
+        [-6.8000, 112.9200],
+        [-6.7200, 113.6500],
+        [-6.8200, 114.5000],
+        [-7.4500, 115.4500],
+        [-7.9500, 116.5000],
+        [-8.0500, 117.8000],
+        [-8.2500, 118.9000],
+        [-8.5500, 119.3200],
+        [-8.8500, 119.3800],
+        [-9.2500, 119.7500],
+        [-9.5500, 120.1500],
+        [-9.6481, 120.2608]
+      ],
+      "landWaypoints": [
+        [-9.6481, 120.2608],
+        [-9.6460, 120.2650],
+        [-9.6500, 120.2685],
+        [-9.6535, 120.2705],
+        [-9.6550, 120.2720]
+      ],
+      "shippingLine": "MERATUS",
+      "vesselName": "KM. Prakasa Pacific",
+      "voyage": "Voy. 627 E - 26",
+      "imoNumber": "9301140",
+      "moverVendor": "PT. PGN Logistik Nusantara",
+      "closingCargoDate": "2026-10-25 18:00",
+      "etd": "2026-10-27 09:23",
+      "atd": "2026-10-27 09:23",
+      "etaPort": "2026-10-30 01:00",
+      "ataPort": null,
+      "etaSite": "2026-10-31 16:00",
+      "currentStageIndex": 2,
+      "status": "IN_TRANSIT",
+      "statusLabel": "Sedang Berlayar",
+      "statusClass": "badge-transit",
+      "flowStages": [
+        {
+          "step": 1,
+          "title": "Pick-up Pabrik & Masuk Depo Jamrud",
+          "location": "Surabaya, Jawa Timur",
+          "date": "25 Okt 2026 · 14.30 WIB",
+          "status": "DONE",
+          "desc": "Material tiang tower dimuat ke kontainer MSPU 121332-7 dan masuk depo sebelum closing."
+        },
+        {
+          "step": 2,
+          "title": "Pemuatan ke Kapal & Keberangkatan",
+          "location": "Dermaga Jamrud Selatan (Tanjung Perak)",
+          "date": "27 Okt 2026 · 09.23 WIB",
+          "status": "DONE",
+          "desc": "KM. Prakasa Pacific Voy. 627 E - 26 cast off langsung berlayar menuju Waingapu."
+        },
+        {
+          "step": 3,
+          "title": "Pelayaran Laut Menuju Waingapu",
+          "location": "Laut Sawu / Perairan NTT",
+          "date": "27 - 30 Okt 2026",
+          "status": "ACTIVE",
+          "desc": "Kapal sedang dalam pelayaran rute Surabaya - Waingapu (Estimasi 3 hari)."
+        },
+        {
+          "step": 4,
+          "title": "Tiba & Sandar di Pelabuhan Waingapu",
+          "location": "Pelabuhan Nusantara Waingapu",
+          "date": "30 Okt 2026 · 01.00 WITA (ETA)",
+          "status": "PENDING",
+          "desc": "Proses sandar kapal dan pembongkaran kontainer di dermaga Waingapu."
+        },
+        {
+          "step": 5,
+          "title": "Trucking Mover Darat ke Site",
+          "location": "Waingapu - Sumba Timur",
+          "date": "30 Okt 2026 (Estimasi)",
+          "status": "PENDING",
+          "desc": "Pengiriman darat oleh mover PT PGN menuju koordinat site Kambera."
+        },
+        {
+          "step": 6,
+          "title": "Material Tiba Lengkap di Lokasi Site",
+          "location": "Site WAINGAPU KOTA",
+          "date": "31 Okt 2026 · 16.00 WITA (ETA Site)",
+          "status": "PENDING",
+          "desc": "Serah terima material tower di site dengan waspang/PM lapangan."
+        }
+      ],
+      "marineRadarUrl": "https://www.marinetraffic.com/en/ais/details/ships/shipid:689953/mmsi:525015792/imo:9301140/vessel:PRAKASA_PACIFIC",
+      "evidenceNote": "Cast-off confirmed by Mitra PGN via Jamrud South Terminal."
+    },
+    {
+      "id": "SHP-2026-002",
+      "sonumb": "0010388360012",
+      "siteId": "BALI-BDG-019",
+      "siteName": "KUTA SELATAN PECATU",
+      "towerHeight": "Monopole 32 M",
+      "province": "Bali",
+      "residence": "Badung",
+      "address": "Jl. Raya Uluwatu, Pecatu, Kuta Selatan, Badung",
+      "materialType": "Monopole Section & Grounding",
+      "containerNo": "TRUCK-L300-8812",
+      "originPort": "Gudang Logistik Surabaya",
+      "destPort": "Pelabuhan Gilimanuk (Lintas Darat)",
+      "originCoords": [
+        -7.2575,
+        112.7521
+      ],
+      "destCoords": [
+        -8.1633,
+        114.4397
+      ],
+      "siteCoords": [
+        -8.8167,
+        115.1167
+      ],
+      "seaWaypoints": [
+        [-7.2575, 112.7521],
+        [-7.3650, 112.7300],
+        [-7.4600, 112.7150],
+        [-7.5450, 112.6950],
+        [-7.6450, 112.9050],
+        [-7.7550, 113.2150],
+        [-7.7050, 113.5150],
+        [-7.7300, 113.7000],
+        [-7.7050, 114.0050],
+        [-7.8350, 114.3750],
+        [-8.1300, 114.3900],
+        [-8.1500, 114.3980],
+        [-8.1550, 114.4150],
+        [-8.1633, 114.4397]
+      ],
+      "landWaypoints": [
+        [-8.1633, 114.4397],
+        [-8.2450, 114.5050],
+        [-8.3600, 114.6250],
+        [-8.4150, 114.8150],
+        [-8.5000, 115.0200],
+        [-8.5380, 115.1220],
+        [-8.5800, 115.1700],
+        [-8.6850, 115.1850],
+        [-8.7800, 115.1650],
+        [-8.8167, 115.1167]
+      ],
+      "shippingLine": "TRUCKING MOVER",
+      "vesselName": "Ferry KMP Portlink VII",
+      "voyage": "Penyeberangan Selat Bali",
+      "imoNumber": "9123456",
+      "moverVendor": "PT. Lintas Trans Indonesia (LTI)",
+      "closingCargoDate": "2026-11-08 12:00",
+      "etd": "2026-11-08 20:00",
+      "atd": "2026-11-08 20:30",
+      "etaPort": "2026-11-09 06:00",
+      "ataPort": "2026-11-09 05:45",
+      "etaSite": "2026-11-09 14:00",
+      "currentStageIndex": 5,
+      "status": "COMPLETED",
+      "statusLabel": "Tiba di Site",
+      "statusClass": "badge-complete",
+      "flowStages": [
+        {
+          "step": 1,
+          "title": "Pick-up Gudang Surabaya",
+          "location": "Surabaya, Jawa Timur",
+          "date": "08 Nov 2026 · 14.00 WIB",
+          "status": "DONE",
+          "desc": "Pemuatan pipa tiang monopole ke armada truk trailer LTI."
+        },
+        {
+          "step": 2,
+          "title": "Perjalanan Darat Tol Trans Jawa",
+          "location": "Surabaya - Banyuwangi",
+          "date": "08 Nov 2026 · 20.30 WIB",
+          "status": "DONE",
+          "desc": "Truk berangkat melintasi jalur Probolinggo - Ketapang Banyuwangi."
+        },
+        {
+          "step": 3,
+          "title": "Penyeberangan Ketapang - Gilimanuk",
+          "location": "Selat Bali",
+          "date": "09 Nov 2026 · 04.30 WITA",
+          "status": "DONE",
+          "desc": "Truk naik ferry KMP Portlink VII menyeberang ke Pulau Bali."
+        },
+        {
+          "step": 4,
+          "title": "Tiba di Pelabuhan Gilimanuk",
+          "location": "Gilimanuk, Jembrana",
+          "date": "09 Nov 2026 · 05.45 WITA",
+          "status": "DONE",
+          "desc": "Keluar dari kapal ferry dan lanjut rute jalur darat Gilimanuk - Denpasar."
+        },
+        {
+          "step": 5,
+          "title": "Perjalanan Darat Menuju Site",
+          "location": "Jembrana - Tabanan - Badung",
+          "date": "09 Nov 2026 · 11.00 WITA",
+          "status": "DONE",
+          "desc": "Armada tiba di area Kuta Selatan Pecatu."
+        },
+        {
+          "step": 6,
+          "title": "Serah Terima Material di Site",
+          "location": "Site KUTA SELATAN PECATU",
+          "date": "09 Nov 2026 · 13.45 WITA",
+          "status": "DONE",
+          "desc": "Material diterima lengkap oleh tim waspang. Surat Jalan tervalidasi."
+        }
+      ],
+      "marineRadarUrl": "https://www.marinetraffic.com/",
+      "evidenceNote": "BA Serah Terima Material ditandatangani Waspang Badung."
+    },
+    {
+      "id": "SHP-2026-003",
+      "sonumb": "0010388360013",
+      "siteId": "NTB-LMB-008",
+      "siteName": "SEKOTONG BARAT",
+      "towerHeight": "SST 72 M",
+      "province": "Nusa Tenggara Barat",
+      "residence": "Lombok Barat",
+      "address": "Desa Pelangan, Sekotong, Lombok Barat, NTB",
+      "materialType": "Tower Leg & Bracing 72M",
+      "containerNo": "TEMU 440912-3",
+      "originPort": "Terminal Nilam (Tanjung Perak, Surabaya)",
+      "destPort": "Pelabuhan Lembar (Lombok Barat)",
+      "originCoords": [
+        -7.2050,
+        112.7290
+      ],
+      "destCoords": [
+        -8.7297,
+        116.0719
+      ],
+      "siteCoords": [
+        -8.7612,
+        115.9320
+      ],
+      "seaWaypoints": [
+        [-7.2050, 112.7290],
+        [-7.0120, 112.6710],
+        [-6.8000, 112.9200],
+        [-6.7200, 113.7000],
+        [-6.9000, 114.6500],
+        [-7.5500, 115.4500],
+        [-8.1000, 115.7000],
+        [-8.3500, 115.8200],
+        [-8.5800, 115.9200],
+        [-8.7100, 116.0300],
+        [-8.7297, 116.0719]
+      ],
+      "landWaypoints": [
+        [-8.7297, 116.0719],
+        [-8.7400, 116.0500],
+        [-8.7500, 116.0100],
+        [-8.7650, 115.9700],
+        [-8.7612, 115.9320]
+      ],
+      "shippingLine": "TEMAS",
+      "vesselName": "KM. Kawa Mas",
+      "voyage": "Voy. 104/S",
+      "imoNumber": "9218844",
+      "moverVendor": "PT. Star Ekspedisi Logistik",
+      "closingCargoDate": "2026-11-09 17:00",
+      "etd": "2026-11-10 14:00",
+      "atd": "2026-11-10 15:30",
+      "etaPort": "2026-11-11 18:00",
+      "ataPort": "2026-11-11 19:15",
+      "etaSite": "2026-11-12 15:00",
+      "currentStageIndex": 4,
+      "status": "PORT_ARRIVED",
+      "statusLabel": "Tiba di Pelabuhan Tujuan",
+      "statusClass": "badge-port",
+      "flowStages": [
+        {
+          "step": 1,
+          "title": "Closing Depo Terminal Nilam Surabaya",
+          "location": "Tanjung Perak Surabaya",
+          "date": "09 Nov 2026 · 16.00 WIB",
+          "status": "DONE",
+          "desc": "Kontainer TEMAS lolos timbang dan stack di dermaga."
+        },
+        {
+          "step": 2,
+          "title": "Cast Off Berlayar ke Lombok",
+          "location": "Tanjung Perak Surabaya",
+          "date": "10 Nov 2026 · 15.30 WIB",
+          "status": "DONE",
+          "desc": "KM Kawa Mas bertolak menuju Pelabuhan Lembar."
+        },
+        {
+          "step": 3,
+          "title": "Pelayaran Laut Selat Madura - Lombok",
+          "location": "Selat Lombok",
+          "date": "10 - 11 Nov 2026",
+          "status": "DONE",
+          "desc": "Waktu tempuh laut 28 jam lancar cuaca bersahabat."
+        },
+        {
+          "step": 4,
+          "title": "Sandar di Pelabuhan Lembar",
+          "location": "Pelabuhan Lembar Lombok",
+          "date": "11 Nov 2026 · 19.15 WITA",
+          "status": "DONE",
+          "desc": "Kapal telah sandar di Lembar. Menunggu antrean un-stuffing."
+        },
+        {
+          "step": 5,
+          "title": "Trucking Mover Menuju Sekotong",
+          "location": "Lembar - Sekotong Barat",
+          "date": "12 Nov 2026 · 08.00 WITA",
+          "status": "ACTIVE",
+          "desc": "Proses muat ke truk tronton menuju bukit Sekotong."
+        },
+        {
+          "step": 6,
+          "title": "Tiba Lengkap di Lokasi Site",
+          "location": "Site SEKOTONG BARAT",
+          "date": "12 Nov 2026 · 15.00 WITA (ETA)",
+          "status": "PENDING",
+          "desc": "Estimasi material tiba di site sore hari."
+        }
+      ],
+      "marineRadarUrl": "https://www.marinetraffic.com/en/ais/details/ships/shipid:463872/mmsi:525005187/vessel:KAWA_MAS",
+      "evidenceNote": "Vessel berthed at Lembar Port Terminal 2."
+    },
+    {
+      "id": "SHP-2026-004",
+      "sonumb": "0010388360014",
+      "siteId": "NTT-KPG-015",
+      "siteName": "KUPANG BARAT OELETSA",
+      "towerHeight": "SST 72 M",
+      "province": "Nusa Tenggara Timur",
+      "residence": "Kupang",
+      "address": "Desa Oeletsan, Kupang Barat, NTT",
+      "materialType": "Tower Steel Structure",
+      "containerNo": "SPIL 890124-1",
+      "originPort": "Terminal Berlian (Tanjung Perak, Surabaya)",
+      "destPort": "Pelabuhan Tenau Kupang (NTT)",
+      "originCoords": [
+        -7.2020,
+        112.7310
+      ],
+      "destCoords": [
+        -10.1889,
+        123.5414
+      ],
+      "siteCoords": [
+        -10.2200,
+        123.5100
+      ],
+      "seaWaypoints": [
+        [-7.2020, 112.7310],
+        [-7.0120, 112.6710],
+        [-6.8000, 112.9500],
+        [-6.7200, 113.8000],
+        [-6.8500, 114.6000],
+        [-7.3000, 115.5000],
+        [-7.8000, 116.8000],
+        [-8.0000, 118.2000],
+        [-8.1000, 119.5000],
+        [-8.1500, 121.0000],
+        [-8.1000, 122.5000],
+        [-8.3200, 123.1000],
+        [-8.6800, 123.3200],
+        [-9.3500, 123.4000],
+        [-9.9500, 123.4500],
+        [-10.1500, 123.5100],
+        [-10.1889, 123.5414]
+      ],
+      "landWaypoints": [
+        [-10.1889, 123.5414],
+        [-10.1980, 123.5350],
+        [-10.2100, 123.5220],
+        [-10.2200, 123.5100]
+      ],
+      "shippingLine": "SPIL",
+      "vesselName": "KM. Oriental Diamond",
+      "voyage": "Voy. 2603",
+      "imoNumber": "9158764",
+      "moverVendor": "PT. Hope Logistik Jaya",
+      "closingCargoDate": "2026-11-06 20:00",
+      "etd": "2026-11-08 10:00",
+      "atd": "2026-11-09 02:00",
+      "etaPort": "2026-11-12 14:00",
+      "ataPort": null,
+      "etaSite": "2026-11-13 18:00",
+      "currentStageIndex": 2,
+      "status": "RISK_DELAY",
+      "statusLabel": "Risiko Terlambat (+16 Jam)",
+      "statusClass": "badge-delay",
+      "flowStages": [
+        {
+          "step": 1,
+          "title": "Closing Depo Terminal Berlian",
+          "location": "Surabaya",
+          "date": "06 Nov 2026 · 19.30 WIB",
+          "status": "DONE",
+          "desc": "Kontainer masuk depo SPIL tepat waktu."
+        },
+        {
+          "step": 2,
+          "title": "Cast Off Terlambat di Surabaya",
+          "location": "Tanjung Perak Surabaya",
+          "date": "09 Nov 2026 · 02.00 WIB",
+          "status": "DONE",
+          "desc": "Kapal mengalami keterlambatan olah gerak pandu 16 jam karena kepadatan dermaga."
+        },
+        {
+          "step": 3,
+          "title": "Pelayaran Laut Menuju Kupang",
+          "location": "Laut Flores",
+          "date": "09 - 12 Nov 2026",
+          "status": "ACTIVE",
+          "desc": "Sedang berlayar di perairan utara Flores menuju Kupang Tenau."
+        },
+        {
+          "step": 4,
+          "title": "Tiba di Pelabuhan Tenau Kupang",
+          "location": "Pelabuhan Tenau",
+          "date": "12 Nov 2026 · 14.00 WITA (ETA Baru)",
+          "status": "PENDING",
+          "desc": "Keterlambatan berangkat berdampak pada mundurnya jadwal sandar."
+        },
+        {
+          "step": 5,
+          "title": "Trucking Mover ke Kupang Barat",
+          "location": "Tenau - Oeletsan",
+          "date": "13 Nov 2026",
+          "status": "PENDING",
+          "desc": "Mover Hope Logistik disiagakan di dermaga Tenau."
+        },
+        {
+          "step": 6,
+          "title": "Material Tiba di Site",
+          "location": "Site KUPANG BARAT OELETSA",
+          "date": "13 Nov 2026 · 18.00 WITA",
+          "status": "PENDING",
+          "desc": "Estimasi serah terima mundur 1 hari dari jadwal awal."
+        }
+      ],
+      "marineRadarUrl": "https://www.marinetraffic.com/en/ais/details/ships/shipid:463872/vessel:ORIENTAL_DIAMOND",
+      "evidenceNote": "Notice of Delay issued by SPIL Port Operations due to port congestion."
+    },
+    {
+      "id": "SHP-2026-005",
+      "sonumb": "0010388360015",
+      "siteId": "KAL-SKD-001",
+      "siteName": "DESAKEDOMBA",
+      "towerHeight": "SST 72 M",
+      "province": "Kalimantan Barat",
+      "residence": "Sekadau",
+      "address": "Desa Kedomba, Nanga Taman, Sekadau, Kalbar",
+      "materialType": "Tower Leg, Bracing & Ladder",
+      "containerNo": "TANT 772189-0",
+      "originPort": "Tanjung Priok (Jakarta)",
+      "destPort": "Pelabuhan Dwikora (Pontianak)",
+      "originCoords": [
+        -6.1038,
+        106.8833
+      ],
+      "destCoords": [
+        -0.0263,
+        109.3425
+      ],
+      "siteCoords": [
+        0.0385,
+        110.9511
+      ],
+      "seaWaypoints": [
+        [-6.1038, 106.8833],
+        [-5.9200, 106.9100],
+        [-5.5000, 107.1500],
+        [-4.5000, 107.7000],
+        [-3.3000, 108.3000],
+        [-2.1000, 108.7500],
+        [-1.2000, 109.0000],
+        [-0.4500, 109.1200],
+        [-0.0750, 109.1800],
+        [-0.0450, 109.2500],
+        [-0.0320, 109.3000],
+        [-0.0263, 109.3425]
+      ],
+      "landWaypoints": [
+        [-0.0263, 109.3425],
+        [-0.0350, 109.3550],
+        [-0.0500, 109.4600],
+        [-0.1200, 109.7200],
+        [-0.1800, 109.9500],
+        [-0.2400, 110.1200],
+        [-0.0500, 110.3500],
+        [0.1200, 110.5500],
+        [0.0800, 110.7500],
+        [0.0385, 110.9511]
+      ],
+      "shippingLine": "TANTO",
+      "vesselName": "KM. Tanto Horas",
+      "voyage": "Voy. 441/W",
+      "imoNumber": "9123890",
+      "moverVendor": "PT. Tranporindo Agung Sejahtera",
+      "closingCargoDate": "2026-11-07 18:00",
+      "etd": "2026-11-09 10:00",
+      "atd": "2026-11-09 10:00",
+      "etaPort": "2026-11-11 14:00",
+      "ataPort": "2026-11-11 14:30",
+      "etaSite": "2026-11-13 17:00",
+      "currentStageIndex": 4,
+      "status": "PORT_ARRIVED",
+      "statusLabel": "Tiba di Pelabuhan Dwikora",
+      "statusClass": "badge-port",
+      "flowStages": [
+        {
+          "step": 1,
+          "title": "Closing Depo Tanjung Priok Jakarta",
+          "location": "Jakarta Utara",
+          "date": "07 Nov 2026 · 17.00 WIB",
+          "status": "DONE",
+          "desc": "Kontainer Tanto lolos proses gate-in dermaga."
+        },
+        {
+          "step": 2,
+          "title": "Cast Off dari Jakarta Menuju Pontianak",
+          "location": "Tanjung Priok Jakarta",
+          "date": "09 Nov 2026 · 10.00 WIB",
+          "status": "DONE",
+          "desc": "KM Tanto Horas bertolak melintasi Laut Jawa."
+        },
+        {
+          "step": 3,
+          "title": "Pelayaran Menuju Muara Sungai Kapuas",
+          "location": "Laut Natuna / Sungai Kapuas",
+          "date": "09 - 11 Nov 2026",
+          "status": "DONE",
+          "desc": "Waktu tempuh pelayaran 48 jam."
+        },
+        {
+          "step": 4,
+          "title": "Sandar di Pelabuhan Dwikora Pontianak",
+          "location": "Pelabuhan Dwikora Pontianak",
+          "date": "11 Nov 2026 · 14.30 WIB",
+          "status": "DONE",
+          "desc": "Kapal telah sandar di Dwikora. Siap bongkar muat ke truk mover."
+        },
+        {
+          "step": 5,
+          "title": "Trucking Mover Pontianak ke Sekadau",
+          "location": "Pontianak - Sanggau - Sekadau",
+          "date": "12 Nov 2026 · 07.00 WIB",
+          "status": "ACTIVE",
+          "desc": "Perjalanan darat 7-9 jam melintasi jalur Trans Kalimantan oleh PT Tranporindo."
+        },
+        {
+          "step": 6,
+          "title": "Tiba Lengkap di Lokasi Site",
+          "location": "Site DESAKEDOMBA Sekadau",
+          "date": "13 Nov 2026 · 17.00 WIB (ETA)",
+          "status": "PENDING",
+          "desc": "Serah terima material di lokasi pembangunan tower."
+        }
+      ],
+      "marineRadarUrl": "https://www.marinetraffic.com/en/ais/details/ships/vessel:TANTO_HORAS",
+      "evidenceNote": "Container safely unloaded at Dwikora Terminal Pontianak."
+    }
+  ]
+}

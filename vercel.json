@@ -1,11 +1,4 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/tbig-shipment/",
-      "permanent": false
-    }
-  ]
+  "cleanUrls": true
 }

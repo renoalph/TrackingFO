@@ -1,17 +1,573 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/tbig-shipment/">
-  <title>Delivie — Shipment &amp; Vessel Monitoring</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <title>Shipment Tracker — Delivery &amp; Vessel Monitoring</title>
+  <meta name="description" content="Dashboard Monitoring Jadwal Kapal, Ekspedisi, dan Milestone Perjalanan Material Tower">
+
+  <!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <!-- Tailwind CSS & Leaflet.js Map -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    window.location.replace('/tbig-shipment/');
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['TiShip', 'Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    };
   </script>
+  <script>
+    // Inisialisasi tema sebelum render agar tidak flickering
+    (function () {
+      try {
+        const saved = localStorage.getItem('tbig_theme');
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) { }
+    })();
+  </script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Custom Styles (Including TiShip @font-face) -->
+  <link rel="stylesheet" href="styles.css?v=3.0">
 </head>
-<body style="background:#0c1017; color:#94a3b8; font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0;">
-  <div style="text-align:center;">
-    <p style="font-size:14px; font-weight:600; color:#f8fafc;">Memuat Delivie Shipment Tracker...</p>
-    <p style="font-size:12px; margin-top:4px;">Mengalihkan ke portal monitoring...</p>
+
+<body
+  class="bg-white dark:bg-[#0b0f17] text-slate-800 dark:text-slate-100 font-sans h-screen w-screen overflow-hidden m-0 p-0 antialiased flex flex-col selection:bg-[#1D3D8F] selection:text-white transition-colors duration-200">
+
+  <!-- MAIN APP CONTAINER WRAPPER (Full Viewport - No Outer Padding) -->
+  <div
+    class="w-full h-full bg-white dark:bg-[#0b0f17] flex flex-col lg:flex-row overflow-hidden transition-colors duration-200">
+
+    <!-- ============================================================ 
+         1. LEFT SLIM ICON SIDEBAR (HITAM / DARK SLIM BAR)
+         ============================================================ -->
+    <aside id="mainAppSidebar"
+      class="w-full lg:w-[72px] bg-[#0c1017] border-b lg:border-b-0 lg:border-r border-slate-800/80 p-3 flex lg:flex-col items-center justify-between shrink-0 z-20 transition-colors duration-200">
+      <!-- Top Brand Logo -->
+      <div class="flex lg:flex-col items-center gap-5">
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1D3D8F] to-[#2798D5] flex items-center justify-center text-white shadow-md shadow-blue-950/40 cursor-pointer"
+          title="Shipment Tracker — Delivery Portal">
+          <span class="material-symbols-rounded text-[22px]">directions_boat</span>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <nav class="flex lg:flex-col items-center gap-1.5">
+          <button class="sidebar-nav-btn active" title="Tracking Delivery">
+            <span class="material-symbols-rounded">local_shipping</span>
+          </button>
+          <button class="sidebar-nav-btn" onclick="openNewShipmentModal()" title="Input Pengiriman Baru">
+            <span class="material-symbols-rounded">add_circle</span>
+          </button>
+          <button class="sidebar-nav-btn" onclick="filterByStatus('IN_TRANSIT')" title="Kapal Sedang Berlayar">
+            <span class="material-symbols-rounded">anchor</span>
+          </button>
+          <button class="sidebar-nav-btn" onclick="loadData()" title="Segarkan Data">
+            <span class="material-symbols-rounded">sync</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Bottom: Theme Toggle (Dark / Light Mode) & Live Indicator -->
+      <div class="flex lg:flex-col items-center gap-2.5">
+        <!-- Theme Toggle Button -->
+        <button id="themeToggleBtn" onclick="toggleDarkMode()"
+          class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 flex items-center justify-center transition shadow-xs cursor-pointer"
+          title="Ganti Mode Gelap / Terang">
+          <span id="themeToggleIcon" class="material-symbols-rounded text-[20px]">dark_mode</span>
+        </button>
+
+        <!-- Live Indicator -->
+        <div class="flex lg:flex-col items-center gap-1 pt-1">
+          <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse my-0.5" title="Sistem Aktif & Terbuka"></div>
+          <span class="text-[9px] font-bold text-slate-500 hidden lg:block tracking-widest uppercase">LIVE</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================================================ 
+         2. MIDDLE COLUMN: SHIPMENT LIST & SEARCH (MASTER)
+         ============================================================ -->
+    <section id="shipmentMasterPanel"
+      class="w-full lg:w-[420px] xl:w-[460px] border-b lg:border-b-0 p-4 sm:p-5 flex flex-col shrink-0 bg-[#f1f4f9] dark:bg-[#0b0f17] h-full overflow-hidden transition-colors duration-200">
+
+      <!-- Column Header -->
+      <div class="flex items-center justify-between mb-3.5">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 tracking-tight">Tracking Delivery</h2>
+          <p class="text-xs text-slate-400">Monitoring pergerakan material tower &amp; kapal</p>
+        </div>
+
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative mb-3">
+        <span
+          class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+        <input id="shipmentSearchInput" type="text" placeholder="Search SO Number, Site, Kapal..."
+          class="w-full pl-9 pr-9 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#1D3D8F] focus:ring-1 focus:ring-[#1D3D8F] shadow-xs transition">
+        <button class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-rounded text-[17px]">tune</span>
+        </button>
+      </div>
+
+      <!-- Quick Filter Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 mb-3 custom-scrollbar text-xs">
+        <button onclick="filterByStatus('ALL')" id="filterBtn_ALL"
+          class="px-3 py-1 rounded-full font-bold bg-[#1D3D8F] text-white whitespace-nowrap shadow-xs transition">
+          Semua (<span id="count_ALL">0</span>)
+        </button>
+        <button onclick="filterByStatus('IN_TRANSIT')" id="filterBtn_IN_TRANSIT"
+          class="px-3 py-1 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          In Transit
+        </button>
+        <button onclick="filterByStatus('PORT_ARRIVED')" id="filterBtn_PORT_ARRIVED"
+          class="px-3 py-1 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          Port Arrived
+        </button>
+        <button onclick="filterByStatus('COMPLETED')" id="filterBtn_COMPLETED"
+          class="px-3 py-1 rounded-full font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          Delivered
+        </button>
+      </div>
+
+      <!-- Scrollable Cards List (No scrollbar visible, smooth scroll) -->
+      <div id="shipmentCardsContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 no-scrollbar">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- ============================================================ 
+         3. RIGHT COLUMN WRAPPER (MATCHES LEFT PANEL BG, PROVIDES TOP PADDING)
+         ============================================================ -->
+    <div id="rightPanelWrapper"
+      class="flex-1 h-full bg-[#f1f4f9] dark:bg-[#0b0f17] flex flex-col overflow-hidden transition-colors duration-200">
+
+      <!-- TOP ACTION BAR: MENYATU DENGAN CARD DI BAWAHNYA (ROUNDED HANYA BAGIAN ATAS, BAWAH KOTAK) -->
+      <div class="px-5 sm:px-8 pt-2.5 flex items-end justify-end gap-2 shrink-0 z-10">
+        <a id="btnLiveRadar" href="#" target="_blank"
+          class="px-4 py-2 rounded-t-xl rounded-b-none bg-white dark:bg-[#111723] text-[#1D3D8F] dark:text-[#38bdf8] hover:text-[#2798D5] text-xs font-semibold flex items-center gap-1.5 transition shadow-xs border-t border-x border-slate-200/60 dark:border-slate-800/60 border-b-0 translate-y-[1px]">
+          <span class="material-symbols-rounded text-[16px]">radar</span>
+          <span>Live AIS Radar</span>
+          <span class="material-symbols-rounded text-[13px]">open_in_new</span>
+        </a>
+        <button onclick="openEvidenceModal()"
+          class="px-4 py-2 rounded-t-xl rounded-b-none bg-white dark:bg-[#111723] text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-xs border-t border-x border-slate-200/60 dark:border-slate-800/60 border-b-0 translate-y-[1px] cursor-pointer">
+          <span class="material-symbols-rounded text-[16px]">assignment</span>
+          <span>Documentation</span>
+        </button>
+      </div>
+
+      <!-- RIGHT CARD CONTAINER (ROUNDED TOP-LEFT, WHITE / DARK CANVAS) -->
+      <section id="rightCardSection"
+        class="flex-1 p-5 sm:p-7 flex flex-col h-full overflow-y-auto no-scrollbar bg-white dark:bg-[#111723] text-slate-900 dark:text-slate-100 rounded-tl-[28px] sm:rounded-tl-[34px] shadow-xs transition-colors duration-200">
+
+        <!-- MAP SECTION WITH FLOATING METRICS (FULL MAP DI PALING ATAS CARD) -->
+        <div class="relative mb-6">
+          <div id="mainInspectorMap"></div>
+
+          <!-- Floating Status Pill (Compact, Ramping & Hanya Data Riil) -->
+          <div
+            class="floating-map-metrics absolute bottom-3.5 left-3.5 px-3.5 py-1.5 flex items-center gap-3 text-xs z-10">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-[#1D3D8F] dark:text-[#38bdf8] text-[15px]">location_on</span>
+              <span class="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium">Posisi:</span>
+              <span id="metricLocation" class="font-bold text-slate-900 dark:text-slate-100 text-[11px]">Laut Sawu,
+                NTT</span>
+            </div>
+
+            <div class="w-px h-3.5 bg-slate-200 dark:bg-slate-700"></div>
+
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-[#2798D5] text-[15px]">event_upcoming</span>
+              <span class="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium">ETA Site:</span>
+              <span id="metricEta" class="font-bold text-slate-900 dark:text-slate-100 text-[11px]">31 Okt 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ 
+           MAIN INFO PANEL (Tabs & Content - Kebawahkan Sedikit & Maksimalkan Space)
+           ============================================================ -->
+        <div class="flex-1 flex flex-col pt-2 pb-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Main info</h3>
+
+            <!-- Tab Navigation (Vehicle | Order details | Driver | Journey Flow) -->
+            <div
+              class="flex items-center border-b border-slate-200/80 dark:border-slate-700/80 overflow-x-auto no-scrollbar">
+              <button onclick="switchTab('vehicle')" id="tabBtn_vehicle" class="inspector-tab-btn active">
+                Vehicle &amp; Vessel
+              </button>
+              <button onclick="switchTab('flow')" id="tabBtn_flow" class="inspector-tab-btn">
+                Journey Flow
+              </button>
+              <button onclick="switchTab('details')" id="tabBtn_details" class="inspector-tab-btn">
+                Order Details
+              </button>
+              <button onclick="switchTab('driver')" id="tabBtn_driver" class="inspector-tab-btn">
+                Driver &amp; Vendor
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB CONTENT CONTAINER -->
+          <div class="flex-1 pt-3">
+
+            <!-- TAB 1: VEHICLE & VESSEL (Sesuai gambar referensi dengan ilustrasi truk/kapal) -->
+            <div id="tabContent_vehicle" class="vehicle-card-frame animate-fadeIn">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+
+                <!-- Vehicle Illustration Placeholder Box -->
+                <div class="md:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-xs">
+                  <div class="w-full px-2 text-[10px] text-slate-400 font-bold uppercase mb-2">
+                    <span>Armada Pengangkut</span>
+                  </div>
+
+                  <!-- Real Illustration Image Box -->
+                  <div
+                    class="w-full h-32 flex items-center justify-center relative my-1 p-2 bg-gradient-to-b from-slate-50/60 to-white rounded-xl shadow-2xs">
+                    <img id="vehicleImageTag" src="asset/image/ship-color.png" alt="Armada Pengangkut"
+                      class="max-h-28 w-auto object-contain drop-shadow-md transition-all duration-300">
+                  </div>
+
+                  <span class="text-[10px] text-slate-400 font-medium">No. Kontainer: <b id="vehicleContainerTag"
+                      class="text-slate-700 font-mono">MSPU 121332-7</b></span>
+                </div>
+
+                <!-- Vehicle & Vessel Specs Table -->
+                <div class="md:col-span-7 space-y-3.5">
+                  <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-rounded text-[#1D3D8F]">directions_boat</span>
+                      <div>
+                        <div id="specVesselName" class="font-bold text-slate-900 text-sm">KM. Prakasa Pacific</div>
+                        <div id="specShippingLine" class="text-[11px] text-slate-500">Meratus Line · General Cargo</div>
+                      </div>
+                    </div>
+                    <div
+                      class="flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                      <span class="material-symbols-rounded text-[14px]">star</span>
+                      <span>4.9</span>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-bold uppercase">Voyage No</span>
+                      <p id="specVoyage" class="font-mono font-bold text-slate-800 mt-0.5">Voy. 627 E - 26</p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-bold uppercase">IMO Number</span>
+                      <p id="specImo" class="font-mono font-bold text-slate-800 mt-0.5">9301140</p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-bold uppercase">Tower Section</span>
+                      <p id="specTowerHeight" class="font-bold text-slate-800 mt-0.5">SST 52 M</p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-bold uppercase">Total Berat</span>
+                      <p class="font-bold text-slate-800 mt-0.5">18.450 Kg</p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-bold uppercase">Muatan Volume</span>
+                      <p class="font-bold text-slate-800 mt-0.5">62,8 m&sup3;</p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-bold uppercase">Rute Jalur</span>
+                      <p id="specRoute" class="font-bold text-[#1D3D8F] mt-0.5">SBY &rarr; Waingapu</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- TAB 2: JOURNEY FLOW (6 TAHAPAN OPERASIONAL HORIZONTAL) -->
+            <div id="tabContent_flow" class="hidden animate-fadeIn space-y-3">
+              <div class="p-3 bg-slate-50/80 rounded-xl text-xs flex items-center justify-between">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                  <span class="material-symbols-rounded text-[#1D3D8F] text-[18px]">alt_route</span>
+                  Alur Tahapan Perjalanan Material
+                </span>
+                <span class="text-[11px] font-medium text-slate-500 flex items-center gap-1">
+                  <span class="material-symbols-rounded text-[15px] text-[#2798D5]">swipe</span>
+                  Scroll horizontal &rarr;
+                </span>
+              </div>
+
+              <!-- Horizontal Scrollable Flow Cards -->
+              <div id="inspectorFlowStages"
+                class="flex items-stretch gap-3.5 overflow-x-auto no-scrollbar pb-2.5 pt-1 px-0.5">
+                <!-- Rendered by app.js -->
+              </div>
+            </div>
+
+            <!-- TAB 3: ORDER DETAILS -->
+            <div id="tabContent_details" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl text-xs">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold">Nomor Sales Order (SO)</span>
+                  <p id="detailSonumb" class="font-mono font-bold text-slate-900 mt-1">0010388360011</p>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold">Site ID &amp; Nama Site</span>
+                  <p id="detailSiteFullName" class="font-bold text-slate-900 mt-1">WAINGAPU KOTA (NTT-WGP-042)</p>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold">Alamat Lokasi</span>
+                  <p id="detailAddress" class="text-slate-700 mt-1">Prailiu, Kambera, Waingapu</p>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold">Tipe Material</span>
+                  <p id="detailMaterial" class="font-semibold text-slate-800 mt-1">Tower Section &amp; Accessories</p>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold">Pelabuhan Muat Asal</span>
+                  <p id="detailOriginPort" class="font-semibold text-slate-800 mt-1">Dermaga Jamrud Selatan (Tj Perak,
+                    Surabaya)</p>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold">Pelabuhan Tujuan</span>
+                  <p id="detailDestPort" class="font-semibold text-slate-800 mt-1">Pelabuhan Nusantara Waingapu</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 4: DRIVER & VENDOR INFORMATION -->
+            <div id="tabContent_driver" class="hidden animate-fadeIn p-4 bg-slate-50 rounded-xl text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div class="p-3 bg-white rounded-lg shadow-2xs flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-full bg-[#f0f7fc] text-[#1D3D8F] flex items-center justify-center font-bold text-sm">
+                    PGN
+                  </div>
+                  <div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase">Mitra Ekspedisi / Mover</div>
+                    <div id="driverVendorName" class="font-bold text-slate-900 text-xs">PT. PGN Logistik Nusantara</div>
+                    <div class="text-[11px] text-slate-500">PIC: Bpk. Bambang Supriyadi (0812-9841-XXXX)</div>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-white rounded-lg shadow-2xs flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                    WSP
+                  </div>
+                  <div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase">Pengawas Lapangan (Waspang)</div>
+                    <div class="font-bold text-slate-900 text-xs">Angen Cahya Asmara</div>
+                    <div class="text-[11px] text-slate-500">Project Manager CME Jatim &amp; Nusra</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+    </div>
+
   </div>
+
+  <!-- ============================================================ 
+       MODAL FORM INPUT PENGIRIMAN BARU 
+       ============================================================ -->
+  <div id="newShipmentModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onclick="closeNewShipmentModal()"></div>
+    <div
+      class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-4 border border-slate-200 z-10 animate-fadeIn">
+
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-[#1D3D8F] text-white flex items-center justify-center">
+            <span class="material-symbols-rounded text-[20px]">add_box</span>
+          </div>
+          <div>
+            <h3 id="modalFormTitle" class="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">Input Pengiriman Material Tower Baru</h3>
+            <p id="modalFormSub" class="text-xs text-slate-400">Masukkan nomor SO, jadwal kapal, dan estimasi tiba di site</p>
+          </div>
+        </div>
+        <button onclick="closeNewShipmentModal()"
+          class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+
+      <form id="newShipmentForm" class="space-y-3.5 text-xs">
+        <input type="hidden" id="editShipmentId" value="">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Nomor SO <span class="text-rose-500">*</span></label>
+            <input id="newSoNumber" type="text" placeholder="Contoh: 0010388360018" required
+              class="w-full border border-slate-200 rounded-lg p-2 font-mono text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Site ID</label>
+            <input id="newSiteId" type="text" placeholder="Contoh: NTT-WGP-045"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Nama Site <span class="text-rose-500">*</span></label>
+            <input id="newSiteName" type="text" placeholder="Contoh: WAINGAPU BARAT" required
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Tinggi Tower</label>
+            <input id="newTowerHeight" type="text" value="SST 72 M"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Provinsi</label>
+            <input id="newProvince" type="text" value="Nusa Tenggara Timur"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Kabupaten/Kota</label>
+            <input id="newResidence" type="text" value="Sumba Timur"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Nomor Kontainer</label>
+            <input id="newContainerNo" type="text" placeholder="Contoh: MSPU 121332-7"
+              class="w-full border border-slate-200 rounded-lg p-2 font-mono text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Operator Kapal</label>
+            <select id="newShippingLine"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+              <option value="MERATUS">MERATUS</option>
+              <option value="TEMAS">TEMAS</option>
+              <option value="TANTO">TANTO</option>
+              <option value="SPIL">SPIL</option>
+              <option value="TRUCKING MOVER">TRUCKING MOVER (Darat Bali)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Nama Kapal &amp; Voyage</label>
+            <input id="newVesselName" type="text" placeholder="Contoh: KM. Prakasa Pacific"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Pelabuhan Asal</label>
+            <select id="newOriginPort"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+              <option value="Dermaga Jamrud Selatan (Tanjung Perak, Surabaya)">Dermaga Jamrud Selatan (Tj Perak,
+                Surabaya)</option>
+              <option value="Terminal Nilam (Tanjung Perak, Surabaya)">Terminal Nilam (Tj Perak, Surabaya)</option>
+              <option value="Terminal Berlian (Tanjung Perak, Surabaya)">Terminal Berlian (Tj Perak, Surabaya)</option>
+              <option value="Tanjung Priok (Jakarta)">Tanjung Priok (Jakarta)</option>
+              <option value="Gudang Logistik Surabaya">Gudang Logistik Transit Surabaya (Darat Bali)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Pelabuhan Tujuan</label>
+            <select id="newDestPort"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+              <option value="Pelabuhan Nusantara Waingapu (NTT)">Pelabuhan Nusantara Waingapu (NTT)</option>
+              <option value="Pelabuhan Lembar (Lombok Barat)">Pelabuhan Lembar (Lombok Barat, NTB)</option>
+              <option value="Pelabuhan Tenau Kupang (NTT)">Pelabuhan Tenau Kupang (NTT)</option>
+              <option value="Pelabuhan Dwikora (Pontianak, Kalbar)">Pelabuhan Dwikora (Pontianak, Kalbar)</option>
+              <option value="Pelabuhan Gilimanuk (Lintas Darat Bali)">Pelabuhan Gilimanuk (Bali)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Tgl Berangkat (ETD)</label>
+            <input id="newEtd" type="text" value="2026-11-15 10:00"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Estimasi Tiba Port (ETA Port)</label>
+            <input id="newEtaPort" type="text" value="2026-11-18 14:00"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Estimasi Tiba Site (ETA Site)</label>
+            <input id="newEtaSite" type="text" value="2026-11-20 16:00"
+              class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:border-[#1D3D8F] focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeNewShipmentModal()"
+            class="px-3.5 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer">
+            Batal
+          </button>
+          <button type="submit"
+            class="px-4 py-1.5 bg-[#1D3D8F] hover:bg-[#152e6d] text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer">
+            Simpan Pengiriman
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL EVIDENCE DOCUMENTATION -->
+  <div id="evidenceModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onclick="closeEvidenceModal()"></div>
+    <div
+      class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4 border border-slate-200 z-10 animate-fadeIn text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <h3 class="font-bold text-slate-900 text-sm">Dokumentasi &amp; Evidence Lapangan</h3>
+        <button onclick="closeEvidenceModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <div id="evidenceContent" class="space-y-3">
+        <!-- Rendered by app.js -->
+      </div>
+      <div class="flex justify-end pt-2 border-t border-slate-100">
+        <button onclick="closeEvidenceModal()"
+          class="px-3 py-1 bg-slate-100 rounded text-slate-700 font-semibold">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING CARD ACTION DROPDOWN MENU (TITIK 3) -->
+  <div id="cardActionDropdown" class="fixed z-50 hidden bg-white dark:bg-[#151c28] border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-2xl py-1.5 w-60 text-xs text-slate-700 dark:text-slate-200 animate-fadeIn backdrop-blur-md">
+    <!-- Rendered dynamically by app.js -->
+  </div>
+
+  <!-- FLOATING TOAST NOTIFICATION -->
+  <div id="actionToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-2 px-4 py-2.5 rounded-full bg-slate-900/95 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-2xl backdrop-blur-md transition-all duration-300">
+    <span id="toastIcon" class="material-symbols-rounded text-[18px] text-emerald-400 dark:text-emerald-600">check_circle</span>
+    <span id="toastMessage">Aksi berhasil dilakukan</span>
+  </div>
+
+  <!-- App Core Engine -->
+  <script src="app.js?v=2.0"></script>
 </body>
+
 </html>
