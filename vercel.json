@@ -1,38 +1,11 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
-      "destination": "/tbig-shipment/index.html"
-    },
-    {
-      "source": "/cme",
-      "destination": "/tracking-cme/index.html"
-    },
-    {
-      "source": "/cme/(.*)",
-      "destination": "/tracking-cme/$1"
-    },
-    {
-      "source": "/shipment",
-      "destination": "/tbig-shipment/index.html"
-    },
-    {
-      "source": "/shipment/(.*)",
-      "destination": "/tbig-shipment/$1"
-    },
-    {
-      "source": "/logistik",
-      "destination": "/tbig-shipment/index.html"
-    },
-    {
-      "source": "/logistik/(.*)",
-      "destination": "/tbig-shipment/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/tbig-shipment/$1"
+      "destination": "/tbig-shipment/",
+      "permanent": false
     }
   ]
 }

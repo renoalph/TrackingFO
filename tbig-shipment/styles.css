@@ -578,3 +578,79 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   white-space: nowrap;
 }
+
+/* =========================================================================
+   REALTIME VESSEL & ROUTE TRACKING STYLES (CURVED NAUTICAL MAP)
+   ========================================================================= */
+.vessel-marker-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.vessel-marker-container {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vessel-pulse-ring {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(39, 152, 213, 0.45);
+  animation: vesselPulse 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  pointer-events: none;
+}
+
+.vessel-icon-circle {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1D3D8F 0%, #2798D5 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35);
+  border: 2px solid #ffffff;
+  z-index: 2;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.vessel-marker-container:hover .vessel-icon-circle {
+  transform: scale(1.15);
+}
+
+.vessel-icon-circle span {
+  font-size: 15px !important;
+}
+
+@keyframes vesselPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Port and Site Pin Badges */
+.port-marker-badge {
+  background: #ffffff;
+  color: #1e293b;
+  border: 2px solid #1D3D8F;
+  border-radius: 8px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
